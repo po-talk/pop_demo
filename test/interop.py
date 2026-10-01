@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """相互通話テスト：本番の画面（/）とお試し版（/pop_demo/）が同じ部屋で話せるか
 
-    python3 test/interop.py                # サーバも Chrome も自前で起動（ポート 8010）
+    python3 test/interop.py                # サーバも Chrome も自前で起動（ポート 8000＝TURN 経由まで試せる）
     python3 test/interop.py --headful      # 画面を出して眺める
     python3 test/interop.py --no-serve     # 既に test/serve.py が動いているならそれを使う
 
@@ -91,7 +91,7 @@ class Run:
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument('--web-port', type=int, default=8010)
+    ap.add_argument('--web-port', type=int, default=8000)   # TURN Worker が許すのは localhost:8000 だけ
     ap.add_argument('--port', type=int, default=9341, help='Chrome の devtools ポート')
     ap.add_argument('--tag', default='interop')
     ap.add_argument('--no-serve', action='store_true')
@@ -123,11 +123,19 @@ def main():
         r.check('本番の画面にお試し版の声が届く', up.wait_for('%s >= 1' % FLOWING, timeout=DISCOVER))
         r.check('お試し版に本番の画面の声が届く', pop.wait_for('%s >= 1 && %s.flowing >= 1' % (FLOWING, POP), timeout=DISCOVER),
                 json.dumps(pop.eval(POP), ensure_ascii=False))
+        if r.a.web_port == 8000:
+            # 本番の画面の参加者行は、経路を .m-conn.relay（☁ TURN 中継）／.m-conn.direct（↔ 直結）で示す。
+            # 相手の行（自分以外）が relay なら、お試し版との間も TURN を通っている
+            conn = "[...document.querySelectorAll('#members .member .m-conn')].map(e => e.className).join(' | ')"
+            relay = up.wait_for("document.querySelectorAll('#members .member .m-conn.relay').length === 2", timeout=20)
+            r.check('TURN 経由でつながる（本番と同じ relay-first）', relay, up.eval(conn))
         pop.eval('window.__pop.leave()', await_promise=False)
         r.check('お試し版の退出が本番の画面に伝わる', up.wait_for('%s === 1' % UP_MEMBERS, timeout=30))
         errs = (up.eval('window.__E') or []) + (pop.eval('window.__E') or [])
-        # TURN Worker は localhost:8000 しか許可しないので、8000 以外では資格情報の取得が弾かれる（直結で続行＝想定内）
-        errs = [e for e in errs if 'pot-turn' not in e]
+        if r.a.web_port != 8000:
+            # TURN Worker は localhost:8000 しか許可しない＝他のポートでは資格情報が取れず直結で続行（想定内）
+            errs = [e for e in errs if 'pot-turn' not in e]
+
         r.check('エラー・CSP 違反なし', not errs, '; '.join(errs))
     finally:
         r.stop()
