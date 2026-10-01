@@ -28,6 +28,7 @@ const roomEl = put(el('div', 'tone-room', '<div class="room-name">ポッポの�
 const room = space.add(roomEl, { kind: 'float', r: ROOM_R, x: 0, y: 0, home: 0.002, drift: 0.6, breath: 0.012 })
 room.innerPad = 12
 const people = [['🦊', 'あなた', true], ['🐱', 'Cat'], ['🐼', 'Panda'], ['🐻', 'Bear'], ['🐰', 'Bunny'], ['🦌', 'Deer']]
+const memberB = []
 people.forEach(([e, n, me], i) => {
   const m = put(el('button', 'member', `<span class="ico">${e}</span><span class="cap m-name">${n}</span>`, { 'aria-label': n + (me ? '（あなた）' : '') }), roomEl)
   const a = i / people.length * Math.PI * 2
@@ -35,7 +36,9 @@ people.forEach(([e, n, me], i) => {
   m.addEventListener('click', () => m.classList.toggle('speaking'))
   if (me) m.classList.add('speaking')
   b.drift = 1
+  memberB.push(b)
 })
+const meB = memberB[0]
 
 // ── 部屋の外壁に吸着する操作ボタン（ハニカムの二段） ─────────────────────────
 const CTRL_R = 36
@@ -66,7 +69,7 @@ const reactSlots = hexOut(REACT.length, 4, 62, reactDeg, ROOM_R + CTRL_R * 4 + 1
 const reacts = REACT.map((e, i) => {
   const b = put(el('button', '', `<span class="ico">${e}</span>`, { 'aria-label': 'リアクション ' + e }))
   b.hidden = true
-  b.addEventListener('click', () => fly(b, e))
+  b.addEventListener('click', () => fly(meB, e))   // 本番と同じく、送った人（自分）の泡から湧き上がる
   return space.add(b, { kind: 'slot', parent: room, r: 28, x: reactSlots[i].x, y: reactSlots[i].y })
 })
 ctrl.react.el.addEventListener('click', () => {
@@ -75,11 +78,12 @@ ctrl.react.el.addEventListener('click', () => {
   ctrl.react.el.classList.toggle('tone-on', open)
   room.pinned = open   // 並べている間は親を留める＝押そうとした泡が逃げない
 })
+// リアクションは送った人の泡から湧き上がる（from＝その人の泡。位置は湧いた瞬間のもの）
 const fly = (from, e) => {
   for (let i = 0; i < 6; i++) setTimeout(() => {
     const f = put(el('div', 'fly', e))
-    f.style.left = from && space.bodyOf(from) ? space.bodyOf(from).wx + 'px' : '0px'
-    f.style.top = from && space.bodyOf(from) ? space.bodyOf(from).wy + 'px' : '0px'
+    f.style.left = from.wx + 'px'
+    f.style.top = (from.wy - from.r * 0.4) + 'px'
     f.style.setProperty('--tx', ((Math.random() - .5) * 140).toFixed(0) + 'px')
     setTimeout(() => f.remove(), 2300)
   }, i * 70)
@@ -102,7 +106,9 @@ let askTimer = 0
 const showAsk = on => { ask.hidden = yes.hidden = no.hidden = !on; room.pinned = on; clearTimeout(askTimer); if (on) askTimer = setTimeout(() => showAsk(false), 8000) }
 ctrl.leave.el.addEventListener('click', () => showAsk(ask.hidden))
 no.addEventListener('click', () => showAsk(false))
-yes.addEventListener('click', () => { showAsk(false); fly(roomEl, '👋') })
+yes.addEventListener('click', () => { showAsk(false); fly(meB, '👋') })
+// 他の人のリアクションの見本：ときどき誰かの泡から湧く
+setInterval(() => { if (space.calm) return; const b = memberB[1 + Math.floor(Math.random() * (memberB.length - 1))]; fly(b, REACT[Math.floor(Math.random() * REACT.length)]) }, 7000)
 
 // ── 他の部屋（未参加・浮遊） ─────────────────────────────────────────
 const lobby = [['アイデア会議', ['🦉', '🐭', '🐹'], -470, -260, 110], ['もくもく作業部屋 ☕', ['🦝', '🐨'], 470, -230, 96], ['夜のラジオ 📣', ['🎙'], 380, 330, 84]]
