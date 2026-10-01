@@ -88,7 +88,7 @@
 .member.ignored .m-emoji { filter: grayscale(1); }
 .member.virtual { border-style: dashed; }
 .member.speaking, .member:has(.m-emoji.speaking) { border-color: var(--blue); animation: speak 1.6s ease-in-out infinite; }
-.m-more { padding: 0; font-size: max(9px, 11cqmin); line-height: 1.35; color: var(--ink-dim); }
+.m-more { padding: 0; font-size: 11px; line-height: 1.35; color: var(--ink-dim); }
 /* ひとことの吹き出し：その人の泡の上にぽこっと出る円 */
 .chat-bubble { position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, -6px); width: 118px; height: 118px; box-sizing: border-box;
   border-radius: 50%; display: grid; place-items: center; text-align: center; padding: 14px; font-size: 12px; line-height: 1.35; font-weight: 600;
@@ -426,3 +426,7 @@ button.room.linked { display: none !important; }
 /* ヘルプの冒頭：デモであることと通常版への道 */
 .help-demo { text-align: center; margin: 0 0 12px; font-size: 13.5px; line-height: 1.6; color: #d9fbe5; }
 .help-demo a { font-weight: 700; color: #86efac; }
+/* 「ほか N 人が聞いています」の泡（自分自身の大きさで文字を決める＝cq 単位は使わない：自分の中の文字は親の容器を基準にしてしまう） */
+.m-more { gap: 1px; color: var(--ink-dim); border-style: dashed; }
+.m-more .mm-ico { font-size: 40cqmin; line-height: 1; }
+.m-more .mm-n { font-size: max(9px, 13cqmin); font-weight: 700; white-space: nowrap; }
