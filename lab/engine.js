@@ -1,5 +1,5 @@
 // 泡のエンジンの試作ページ。通話はしない（見た目と手触りだけ）
-import { Space, hexAround, hexOut, foam, calmWhileTyping, tips } from '../bubble.js'
+import { Space, hexGrid, hexOut, foam, calmWhileTyping, tips } from '../bubble.js'
 
 const world = document.getElementById('world')
 const space = new Space(document.getElementById('viewport'), world)
@@ -62,7 +62,7 @@ const REACT = ['👏', '😂', '✨', '👍', '🤔', '😮', '🎉', '🍵']
 // 置き場所：👏 の向き（部屋の中心から見た角度）の外側。操作の泡の二段より外に、ハニカムの塊で出す
 const reactIdx = controls.findIndex(c => c[0] === 'react')
 const reactDeg = Math.atan2(pos[reactIdx].y, pos[reactIdx].x) * 180 / Math.PI
-const reactSlots = hexOut(REACT.length, 62, reactDeg, ROOM_R + CTRL_R * 4 + 92)
+const reactSlots = hexOut(REACT.length, 4, 62, reactDeg, ROOM_R + CTRL_R * 4 + 140)   // 4 個ずつ 2 行
 const reacts = REACT.map((e, i) => {
   const b = put(el('button', '', `<span class="ico">${e}</span>`, { 'aria-label': 'リアクション ' + e }))
   b.hidden = true
@@ -112,21 +112,16 @@ lobby.forEach(([name, kids, x, y, r]) => {
   })
 })
 
-// ── プロフィール（浮かぶ泡）：絵文字を押すと 16 個の絵文字がハニカムで周りに並ぶ ──────────
-const AVATARS = ['🦊', '🐱', '🐼', '🐰', '🐻', '🦉', '🐶', '🦄', '🐸', '🐧', '🐨', '🐯', '🦁', '🐵', '🦝', '🦦']
+// ── プロフィール（浮かぶ泡）：絵文字を押すと、16 個の絵文字がハニカム（半個ずらしの行）で下に並ぶ ──────────
+const AVATARS = ['🦞','🐱','🐶','🦊','🐻','🐼','🐸','🐧','🦉','🐙','🦄','🐝','🌸','⭐','🍎','🍣']   // 本番と同じ 16 個（index.html の AVATARS）
 const pf = put(el('div', 'tone-violet', `<button class="ico no-drag" id="pfEmoji" aria-label="アバターを選ぶ" style="font-size:40cqmin;background:none;border:0;cursor:pointer;pointer-events:auto">🦊</button>
   <input id="pfName" value="あなた" maxlength="20" aria-label="あなたの名前">`))
 const pfB = space.add(pf, { kind: 'float', r: 100, x: -360, y: 330, home: 0.002 })
-// 半径 100 の泡を囲む 1 周目は 18 個＝ 16 個の絵文字 ＋ 🎲（おまかせ）＋ ✕（閉じる）。輪がちょうど埋まり、隙間ができない
-const avSlots = hexAround(AVATARS.length + 2, 64, 100, -90)
-const extra = [['🎲', 'おまかせで選ぶ', () => avs[Math.floor(Math.random() * avs.length)].el.click()], ['✕', '閉じる', () => openAv(false)]]
-const extras = extra.map(([ico, label, fn], i) => {
-  const b = put(el('button', 'tone-off', `<span class="ico">${ico}</span>`, { 'aria-label': label }))
-  b.hidden = true
-  b.addEventListener('click', fn)
-  const sl = avSlots[AVATARS.length + i] || avSlots[avSlots.length - 1]
-  return space.add(b, { kind: 'slot', parent: pfB, r: 28, x: sl.x, y: sl.y })
-})
+// 4 個ずつ 4 行、奇数行を半個ずらす。プロフィールの泡のすぐ下に置く
+const AV_STEP = 62, AV_COLS = 4
+const avGrid = hexGrid(AVATARS.length, AV_COLS, AV_STEP)
+const avTop = 100 + 14 + 28 - Math.min(...avGrid.map(p => p.y))
+const avSlots = avGrid.map(p => ({ x: p.x, y: p.y + avTop }))
 const avs = AVATARS.map((a, i) => {
   const b = put(el('button', '', `<span class="ico">${a}</span>`, { 'aria-label': 'アバター ' + a }))
   b.hidden = true
@@ -137,7 +132,7 @@ const avs = AVATARS.map((a, i) => {
   })
   return space.add(b, { kind: 'slot', parent: pfB, r: 28, x: avSlots[i].x, y: avSlots[i].y })
 })
-const openAv = on => { [...avs, ...extras].forEach(b => { b.el.hidden = !on }); pfB.pinned = on; if (on) space.view(pfB.x, pfB.y, 420) }
+const openAv = on => { avs.forEach(b => { b.el.hidden = !on }); pfB.pinned = on; if (on) space.view(pfB.x, pfB.y + 120, 520) }
 pf.querySelector('#pfEmoji').addEventListener('click', () => openAv(avs[0].el.hidden))
 pf.querySelector('#pfName').addEventListener('input', e => { roomEl.querySelector('.member .m-name').textContent = e.target.value || 'あなた' })
 

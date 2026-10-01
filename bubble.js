@@ -30,6 +30,24 @@ export const hexSpiral = (n, step) => {
   return out.slice(0, n).map(([q, r]) => ({ x: step * (q + r / 2), y: step * r * SQ3 / 2 }))
 }
 
+// ハニカムの並び（行を半個ずらして詰める）。cols 個ずつの行を作り、奇数行は半個右へ。
+// 全体の中心が (0, 0) になるように返す。最後の行が短いときは、その行だけ中央に寄せる。
+//   ⚪︎⚪︎⚪︎⚪︎
+//    ⚪︎⚪︎⚪︎⚪︎
+//   ⚪︎⚪︎⚪︎⚪︎
+export const hexGrid = (n, cols, step) => {
+  const rows = Math.ceil(n / cols), dy = step * SQ3 / 2
+  const out = []
+  for (let i = 0; i < n; i++) {
+    const row = Math.floor(i / cols), col = i % cols
+    const inRow = row === rows - 1 ? n - row * cols : cols
+    const shift = row % 2 ? step / 2 : 0
+    const lead = (cols - inRow) * step / 2          // 短い最後の行は中央へ
+    out.push({ x: col * step + shift + lead - (cols - 1) * step / 2 - (rows > 1 ? step / 4 : 0), y: row * dy - (rows - 1) * dy / 2 })
+  }
+  return out
+}
+
 // 親の泡を真ん中に据えたハニカム。親の円にかかる格子点は飛ばし、近い順に n 個（＝親を取り囲む輪）。
 // from（度）を指定すると、その向きから時計回りに埋める（例：-90＝真上から）
 export const hexAround = (n, step, parentR, from = -90) => {
@@ -40,10 +58,10 @@ export const hexAround = (n, step, parentR, from = -90) => {
   return pts.slice(0, n).map(({ x, y }) => ({ x, y }))
 }
 
-// 外へ向けた塊：親の中心から角度 deg の方向、距離 dist の所を中心に、ハニカムで n 個（親基準の座標で返す）
-export const hexOut = (n, step, deg, dist) => {
+// 外へ向けた塊：親の中心から角度 deg の方向、距離 dist の所を中心に、ハニカム（半個ずらしの行・cols 個ずつ）で n 個
+export const hexOut = (n, cols, step, deg, dist) => {
   const a = deg * Math.PI / 180, cx = dist * Math.cos(a), cy = dist * Math.sin(a)
-  return hexSpiral(n, step).map(p => ({ x: cx + p.x, y: cy + p.y }))
+  return hexGrid(n, cols, step).map(p => ({ x: cx + p.x, y: cy + p.y }))
 }
 
 // 親の外壁に沿った弧。中心角 from（度）から gap ずつ。dist＝親の中心からの距離
