@@ -423,3 +423,6 @@ html.zg-av #avatars > button, html.zg-rx #reactions > button { display: flex; }
 #linkJoin:disabled { opacity: .45; }
 .sprout[hidden] { display: none !important; }
 button.room.linked { display: none !important; }
+/* ヘルプの冒頭：デモであることと通常版への道 */
+.help-demo { text-align: center; margin: 0 0 12px; font-size: 13.5px; line-height: 1.6; color: #d9fbe5; }
+.help-demo a { font-weight: 700; color: #86efac; }
