@@ -430,3 +430,6 @@ button.room.linked { display: none !important; }
 .m-more { gap: 1px; color: var(--ink-dim); border-style: dashed; }
 .m-more .mm-ico { font-size: 40cqmin; line-height: 1; }
 .m-more .mm-n { font-size: max(9px, 13cqmin); font-weight: 700; white-space: nowrap; }
+/* 無視のハートは 9〜10 時の位置（名前の頭に重ねない）。経路の印はその上、11 時へ */
+.member .m-ig { left: -12%; top: 23%; bottom: auto; }
+.member .m-conn { left: 14%; top: -4%; }
