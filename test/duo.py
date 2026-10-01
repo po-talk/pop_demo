@@ -54,9 +54,22 @@ try:
         pop = tab('http://localhost:8000/pop_demo/' + link, True)
         pop.wait_for('!!window.__pop && !!window.__zg', timeout=20)
         pop.wait_for("window.__pop.state().entry !== 'checking'", timeout=60)
-        pop.eval('window.__pop.join()', await_promise=False)
+        time.sleep(1.5); snap(pop, '0link')
+        pop.eval("document.getElementById('linkJoin').click()", await_promise=False)   # 人と同じく、リンクの部屋の泡の ✓ から入る
     pop.wait_for('window.__pop.state().peers.length === 1', timeout=60)
     time.sleep(3)
+    # 声の大きさ：偽マイクの音で、相手の泡の --lv が上がり、部屋の底から泡が湧くか（数秒見て最大を取る）
+    # ヘッドレスの偽マイクは無音（本番の画面も反応しない）ので、音量を差し込んで見た目だけ確かめる
+    pop.eval("(() => { window.__zg.eqTest = 0.8; const m = document.querySelector('#members .member'); m.classList.add('speaking'); m.style.setProperty('--lv', '0.9'); m._lv = 0.9; setInterval(() => { const m = document.querySelector('#members .member'); if (m) { m.classList.add('speaking'); m.style.setProperty('--lv','0.9'); m._lv = 0.9 } }, 50) })()")
+    time.sleep(1.5)
+    mx = {'lv': 0, 'eq': 0}
+    for _ in range(20):
+        v = pop.eval("JSON.stringify({ lv: Math.max(0, ...[...document.querySelectorAll('#members .member')].map(e => +(e.style.getPropertyValue('--lv') || 0))), eq: document.querySelectorAll('.eq-bub').length })")
+        v = json.loads(v); mx['lv'] = max(mx['lv'], v['lv']); mx['eq'] = max(mx['eq'], v['eq']); time.sleep(0.25)
+    print('  glow box-shadow', pop.eval("(() => { const m = document.querySelector('#members .member'); m.classList.add('speaking'); m.style.setProperty('--lv','0.9'); return getComputedStyle(m).boxShadow.slice(0, 90) })()"))
+    snap(pop, '1glow')
+    print('  up speaking ever?', up.eval("document.querySelectorAll('#members .speaking').length"), ' pop transforms', pop.eval("[...document.querySelectorAll('#members .m-emoji')].map(e => e.style.transform).join(',')"))
+    print('  voice level max', mx['lv'], ' rising bubbles max', mx['eq'], '✅' if mx['lv'] > 0 and mx['eq'] > 0 else '❌')
     snap(pop, '1call')
     up.eval("(() => { const t = document.getElementById('chatText'); t.value = 'こんばんは〜 はじめまして！'; document.getElementById('chatSend').click() })()")
     time.sleep(1.5); snap(pop, '2said')

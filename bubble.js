@@ -579,6 +579,7 @@ export class Space {
       const pop = b.pop < 1 ? inflate(b.pop) : 1
       b.el.style.opacity = b.pop < 1 ? Math.min(1, b.pop * 4).toFixed(2) : ''
       let sx = pop, sy = pop
+      if (b.swell) { sx *= 1 + b.swell; sy *= 1 + b.swell }   // 外から渡すふくらみ（声の大きさなど）
       if (!calm && !b.dragging) {
         if (b.breath) { const br = 1 + Math.sin(t * 1.1 + b.phase) * b.breath; sx *= br; sy *= br }
         if (b.kind === 'dock') {

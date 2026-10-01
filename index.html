@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.3.1（元：ぽっと通話 v0.15.18）
+  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.4.0（元：ぽっと通話 v0.15.18）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -87,8 +87,8 @@
 <!-- デモなのでアクセス解析は入れない（本番・β の集計に混ぜない） -->
 <!-- End Cloudflare Web Analytics -->
 <!-- 泡の質感（bubble.css）とこの画面の見た目（zerog.css）。元の <style> は使わない（見た目を丸ごと差し替えたため） -->
-<link rel="stylesheet" href="bubble.css?v=12">
-<link rel="stylesheet" href="zerog.css?v=12">
+<link rel="stylesheet" href="bubble.css?v=14">
+<link rel="stylesheet" href="zerog.css?v=14">
 <!-- 見た目（昼夜）のエンジン。**モジュールの外・<style> の直後**に置く＝最初の描画より前に
      昼の色を当てるため（モジュールは描画後に走るので、そこに置くと昼でも一瞬紺が見える）。
      アプリの状態には一切触らない（読むのは localStorage の設定と時計だけ）。設定の UI は
@@ -235,9 +235,19 @@
     </div>
     <div id="avatars" class="zc"></div>
 
-    <!-- ── 部屋を作る／参加する（🏠 を押すと泡が並ぶ。リンクで来た人は最初から開いている） ── -->
+    <!-- ── 共有リンクで来た部屋：部屋の泡として出す（✓ で入る／終わっていたら ☎️ と 🏠） ── -->
+    <div id="linkBub" class="tone-room link-bub" hidden role="group" aria-label="リンクの部屋">
+      <span class="lb-kind" aria-hidden="true">🏠</span>
+      <span class="lb-name"></span>
+      <span class="lb-state"></span>
+      <button id="linkJoin" type="button" class="sprout tone-ok" aria-label="参加する"><span class="ico">✓</span></button>
+      <button id="linkLobby" type="button" class="sprout" aria-label="通話中の部屋から選ぶ" hidden><span class="ico">☎️</span></button>
+      <button id="linkNew" type="button" class="sprout" aria-label="この名前で新しく部屋を作る" hidden><span class="ico">🏠</span></button>
+    </div>
+
+    <!-- ── 新しい部屋を作る（🏠 を押すと泡が並ぶ） ── -->
     <details id="createBox" class="stub"><summary></summary></details>
-    <button id="createBtn" type="button" aria-label="部屋を作る・参加する" aria-expanded="false"><span class="ico">🏠</span></button>
+    <button id="createBtn" type="button" aria-label="新しい部屋を作る" aria-expanded="false"><span class="ico">🏠</span></button>
     <div id="createWrap" class="zc">
       <div id="roomField" class="zc">
         <div id="roomBub" class="tone-glass" role="group" aria-label="部屋名">
@@ -557,7 +567,7 @@ window.__potPcs = () => [...livePcs]   // 診断・テスト用
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.3.1'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.4.0'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.15.18'
 
@@ -2996,6 +3006,9 @@ const vadTick = () => {
     const grow = reading ? 0.08 + 0.10 * (0.5 + 0.5 * Math.sin(performance.now() / 140)) : Math.min((rms - 0.045) * 4, 0.55)
     el.style.transform = active || reading ? 'scale(' + (1 + grow).toFixed(3) + ')' : 'scale(1)'
     el.parentElement.classList.toggle('speaking', active || reading)
+    // MOD：声の大きさ（0〜1）を泡へ。縁の光の強さと、泡のふくらみに使う（startZeroG）
+    const lv = active ? Math.min(1, (rms - 0.045) / 0.15) : reading ? 0.35 : 0
+    el.parentElement._lv = lv; el.parentElement.style.setProperty('--lv', lv.toFixed(2))
   })
   roomRms = peak > roomRms ? peak : roomRms * 0.82 + peak * 0.18   // アタック速く／ディケイ遅く
   vadRAF = analysers.size ? requestAnimationFrame(vadTick) : null
@@ -4762,7 +4775,7 @@ const syncCreateBox = () => {
   // ★開く条件は「**URL に部屋がある**」＝共有リンクから来た人だけ。
   //   入力欄の中身では判定できない：名前から「◯◯の部屋」が**自動で入っている**ので、
   //   value を見ると常に開いてしまう（実際そうなった）。
-  if (roomFromHash()) box.open = true
+  // MOD：リンクで来ても「部屋を作る」は開かない（🏠 は新しく作る専用。リンク先は部屋の泡 #linkBub で見せる）
   syncIdleChrome()
 }
 $('createBox').addEventListener('toggle', syncIdleChrome)
@@ -5536,7 +5549,7 @@ addEventListener('online', () => initLobby(true, true))
 // （syncShare は joinedId を参照するため、宣言前に呼ぶと TDZ で落ちる）
 syncShare()
 
-const ZG_V = '12'   // bubble.js / *.css のキャッシュ避け（変えたら上げる）
+const ZG_V = '14'   // bubble.js / *.css のキャッシュ避け（変えたら上げる）
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MOD：Zero-G の泡の配置と動き（ここから下は見た目だけ。通話のロジックには触らない）
@@ -5571,6 +5584,7 @@ function startZeroG(Z) {
   const roomInB = space.add($('roomBub'), { kind: 'slot', parent: pfB, r: ROOMIN_R, wall: { a: deg(-12), d: ROOMIN_R + 16 } })
   space.add($('kindBcL'), { kind: 'slot', parent: roomInB, r: 28, wall: { a: deg(-62), d: 32 } })
   space.add($('kindChatL'), { kind: 'slot', parent: roomInB, r: 28, wall: { a: deg(-22), d: 32 } })
+  const linkB = space.add($('linkBub'), { kind: 'slot', parent: pfB, r: 96, wall: { a: deg(-24), d: 96 + 14 } })   // d は壁から子の中心まで
   const JOIN_R = 60
   const joinB = space.add($('join'), { kind: 'slot', parent: roomInB, r: JOIN_R, wall: { a: deg(62), d: JOIN_R + 8 } })
   space.add($('entryNote'), { kind: 'slot', parent: joinB, r: 84, wall: { a: deg(10), d: 88 } })
@@ -5590,8 +5604,19 @@ function startZeroG(Z) {
     if (on) { const cx = avSlots.reduce((a, p) => a + p.x, 0) / avSlots.length, cy = avSlots.reduce((a, p) => a + p.y, 0) / avSlots.length; space.view(pfB.x + cx * .5, pfB.y + cy * .5, 600) }
   }
   $('pfEmoji').addEventListener('click', () => { if (!call.joinedId) setAv(!html.classList.contains('zg-av')) })
+  // リンクの部屋をやめて「新しく作る」に切り替える（URL の部屋を捨て、新しい ID を発行。名前は name か「◯◯の部屋」）
+  const freshRoom = name => {
+    entryCancel()
+    try { history.replaceState(null, '', location.pathname + location.search) } catch {}
+    pendingHash = newHash(); pendingPk = ''
+    roomInput.value = capRoom(name || defaultRoom()); boundRoomName = roomInput.value; lastAutoRoom = name ? '' : roomInput.value
+    kindChat.checked = true; kindBc.checked = false
+    syncRoomCount(); syncShare(); syncKindRow(); syncLobby()
+  }
   $('createBtn').addEventListener('click', () => {
-    const box = $('createBox'); box.open = !box.open
+    const box = $('createBox')
+    if (!box.open && !call.joinedId && roomFromHash()) freshRoom()
+    box.open = !box.open
     if (box.open) space.view(pfB.x + 210, pfB.y + 50, 800)
   })
 
@@ -5677,7 +5702,9 @@ function startZeroG(Z) {
     const seen = new Set()
     for (const el of $('lobbyList').children) {
       if (el.id === 'roomAsk') continue
-      if (!el.classList.contains('room') || el.classList.contains('here')) continue
+      // リンクで来た部屋は、リンクの部屋の泡が代わりに出ている（同じ部屋を 2 つ出さない）
+      el.classList.toggle('linked', !call.joinedId && el.dataset.room === roomFromHash())
+      if (!el.classList.contains('room') || el.classList.contains('here') || el.classList.contains('linked')) continue
       const key = el.dataset.room
       seen.add(key)
       const n = +el.dataset.n || 1, r = Math.min(150, 58 + Math.sqrt(n) * 24)
@@ -5743,7 +5770,8 @@ function startZeroG(Z) {
       const R = callB.targetR ?? callB.r
       if (call.tab === 'settings' || call.tab === 'mail') space.view(callB.x - PANEL_R * .9, callB.y, (R + PANEL_R) * 2 + 120)
       else space.view(callB.x + 40, callB.y + 30, R * 2 + CTRL_R * 7)
-    } else space.view(pfB.x + ($('createBox').open ? 210 : 40), pfB.y + 50, $('createBox').open ? 800 : 520)
+    } else if (roomFromHash() && !$('createBox').open) space.view(pfB.x + 150, pfB.y - 40, 720)
+    else space.view(pfB.x + ($('createBox').open ? 210 : 40), pfB.y + 50, $('createBox').open ? 800 : 520)
   }
   space.onFrame = () => {
     tick++
@@ -5789,12 +5817,50 @@ function startZeroG(Z) {
       askB.el.classList.toggle('open', !$('leaveConfirm').hidden)
       callB.pinned = chatOn || !$('leaveConfirm').hidden || call.tab === 'settings' || call.tab === 'mail'
     }
+    if (tick % 10 === 0) syncLink()
+    if (j) {
+      // 声の大きさで泡がふくらむ（縁の光は CSS が --lv で強める）
+      memB.forEach(b => { const t = (b.el._lv || 0) * 0.09; b.swell = (b.swell || 0) + (t - (b.swell || 0)) * 0.3 })
+      // 点字イコライザーの代わり：部屋の音量（roomRms）で、部屋の泡の底から小さな泡が立ちのぼる
+      const lvl = window.__zg.eqTest ?? eqLevel()   // eqTest：試験用に音量を差し込む（ヘッドレスの偽マイクは無音のため）
+      if (!space.calm && lvl > 0.05 && Math.random() < lvl * 0.45 && callB.el.querySelectorAll('.eq-bub').length < 26) {
+        const R = callB.r, e = document.createElement('div'), d = 5 + Math.random() * (6 + lvl * 12)
+        const x = R + (Math.random() - 0.5) * R * 1.1
+        e.className = 'eq-bub'
+        Object.assign(e.style, { width: d + 'px', height: d + 'px', left: (x - d / 2) + 'px', top: (R * 1.82) + 'px' })
+        e.style.setProperty('--dy', (-R * (0.6 + lvl * 0.9)).toFixed(0) + 'px')
+        e.style.setProperty('--dx', ((Math.random() - 0.5) * 40).toFixed(0) + 'px')
+        e.style.setProperty('--t', (2.2 + Math.random() * 1.6).toFixed(2) + 's')
+        callB.el.appendChild(e)
+        setTimeout(() => e.remove(), 4000)
+      }
+    }
     if (tick % 60 === 0) html.classList.toggle('zg-day', html.style.colorScheme === 'light')
   }
   $('callName').textContent = ''
   // 退出の確認：出たら部屋と一緒に見えるところへ
   new MutationObserver(() => { if (!$('leaveConfirm').hidden) { const t = askB.target(); space.view(callB.x + (t.x - callB.x) * .4, callB.y + (t.y - callB.y) * .4, (callB.r + 84) * 2 + 140) } })
     .observe($('leaveConfirm'), { attributes: true, attributeFilter: ['hidden'] })
+  // リンクの部屋の泡：名前・状態（入口の確認の結果）・生える泡を毎回描く
+  const syncLink = () => {
+    const h = !call.joinedId && roomFromHash()
+    $('linkBub').hidden = !h
+    if (!h) return
+    const bc = !!roomPk(h), st = entry.state
+    $('linkBub').querySelector('.lb-kind').textContent = bc ? '📣' : '🏠'
+    $('linkBub').querySelector('.lb-name').textContent = roomInput.value.trim() || hashName() || '名前のない部屋'
+    $('linkBub').querySelector('.lb-state').textContent = st === 'checking' ? '🔍 さがしています…' : $('entryText').textContent || (bc ? '配信部屋' : '')
+    $('linkBub').classList.toggle('asleep', st === 'asleep')
+    $('linkJoin').hidden = st === 'asleep'
+    $('linkJoin').disabled = st === 'checking'
+    $('linkJoin').setAttribute('aria-label', $('joinLbl').textContent)
+    $('linkLobby').hidden = st !== 'asleep'
+    $('linkNew').hidden = st !== 'asleep' || bc   // 聞き役は配信部屋を作れない（鍵が無い）
+  }
+  $('linkJoin').addEventListener('click', () => $('join').click())
+  $('linkLobby').addEventListener('click', () => $('entryLobby').click())
+  $('linkNew').addEventListener('click', () => { freshRoom(roomInput.value.trim() || hashName()); $('createBox').open = true; setTimeout(view, 30) })
+
   // 「通話中の部屋から選ぶ」：元はページを下へスクロールしていた。ここではカメラを引いてロビーを見せる
   $('entryLobby').addEventListener('click', () => space.view(0, 0, 1500))
   $('homeBtn').addEventListener('click', view)
