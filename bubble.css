@@ -1,0 +1,152 @@
+/* bubble.css — Zero-G の泡の質感（index.html と lab/ で共有）
+   ★形は円だけ。角丸の四角は作らない（利用者の指定）。文字の多いもの（ひとことの流れ・お便り・ヘルプ）も
+     大きな円の中に読む場所を作る。
+   ★動く泡に backdrop-filter は使わない（毎コマ背景をぼかし直すことになり、スマホで重くなる）。 */
+
+:root {
+  color-scheme: dark;
+  --space0: #04040d; --space1: #0b0a21; --space2: #1a1744;
+  --neb1: rgba(129, 140, 248, .18); --neb2: rgba(244, 114, 182, .14); --neb3: rgba(56, 189, 248, .15);
+  --ink: #f1f5f9; --ink-dim: #cbd5e1; --ink-faint: #94a3b8;
+  --rim: rgba(255, 255, 255, .45); --rim-soft: rgba(255, 255, 255, .25);
+  --film: rgba(255, 255, 255, .10);
+  --blue: #38bdf8; --blue-hi: #7dd3fc; --violet: #c084fc; --pink: #f472b6;
+  --ok: #4ade80; --warn: #fbbf24; --danger: #fb7185; --danger-deep: #e11d48;
+  --shadow: rgba(0, 0, 0, .45);
+}
+
+html, body { margin: 0; height: 100%; }
+body {
+  background: radial-gradient(circle at 50% 40%, var(--space2) 0%, var(--space1) 65%, var(--space0) 100%) fixed;
+  color: var(--ink);
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Segoe UI", Roboto, "Noto Sans JP", sans-serif;
+  overflow: hidden;
+  overscroll-behavior: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.nebula {
+  position: fixed; inset: -20%; pointer-events: none;
+  background:
+    radial-gradient(circle at 18% 25%, var(--neb1) 0%, transparent 35%),
+    radial-gradient(circle at 82% 30%, var(--neb2) 0%, transparent 40%),
+    radial-gradient(circle at 50% 80%, var(--neb3) 0%, transparent 45%);
+}
+
+#viewport { position: fixed; inset: 0; overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; }
+#world { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-origin: 0 0; will-change: transform; }
+
+/* ── 泡の基本 ───────────────────────────────────────────── */
+.bub {
+  position: absolute; left: 0; top: 0;
+  box-sizing: border-box;
+  border-radius: 50%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center;
+  color: var(--ink);
+  border: 1.5px solid var(--rim);
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.30) 0%, rgba(255,255,255,.06) 62%, rgba(147,197,253,.24) 100%);
+  box-shadow:
+    inset 0 0 calc(var(--glow, 18) * 1px) rgba(255,255,255,.28),
+    inset -8px -8px 20px rgba(192,132,252,.22),
+    inset 8px 8px 20px rgba(96,165,250,.20),
+    0 8px 28px var(--shadow);
+  will-change: transform;
+  touch-action: none;
+  container-type: size;
+  user-select: none; -webkit-user-select: none;
+  transition: box-shadow .25s, border-color .25s, background .25s, opacity .25s;
+}
+/* 三日月のハイライト（細い弧）と、小さな光の点。大きな白い楕円は重く見えるので使わない */
+.bub::before {
+  content: ''; position: absolute; inset: 5%; border-radius: 50%; pointer-events: none;
+  border-top: 2px solid rgba(255,255,255,.62);
+  border-left: 1px solid rgba(255,255,255,.18);
+  border-right: 1px solid transparent; border-bottom: 1px solid transparent;
+  transform: rotate(-28deg);
+}
+.bub::after {
+  content: ''; position: absolute; top: 15%; left: 22%; width: 9%; height: 6%; border-radius: 50%;
+  background: rgba(255,255,255,.75); transform: rotate(-35deg); pointer-events: none;
+}
+button.bub, label.bub, a.bub { font: inherit; padding: 0; margin: 0; cursor: pointer; appearance: none; -webkit-appearance: none; text-decoration: none; }
+button.bub:disabled { cursor: default; opacity: .45; }
+.bub.dragging { cursor: grabbing; }
+button.bub:not(:disabled):active, label.bub:active { filter: brightness(1.25); }
+button.bub:focus-visible, label.bub:focus-within, a.bub:focus-visible { outline: 2px solid var(--blue-hi); outline-offset: 3px; }
+
+/* 中身：アイコンは泡の大きさに合わせる（container query の単位） */
+.bub .ico { font-size: 44cqmin; line-height: 1; pointer-events: none; filter: drop-shadow(0 2px 4px rgba(0,0,0,.3)); }
+.bub .ico svg { width: 1em; height: 1em; display: block; }
+.bub .cap { font-size: max(10px, 12cqmin); margin-top: 3cqmin; color: var(--ink); font-weight: 600; text-shadow: 0 1px 3px rgba(0,0,0,.8);
+  max-width: 82%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
+.sr { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
+
+/* 色味 */
+.tone-on   { border-color: var(--blue); box-shadow: 0 0 0 1.5px var(--blue), 0 0 22px rgba(56,189,248,.65), inset 0 0 18px rgba(56,189,248,.35); }
+.tone-off  { background: radial-gradient(circle at 35% 30%, rgba(203,213,225,.16) 0%, rgba(30,41,59,.25) 70%, rgba(148,163,184,.25) 100%);
+             border-color: rgba(148,163,184,.55); color: var(--ink-faint); }
+.tone-red  { background: radial-gradient(circle at 35% 30%, rgba(251,113,133,.42) 0%, rgba(190,18,60,.18) 70%, rgba(225,29,72,.45) 100%);
+             border-color: rgba(251,113,133,.75); color: #ffe4e6; }
+.tone-ok   { background: radial-gradient(circle at 35% 30%, rgba(74,222,128,.40) 0%, rgba(21,128,61,.16) 70%, rgba(34,197,94,.42) 100%);
+             border-color: rgba(134,239,172,.8); }
+.tone-violet { border-color: rgba(192,132,252,.7);
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.32) 0%, rgba(255,255,255,.06) 62%, rgba(192,132,252,.26) 100%);
+  box-shadow: 0 0 40px rgba(192,132,252,.35), inset 0 0 50px rgba(255,255,255,.22), inset -14px -14px 36px rgba(244,114,182,.2), 0 16px 60px var(--shadow); }
+.tone-room { border-color: rgba(147,197,253,.7);
+  background: radial-gradient(circle at 40% 32%, rgba(255,255,255,.12) 0%, rgba(255,255,255,.03) 60%, rgba(96,165,250,.16) 100%);
+  box-shadow: 0 0 45px rgba(56,189,248,.30), inset 0 0 80px rgba(255,255,255,.18), inset -20px -20px 60px rgba(192,132,252,.22), inset 20px 20px 60px rgba(56,189,248,.22), 0 20px 80px rgba(0,0,0,.55); }
+.tone-faint { opacity: .82; border-color: var(--rim-soft); }
+
+/* 話している人：外周に青〜紫の光が脈打つ */
+.speaking { border-color: var(--blue); animation: speak 1.6s ease-in-out infinite; }
+@keyframes speak {
+  0%, 100% { box-shadow: 0 0 0 2px var(--blue), 0 0 16px rgba(56,189,248,.7), inset 0 0 14px rgba(56,189,248,.35); }
+  50%      { box-shadow: 0 0 0 3.5px var(--violet), 0 0 30px rgba(167,139,250,.95), inset 0 0 22px rgba(56,189,248,.55); }
+}
+
+/* 文字を入れる泡：入力欄そのものは透明にして、泡が欄になる */
+.bub input[type=text], .bub input:not([type]), .bub textarea {
+  width: 78%; box-sizing: border-box; background: transparent; border: 0; border-bottom: 1.5px solid var(--rim-soft);
+  color: var(--ink); text-align: center; font: inherit; font-size: 16px; /* 16px 未満だと iOS が拡大する */
+  padding: 4px 2px; outline: none; border-radius: 0; touch-action: auto; user-select: text; -webkit-user-select: text;
+}
+.bub input:focus, .bub textarea:focus { border-bottom-color: var(--blue); }
+.bub input::placeholder, .bub textarea::placeholder { color: var(--ink-faint); }
+
+/* 現れる・消える */
+.bub[hidden] { display: none !important; }
+
+/* 名前の小泡（長押し・ホバー）。文字の長さに合わせて JS が直径を決める */
+#tip {
+  position: fixed; left: 0; top: 0; z-index: 1000; pointer-events: none;
+  box-sizing: border-box; border-radius: 50%; display: grid; place-items: center; text-align: center;
+  padding: 10px; font-size: 12px; font-weight: 600; line-height: 1.3; color: var(--ink);
+  background: radial-gradient(circle at 35% 30%, rgba(30,41,90,.96) 0%, rgba(15,23,42,.96) 100%);
+  border: 1.5px solid var(--rim); box-shadow: 0 6px 24px var(--shadow);
+}
+#tip[hidden] { display: none; }
+
+/* 飛んでいくリアクションの小泡 */
+.fly {
+  position: absolute; left: 0; top: 0; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%; pointer-events: none;
+  display: grid; place-items: center; font-size: 24px;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.55) 0%, rgba(255,255,255,.1) 70%, rgba(244,114,182,.4) 100%);
+  border: 1px solid rgba(255,255,255,.65); box-shadow: 0 0 18px rgba(244,114,182,.6);
+  animation: fly 2.2s forwards cubic-bezier(.1,.8,.3,1);
+}
+@keyframes fly {
+  0%   { transform: translate(0,0) scale(.5); opacity: .95; }
+  80%  { opacity: .85; }
+  100% { transform: translate(var(--tx, 0px), -170px) scale(1.15); opacity: 0; }
+}
+
+/* 背景に漂う飾りの泡（物理なし・CSS だけ） */
+.mote { position: absolute; border-radius: 50%; pointer-events: none; border: 1px solid rgba(255,255,255,.2);
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.16) 0%, rgba(255,255,255,.02) 70%, rgba(167,139,250,.12) 100%); }
+
+/* 入力中・動きを減らす設定では CSS のアニメーションも止める */
+html.typing .speaking, html.typing .fly { animation-play-state: paused; }
+@media (prefers-reduced-motion: reduce) {
+  .speaking { animation: none; box-shadow: 0 0 0 3px var(--blue), 0 0 22px rgba(56,189,248,.8); }
+  .fly { animation-duration: .01s; }
+}
