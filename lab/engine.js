@@ -1,5 +1,5 @@
 // 泡のエンジンの試作ページ。通話はしない（見た目と手触りだけ）
-import { Space, hexGrid, hexOut, hexHug, foam, calmWhileTyping, tips, fitCircle } from '../bubble.js?v=10020252'
+import { Space, hexGrid, hexOut, hexHug, foam, toWall, calmWhileTyping, tips, fitCircle } from '../bubble.js?v=10021028'
 
 const world = document.getElementById('world')
 const space = new Space(document.getElementById('viewport'), world)
@@ -50,7 +50,7 @@ const pos = foam(controls.length, ROOM_R, CTRL_R, 18, 4)
 const ctrl = {}
 controls.forEach(([k, ico, label], i) => {
   const b = put(el('button', k === 'leave' ? 'tone-red' : '', `<span class="ico">${ico}</span>`, { 'aria-label': label }))
-  ctrl[k] = space.add(b, { kind: 'dock', parent: room, r: CTRL_R, x: pos[i].x, y: pos[i].y })
+  ctrl[k] = space.add(b, { kind: 'dock', parent: room, r: CTRL_R, wall: toWall(pos[i], ROOM_R) })   // 部屋が膨らんでも壁に付いていく
 })
 let muted = false
 ctrl.mute.el.addEventListener('click', () => {
@@ -65,12 +65,14 @@ const REACT = ['👏', '😂', '✨', '👍', '🤔', '😮', '🎉', '🍵']
 // 置き場所：👏 の向き（部屋の中心から見た角度）の外側。操作の泡の二段より外に、ハニカムの塊で出す
 const reactIdx = controls.findIndex(c => c[0] === 'react')
 const reactDeg = Math.atan2(pos[reactIdx].y, pos[reactIdx].x) * 180 / Math.PI
-const reactSlots = hexOut(REACT.length, 4, 62, reactDeg, ROOM_R + CTRL_R * 4 + 140)   // 4 個ずつ 2 行
+const REACT_D = ROOM_R + CTRL_R * 4 + 140
+const reactSlots = hexOut(REACT.length, 4, 62, reactDeg, REACT_D)   // 4 個ずつ 2 行
+const reactC = { x: REACT_D * Math.cos(reactDeg * Math.PI / 180), y: REACT_D * Math.sin(reactDeg * Math.PI / 180) }
 const reacts = REACT.map((e, i) => {
   const b = put(el('button', '', `<span class="ico">${e}</span>`, { 'aria-label': 'リアクション ' + e }))
   b.hidden = true
   b.addEventListener('click', () => fly(meB, e))   // 本番と同じく、送った人（自分）の泡から湧き上がる
-  return space.add(b, { kind: 'slot', parent: room, r: 28, x: reactSlots[i].x, y: reactSlots[i].y })
+  return space.add(b, { kind: 'slot', parent: room, r: 28, wall: toWall(reactSlots[i], ROOM_R, reactC) })
 })
 ctrl.react.el.addEventListener('click', () => {
   const open = reacts[0].el.hidden
@@ -110,7 +112,9 @@ const addMsg = (e, n, x, mine = false) => {
   log.scrollTop = log.scrollHeight
   refit()
 }
-const refit = () => fitCircle(log, [...log.children], 10)
+// 読み物は部屋の泡の左側いっぱい。右の上限は、右に寄った参加者の塊の手前（chatMode が決める）
+let chatRight = null
+const refit = () => fitCircle(log, [...log.children], { pad: 14, right: chatRight, circle: { cx: log.clientWidth / 2, cy: log.clientHeight / 2 + log.offsetTop * 0, R: log.clientWidth / 2 - 6 } })
 log.addEventListener('scroll', () => requestAnimationFrame(refit))
 SAMPLE.forEach(([e, n, x]) => addMsg(e, n, x, n === 'あなた'))
 const say = (b, text) => {   // 話した人の泡のそばに、ひとことの小泡（本番の吹き出しの代わり）
@@ -130,18 +134,28 @@ const send = () => {
 }
 chat.querySelector('.chat-send').addEventListener('click', send)
 chatInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) send() })
+// ひとことを開くと部屋の泡は少し膨らみ（210→270）、参加者は右側にハニカムで寄り集まる。
+// 左側は縁いっぱいまで読み物（行頭は円に沿う）
+const CHAT_R = 270, MEM_R = 38
 const chatMode = on => {
   chat.hidden = !on
   roomEl.classList.toggle('chat-mode', on)
   ctrl.chat.el.classList.toggle('tone-on', on)
   ctrl.chat.el.setAttribute('aria-label', on ? 'ひとことを閉じる' : 'ひとこと')
-  const n = memberB.length, rr = ROOM_R - 38 - 14
-  memberB.forEach((b, i) => {
-    const a = -Math.PI / 2 + (i + 0.5) / n * Math.PI * 2
-    b.tx = on ? Math.cos(a) * rr : null; b.ty = on ? Math.sin(a) * rr : null
-  })
+  room.grow(on ? CHAT_R : ROOM_R)
+  const n = memberB.length, g = hexGrid(n, 2, MEM_R * 2 + 6)
+  const maxX = Math.max(...g.map(p => p.x)), minX = Math.min(...g.map(p => p.x))
+  const cx = CHAT_R - 18 - MEM_R - maxX
+  memberB.forEach((b, i) => { b.tx = on ? cx + g[i].x : null; b.ty = on ? g[i].y : null })
+  // 読み物の右端＝参加者の塊の左端の少し手前（部屋の要素の左上からの x）
+  chatRight = CHAT_R + cx + minX - MEM_R - 10
+  chat.style.setProperty('--chat-right', ((1 - chatRight / (CHAT_R * 2)) * 100).toFixed(1) + '%')
   room.pinned = on
-  if (on) { space.view(room.x, room.y, ROOM_R * 2 + 40); requestAnimationFrame(() => { log.scrollTop = log.scrollHeight; refit() }) }
+  if (on) {
+    space.view(room.x, room.y, CHAT_R * 2 + 40)
+    // 膨らんでいる間も行頭を合わせ直す
+    let k = 0; const tick = () => { log.scrollTop = log.scrollHeight; refit(); if (++k < 40) requestAnimationFrame(tick) }; requestAnimationFrame(tick)
+  }
 }
 ctrl.chat.el.addEventListener('click', () => chatMode(chat.hidden))
 // 他の人のひとことの見本
@@ -157,8 +171,7 @@ const ask = put(el('div', 'tone-violet', '<span class="q">「ポッポの森」�
 ask.hidden = true
 // 部屋の右上の外にぽこんと出す問いの泡。✓ ✕ は問いの泡の右下の外壁から生える（中に入れるより押しやすく、文も読みやすい）
 const ASK_R = 84, ASK_DEG = -42, ASK_D = ROOM_R + ASK_R + 10
-const askB = space.add(ask, { kind: 'slot', parent: room, r: ASK_R,
-  x: ASK_D * Math.cos(ASK_DEG * Math.PI / 180), y: ASK_D * Math.sin(ASK_DEG * Math.PI / 180) })
+const askB = space.add(ask, { kind: 'slot', parent: room, r: ASK_R, wall: { a: ASK_DEG * Math.PI / 180, d: ASK_R + 10 } })
 const yes = put(el('button', 'tone-red', '<span class="ico">✓</span>', { 'aria-label': '退出する' }))
 const no = put(el('button', '', '<span class="ico">✕</span>', { 'aria-label': 'やめる' }))
 yes.hidden = no.hidden = true
@@ -166,11 +179,10 @@ const onAsk = (deg, r = 32) => { const d = ASK_R + r + 4, a = deg * Math.PI / 18
 space.add(yes, { kind: 'slot', parent: askB, r: 32, ...onAsk(18) })
 space.add(no, { kind: 'slot', parent: askB, r: 32, ...onAsk(66) })
 let askTimer = 0
-const askAt = { x: ASK_D * Math.cos(ASK_DEG * Math.PI / 180), y: ASK_D * Math.sin(ASK_DEG * Math.PI / 180) }
 const showAsk = on => {
   yes.hidden = no.hidden = !on
   // 問いの泡が画面の外に出ないよう、部屋と問いの泡の両方が収まるところへカメラを寄せる
-  if (on) space.view(room.x + askAt.x * 0.45, room.y + askAt.y * 0.45, (ROOM_R + ASK_D + ASK_R) * 1.15)
+  if (on) { const t = askB.target(); space.view(room.x + (t.x - room.x) * 0.45, room.y + (t.y - room.y) * 0.45, (room.r * 2 + ASK_R * 2 + 20) * 1.15) }
   ask.hidden = !on; room.pinned = on; clearTimeout(askTimer); if (on) askTimer = setTimeout(() => showAsk(false), 8000) }
 ctrl.leave.el.addEventListener('click', () => showAsk(ask.hidden))
 no.addEventListener('click', () => showAsk(false))

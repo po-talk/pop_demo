@@ -98,6 +98,13 @@ export const hexHug = (n, step, deg, parentR, r, gap = 4) => {
   return cells.slice(0, n).sort((p, q) => p.y - q.y || p.x - q.x).map(({ x, y }) => ({ x, y }))
 }
 
+// 親基準の座標 (x, y) を、半径 R の親の「外壁から」の置き方 { a, d } に直す（Body の wall に渡す）。
+// cx, cy を渡すと、その点（塊の中心など）を基準に壁へ付け、(x, y) はそこからのずれとして持つ＝塊の形が崩れない
+export const toWall = (p, R, c = null) => {
+  const q = c || p, a = Math.atan2(q.y, q.x), d = Math.hypot(q.x, q.y) - R
+  return c ? { a, d, dx: p.x - c.x, dy: p.y - c.y } : { a, d }
+}
+
 // 親の外壁に沿った弧。中心角 from（度）から gap ずつ。dist＝親の中心からの距離
 export const arc = (n, dist, from, gapDeg) =>
   Array.from({ length: n }, (_, i) => {
@@ -130,6 +137,10 @@ class Body {
     this.parent = o.parent || null
     this.r = o.r || 40
     this.ox = o.x || 0; this.oy = o.y || 0       // dock/slot/inner：親の中心からの位置。float：ホーム
+    // dock/slot の置き場所を「親の外壁から」で持つとき：{ a: 角度（ラジアン）, d: 壁からの距離, dx, dy: そこからのずれ }。
+    // 親が膨らんだり縮んだりしても、壁にくっついたまま付いていく
+    this.wall = o.wall || null
+    this.targetR = null
     this.x = o.at ? o.at.x : this.ox; this.y = o.at ? o.at.y : this.oy
     this.vx = 0; this.vy = 0
     this.home = o.home ?? 0.0016                 // float：ホームへのばね
@@ -142,6 +153,7 @@ class Body {
     this.phase = Math.random() * 100
     this.visible = el.isConnected && (el.checkVisibility ? el.checkVisibility() : !!el.offsetParent)
     this.shown = this.visible                     // 一度でも見えたか（最初から隠れている泡は、隠れても弾けさせない）
+    this.shownAt = performance.now()              // 見え始めた時刻（出た直後に隠したもの＝初期化の都合は弾けさせない）
     this.burst = o.burst ?? true                  // 消えるときに弾けて小泡が散るか
     this.pop = 0                                  // 現れたときの膨らみ（0→1）
     this.dragging = false
@@ -160,8 +172,14 @@ class Body {
   // 目標の位置（dock/slot）
   target() {
     const p = this.parent
+    if (p && this.wall) {
+      const w = this.wall, d = p.r + w.d
+      return { x: p.x + Math.cos(w.a) * d + (w.dx || 0), y: p.y + Math.sin(w.a) * d + (w.dy || 0) }
+    }
     return p ? { x: p.x + this.ox, y: p.y + this.oy } : { x: this.ox, y: this.oy }
   }
+  // 半径を滑らかに変える（ひとことを開いて部屋を少し大きくする、など）
+  grow(r) { this.targetR = r; return this }
   place() {
     if (this.kind === 'slot' || this.kind === 'dock') { const t = this.target(); this.x = t.x; this.y = t.y }
     this.vx = this.vy = 0
@@ -345,8 +363,8 @@ export class Space {
     const popping = []
     for (const b of this.bodies) {
       const v = b.el.isConnected && (b.el.checkVisibility ? b.el.checkVisibility() : !!b.el.offsetParent)
-      if (v && !b.visible) { b.pop = 0; b.place(); b.shown = true; if (b.kind === 'float' && b.spawn) b.spawn(b) }
-      if (!v && b.visible && b.shown && b.burst && !this.reduce) popping.push(b)
+      if (v && !b.visible) { b.pop = 0; b.place(); b.shown = true; b.shownAt = performance.now(); if (b.kind === 'float' && b.spawn) b.spawn(b) }
+      if (!v && b.visible && b.shown && b.burst && !this.reduce && performance.now() - b.shownAt > 400) popping.push(b)
       b.visible = v
     }
     // まとめて消えるとき（絵文字の並び 16 個など）は、1 つあたりの小泡を減らす＝散りすぎない
@@ -415,6 +433,12 @@ export class Space {
     const t = this.t, calm = this.calm
     const live = this.bodies.filter(b => b.visible)
     const top = live.filter(b => b.kind !== 'inner')
+    // 0) 膨らむ・縮む
+    for (const b of live) if (b.targetR != null) {
+      const nr = b.r + (b.targetR - b.r) * (1 - Math.pow(0.84, dt))
+      b.size(Math.abs(b.targetR - nr) < 0.3 ? b.targetR : nr)
+      if (b.r === b.targetR) b.targetR = null
+    }
     // 1) それぞれの力
     for (const b of live) {
       if (b.dragging) continue
@@ -623,16 +647,21 @@ export const tips = (tipEl, root = document) => {
 // box は円の中の、縦に流れる（スクロールする）入れ物。中の各ブロック（items）について、いま見えている高さで
 // 円が切り取る幅を求め、左右の余白にする＝行頭と行末が円の縁に沿う。スクロール・追加のたびに呼ぶ。
 // ブロックは短い（ひとことは 60 字まで＝1〜3 行）ので、1 ブロック内は同じ余白で十分に円らしく見える
-export const fitCircle = (box, items, pad = 8, minFrac = 0.5) => {
+export const fitCircle = (box, items, opt = {}) => {
   // ★ブロックの「中心の高さ」で幅を決める。縁で測ると、狭める→折り返して背が伸びる→さらに狭める、が
-  //   繰り返されて 1 文字幅まで潰れる（試作で踏んだ）。最小幅も直径の minFrac に留める
-  const R = box.clientWidth / 2, cy = box.clientHeight / 2, st = box.scrollTop
-  const maxSide = R * (1 - minFrac)
+  //   繰り返されて 1 文字幅まで潰れる（試作で踏んだ）。最小幅も minW に留める
+  // 円は既定で box に内接するもの。opt.circle = { cx, cy, R }（box の左上からの座標）で別の円にもできる。
+  // opt.right は右の上限（box の左上からの x）。参加者を右に寄せて、左だけを読み物にするときに使う
+  const pad = opt.pad ?? 8, st = box.scrollTop, W = box.clientWidth
+  const c = opt.circle || { cx: W / 2, cy: box.clientHeight / 2, R: W / 2 }
+  const right = opt.right ?? W, minW = opt.minW ?? W * 0.35
   for (const it of items) {
     const mid = it.offsetTop - st + it.offsetHeight / 2
-    const dy = Math.min(R - 1, Math.abs(mid - cy))
-    const half = Math.sqrt(Math.max(0, R * R - dy * dy))
-    const side = Math.min(maxSide, Math.max(pad, R - half + pad))
-    it.style.paddingLeft = it.style.paddingRight = side.toFixed(0) + 'px'
+    const dy = Math.min(c.R - 1, Math.abs(mid - c.cy))
+    const half = Math.sqrt(Math.max(0, c.R * c.R - dy * dy))
+    let l = c.cx - half + pad, r = Math.min(c.cx + half, right) - pad
+    if (r - l < minW) { const m = (l + r) / 2; l = m - minW / 2; r = m + minW / 2 }
+    it.style.paddingLeft = Math.max(0, l).toFixed(0) + 'px'
+    it.style.paddingRight = Math.max(0, W - r).toFixed(0) + 'px'
   }
 }
