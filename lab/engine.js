@@ -1,5 +1,5 @@
 // 泡のエンジンの試作ページ。通話はしない（見た目と手触りだけ）
-import { Space, hexGrid, hexOut, hexHug, foam, calmWhileTyping, tips, fitCircle } from '../bubble.js?v=10020238'
+import { Space, hexGrid, hexOut, hexHug, foam, calmWhileTyping, tips, fitCircle } from '../bubble.js?v=10020252'
 
 const world = document.getElementById('world')
 const space = new Space(document.getElementById('viewport'), world)
@@ -174,7 +174,7 @@ const showAsk = on => {
   ask.hidden = !on; room.pinned = on; clearTimeout(askTimer); if (on) askTimer = setTimeout(() => showAsk(false), 8000) }
 ctrl.leave.el.addEventListener('click', () => showAsk(ask.hidden))
 no.addEventListener('click', () => showAsk(false))
-yes.addEventListener('click', () => { showAsk(false); fly(meB, '👋') })
+yes.addEventListener('click', () => { showAsk(false); fly(meB, '👋'); setTimeout(() => setJoined(false), 250) })
 // 他の人のリアクションの見本：ときどき誰かの泡から湧く
 setInterval(() => { if (space.calm) return; const b = memberB[1 + Math.floor(Math.random() * (memberB.length - 1))]; fly(b, REACT[Math.floor(Math.random() * REACT.length)]) }, 7000)
 
@@ -215,3 +215,30 @@ pf.querySelector('#pfName').addEventListener('input', e => { roomEl.querySelecto
 // カメラ：全体が収まるように
 const fit = () => space.view(0, 40, 1150, { now: !fit.done }); fit(); fit.done = true
 addEventListener('resize', () => fit())
+
+// ── 入室中は「部屋の中のあなた」が自分の泡。プロフィールの泡は出さない ────────────────────
+// （本番も通話中はプロフィールを触れない）。退出すると、あなたの泡が部屋から弾けて抜け、
+// プロフィールの泡が膨らんで戻る。部屋をタップすると逆の順で入る
+let joined = true
+pf.hidden = true
+const setJoined = on => {
+  joined = on
+  openAv(false)
+  if (!on) chatMode(false)
+  reacts.forEach(r => { r.el.hidden = true }); ctrl.react.el.classList.remove('tone-on')
+  meB.el.hidden = !on
+  Object.values(ctrl).forEach(c => { c.el.hidden = !on })
+  roomEl.classList.toggle('tone-room', on); roomEl.classList.toggle('tone-faint', !on)
+  roomEl.querySelector('.room-name small').textContent = (on ? people.length : people.length - 1) + '人'
+  roomEl.setAttribute('aria-label', on ? '' : 'ポッポの森に参加')
+  if (!on) {
+    // プロフィールの泡は、あなたが抜けた所（部屋の左外）に膨らむ
+    pfB.ox = pfB.x = room.x - ROOM_R - 130; pfB.oy = pfB.y = room.y + 40
+    pf.hidden = false
+    space.view(room.x - 120, room.y, ROOM_R * 2 + 360)
+  } else {
+    pf.hidden = true
+    space.view(room.x + 60, room.y + 60, ROOM_R * 2 + 260)
+  }
+}
+roomEl.addEventListener('click', e => { if (!joined && !e.target.closest('.member')) setJoined(true) })
