@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.3.0（元：ぽっと通話 v0.15.18）
+  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.3.1（元：ぽっと通話 v0.15.18）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -87,8 +87,8 @@
 <!-- デモなのでアクセス解析は入れない（本番・β の集計に混ぜない） -->
 <!-- End Cloudflare Web Analytics -->
 <!-- 泡の質感（bubble.css）とこの画面の見た目（zerog.css）。元の <style> は使わない（見た目を丸ごと差し替えたため） -->
-<link rel="stylesheet" href="bubble.css?v=11">
-<link rel="stylesheet" href="zerog.css?v=11">
+<link rel="stylesheet" href="bubble.css?v=12">
+<link rel="stylesheet" href="zerog.css?v=12">
 <!-- 見た目（昼夜）のエンジン。**モジュールの外・<style> の直後**に置く＝最初の描画より前に
      昼の色を当てるため（モジュールは描画後に走るので、そこに置くと昼でも一瞬紺が見える）。
      アプリの状態には一切触らない（読むのは localStorage の設定と時計だけ）。設定の UI は
@@ -557,7 +557,7 @@ window.__potPcs = () => [...livePcs]   // 診断・テスト用
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.3.0'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.3.1'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.15.18'
 
@@ -821,17 +821,21 @@ const shareText = () => {
   return (isBcRoom(id) ? '📣 ' : '🫖 ') + pendingRoomName() + ' - ' + who + '\n' + shareUrl()
 }
 const copyLink = async (btn, text = shareUrl()) => {
-  const original = btn.dataset.label || (btn.dataset.label = btn.textContent)  // 初回の文言を保持
+  // MOD：泡のボタンは中身（アイコン）ごと覚えて戻す。コピー中は ✓ の泡に（文字を入れると泡からはみ出す）
+  const original = btn._orig || (btn._orig = btn.innerHTML)
+  const label = btn.getAttribute('aria-label')
   try {
     await navigator.clipboard.writeText(text)
-    btn.textContent = 'コピーしました ✓'
+    btn.innerHTML = '<span class="ico">✓</span><span class="sr">コピーしました</span>'; btn.classList.add('tone-ok')
     $('share').classList.add('full')   // 何をコピーしたか確かめられるよう、この間だけ全文を見せる
     clearTimeout(btn._revert); btn._revert = setTimeout(() => {
-      btn.textContent = original
+      btn.innerHTML = original; btn.classList.remove('tone-ok')
       if (!qrShown) $('share').classList.remove('full')   // QR表示中なら開いたままにする
     }, 1600)  // 少し後に元へ
   } catch {
-    btn.textContent = '長押しでコピー: ' + shareUrl()  // 失敗時はURLを残す（長押しでコピーできるように）
+    // 失敗時：URL を長押しで選べるよう、prompt に出す（泡の中に長い URL は入らない）
+    try { prompt('このリンクをコピーしてください', text) } catch {}
+    if (label) btn.setAttribute('aria-label', label)
   }
 }
 $('copyTop').onclick = () => copyLink($('copyTop'))                 // URL だけ（Safari で開くため）
@@ -5532,7 +5536,7 @@ addEventListener('online', () => initLobby(true, true))
 // （syncShare は joinedId を参照するため、宣言前に呼ぶと TDZ で落ちる）
 syncShare()
 
-const ZG_V = '9'   // bubble.js / *.css のキャッシュ避け（変えたら上げる）
+const ZG_V = '12'   // bubble.js / *.css のキャッシュ避け（変えたら上げる）
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MOD：Zero-G の泡の配置と動き（ここから下は見た目だけ。通話のロジックには触らない）
@@ -5694,9 +5698,10 @@ function startZeroG(Z) {
     if (ask) {
       const host = lobB.get(ask.previousElementSibling?.dataset.room)
       if (host) {
+        if (syncLobby.askB && !space.bodies.includes(syncLobby.askB)) syncLobby.askB = null   // 親と一緒に外されていた
         const fresh = !syncLobby.askB || syncLobby.askB.parent !== host || !syncLobby.askB.visible
         if (!syncLobby.askB) syncLobby.askB = space.add(ask, { kind: 'slot', parent: host, r: 80, wall: { a: deg(-40), d: 86 } })
-        else { space.rebind(syncLobby.askB, ask); syncLobby.askB.parent = host }
+        else { space.rebind(syncLobby.askB, ask); syncLobby.askB.parent = host; syncLobby.askB.place() }
         ask.querySelector('#roomAskYes')?.setAttribute('aria-label', ask.querySelector('#roomAskYes').textContent)
         ask.querySelector('#roomAskNo')?.setAttribute('aria-label', 'やめる')
         host.pinned = true
@@ -5751,7 +5756,7 @@ function startZeroG(Z) {
       $('reactBtn').hidden = !j
       // 入った瞬間：プロフィールの泡がいた所に部屋の泡が膨らむ（あなたが部屋になる）
       if (j) { callB.x = callB.ox = pfB.x; callB.y = callB.oy = pfB.y; callB.size(140); callB.pop = 0 }
-      else { pfB.x = pfB.ox = callB.x; pfB.y = pfB.oy = callB.y }
+      else { pfB.x = pfB.ox = callB.x; pfB.y = pfB.oy = callB.y; if (joined !== null) $('createBox').open = false }   // 退出後は畳む
       // 招待の泡：参加前は「部屋を作る」の泡の下に、通話中は操作として部屋の外壁に
       if (j) { copyB.kind = qrB.kind = 'dock'; copyB.parent = qrB.parent = callB; ctrlSig = '' }
       else {

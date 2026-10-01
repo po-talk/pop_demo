@@ -662,7 +662,7 @@ export const tips = (tipEl, root = document) => {
   const up = () => { clearTimeout(timer); if (shownFor && !swallow) hide(); else if (shownFor) setTimeout(hide, 1400) }
   root.addEventListener('pointerup', up)
   root.addEventListener('pointercancel', () => { hide(); swallow = false })
-  root.addEventListener('click', e => { if (swallow) { e.stopPropagation(); e.preventDefault(); swallow = false } }, true)
+  root.addEventListener('click', e => { if (swallow) { e.stopPropagation(); e.preventDefault(); swallow = false } else hide() }, true)   // 押したら名前の小泡は引っ込める
   root.addEventListener('contextmenu', e => { if (target(e)) e.preventDefault() })   // 長押しのメニューを出さない
   addEventListener('scroll', hide, true)
 }

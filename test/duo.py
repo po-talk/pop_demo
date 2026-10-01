@@ -40,7 +40,15 @@ try:
         pop.wait_for('!!window.__pop && !!window.__zg', timeout=20)
         pop.wait_for("document.querySelectorAll('#lobbyList button.room').length > 0", timeout=60)
         time.sleep(2); pop.eval("window.__zg.space.view(0, 0, 1300)"); time.sleep(2); snap(pop, '0lobby')
-        pop.eval("document.querySelector('#lobbyList button.room').click()"); time.sleep(2); snap(pop, '0ask')
+        # 何度も出し直す（間に在室の描き直しを挟む）。毎回、問いの泡が部屋の泡のそばに出るか
+        GAP = ("(() => { const a = document.getElementById('roomAsk'), r = document.querySelector('#lobbyList button.room:not(.here)');"
+               " if (!a || !r) return -1; const p = a.getBoundingClientRect(), q = r.getBoundingClientRect();"
+               " return Math.round(Math.hypot(p.x + p.width/2 - q.x - q.width/2, p.y + p.height/2 - q.y - q.height/2) - (p.width + q.width)/2) })()")
+        for k in range(4):
+            pop.eval("document.querySelector('#lobbyList button.room').click()"); time.sleep(1.5)
+            g = pop.eval(GAP); print('  ask gap try', k, g, '✅' if 0 <= g < 40 else '❌')
+            if k < 3: pop.eval("document.getElementById('roomAskNo').click()"); time.sleep(6)
+        snap(pop, '0ask')
         pop.eval("document.getElementById('roomAskYes').click()")
     else:
         pop = tab('http://localhost:8000/pop_demo/' + link, True)
