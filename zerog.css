@@ -360,14 +360,14 @@ html.zg-av #avatars > button, html.zg-rx #reactions > button { display: flex; }
 .pf-grow-ico { font-size: 13cqmin; line-height: 1; }
 
 /* 物理を持たない小さな泡（文字の泡から生える ✓ ✕ ✏️ など）にも同じ質感 */
-.sprout, .bub-mini, #roomAsk > button, #leaveYes, #leaveNo {
+.sprout, .bub-mini, #roomAsk > button, #leaveYes, #leaveNo, .sprouts > button {
   border-radius: 50%; padding: 0; cursor: pointer; color: var(--ink); font: inherit; display: grid; place-items: center; box-sizing: border-box;
   border: 1.5px solid var(--rim);
   background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.32) 0%, rgba(255,255,255,.07) 62%, rgba(147,197,253,.26) 100%);
   box-shadow: inset 0 0 12px rgba(255,255,255,.25), 0 6px 18px rgba(0,0,0,.4); container-type: size; animation: inflate .4s cubic-bezier(.34,1.56,.64,1) both; }
 .sprout.tone-red, #leaveYes, #roomAskYes { background: radial-gradient(circle at 35% 30%, rgba(251,113,133,.45) 0%, rgba(190,18,60,.2) 70%, rgba(225,29,72,.45) 100%); border-color: rgba(251,113,133,.8); }
 .sprout.tone-ok, #tagSend { background: radial-gradient(circle at 35% 30%, rgba(74,222,128,.42) 0%, rgba(21,128,61,.18) 70%, rgba(34,197,94,.42) 100%); border-color: rgba(134,239,172,.8); }
-.sprout .ico { font-size: 46cqmin; }
+.sprout .ico, .sprouts > button .ico { font-size: 46cqmin; }
 #leaveYes .ico, #leaveNo .ico { font-size: 44cqmin; }
 /* 話題の「つける／変える」：文字は JS が書き換えるので、見た目は ✏️ に固定（名前は長押しで） */
 #tagEdit { font-size: 0; }
@@ -389,3 +389,9 @@ html.zg-av #avatars > button, html.zg-rx #reactions > button { display: flex; }
   -webkit-mask-image: linear-gradient(transparent 6%, #000 14%, #000 64%, transparent 72%); mask-image: linear-gradient(transparent 6%, #000 14%, #000 64%, transparent 72%); }
 .ignore-actions { bottom: 7%; }
 #roomAsk > #roomAskYes { background: radial-gradient(circle at 35% 30%, rgba(74,222,128,.45) 0%, rgba(21,128,61,.2) 70%, rgba(34,197,94,.45) 100%); border-color: rgba(134,239,172,.85); }
+
+/* お知らせの列は、左上の状態の泡の右から（狭い画面で重ねない） */
+#notices { left: calc(max(10px, env(safe-area-inset-left)) + 100px); right: max(10px, env(safe-area-inset-right)); transform: none; width: auto; }
+#entryActions > button { width: 38%; height: 38%; }
+#entryActions > button:nth-child(1) { left: 80%; top: 58%; }
+#entryActions > button:nth-child(2) { left: 50%; top: 86%; }
