@@ -5876,7 +5876,25 @@ function startZeroG(Z) {
   addEventListener('resize', () => setTimeout(view, 100))
   syncMembers(); syncLobby()
   view(); space.view(pfB.x + 40, pfB.y + 40, 520, { now: true })
-  window.__zg = { space, view }   // 試験・調整用
+  // 撮影用：架空の部屋をロビーに浮かべる（スクリーンショット・紹介画像のため。通信は一切しない＝自分の画面にだけ出る）
+  // rooms: [{ name, people: [[emoji, name, muted?], ...], talk?: 0-3, bc?: true, tag? }]
+  let demoTimer = 0
+  const demoRooms = rooms => {
+    clearInterval(demoTimer)
+    const put = () => {
+      presences.forEach((v, k) => { if (String(k).startsWith('demo:')) presences.delete(k) })
+      if (!rooms) { renderLobby(); return }
+      rooms.forEach((r, i) => {
+        const id = (r.bc ? 'demo' + i + 'xxxxxxxxxxx~pk~' + 'D'.repeat(22) : 'demo' + i + 'xxxxxxxxxxx').slice(0, r.bc ? 42 : 16)
+        r.people.forEach(([emoji, name, muted], j) => presences.set('demo:' + i + ':' + j, {
+          room: id, rn: r.name, name, emoji, muted: !!muted, stage: ['🌱', '🌿', '🌷', '🌳'][j % 4], elapsed: 600 + i * 900, ts: Date.now(),
+          talk: j === 0 ? (r.talk || 0) : 0, tag: r.tag || '', tagBy: r.tag ? name : '', bo: !!r.bc && j === 0, tt: false }))
+      })
+      renderLobby()
+    }
+    put(); if (rooms) demoTimer = setInterval(put, 4000)
+  }
+  window.__zg = { space, view, demoRooms }   // 試験・調整・撮影用
 }
 
 // MOD：外から状態を読む口（test/interop.py 用）。見た目を作り替えても同じ物差しで測れるよう、
