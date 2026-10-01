@@ -88,12 +88,16 @@ const fly = (from, e) => {
 // 退出：確認は 2 つの泡（✓ と ✕）＋問いの泡
 const ask = put(el('div', 'tone-violet', '<span class="q">「ポッポの森」から退出しますか？</span>', { id: 'ask' }))
 ask.hidden = true
-const askB = space.add(ask, { kind: 'slot', parent: room, r: 92, x: 0, y: 0 })
+// 置き場所は親（部屋）の右上の外側に固定。中の参加者と重ならないので読みやすい。✓ ✕ は問いの泡の右の外壁に
+const ASK_R = 84, ASK_DEG = -42, ASK_D = ROOM_R + ASK_R + 10
+const askB = space.add(ask, { kind: 'slot', parent: room, r: ASK_R,
+  x: ASK_D * Math.cos(ASK_DEG * Math.PI / 180), y: ASK_D * Math.sin(ASK_DEG * Math.PI / 180) })
 const yes = put(el('button', 'tone-red', '<span class="ico">✓</span>', { 'aria-label': '退出する' }))
 const no = put(el('button', '', '<span class="ico">✕</span>', { 'aria-label': 'やめる' }))
 yes.hidden = no.hidden = true
-space.add(yes, { kind: 'slot', parent: askB, r: 34, x: -46, y: 108 })
-space.add(no, { kind: 'slot', parent: askB, r: 34, x: 46, y: 108 })
+const onAsk = (deg, r = 34) => { const d = ASK_R + r + 6, a = deg * Math.PI / 180; return { x: d * Math.cos(a), y: d * Math.sin(a) } }
+space.add(yes, { kind: 'slot', parent: askB, r: 34, ...onAsk(-15) })
+space.add(no, { kind: 'slot', parent: askB, r: 34, ...onAsk(35) })
 let askTimer = 0
 const showAsk = on => { ask.hidden = yes.hidden = no.hidden = !on; room.pinned = on; clearTimeout(askTimer); if (on) askTimer = setTimeout(() => showAsk(false), 8000) }
 ctrl.leave.el.addEventListener('click', () => showAsk(ask.hidden))
