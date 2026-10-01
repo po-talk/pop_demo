@@ -53,11 +53,11 @@
      コンパイルに要る。声のモデルは v0.14.52 から repo 同梱（models/）＝'self' で足りる（huggingface.co の許可は外した）。 -->
 <meta http-equiv="Content-Security-Policy" content="
   default-src 'none';
-  script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://esm.sh https://cdn.jsdelivr.net https://unpkg.com;
+  script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' https://esm.sh https://static.cloudflareinsights.com https://cdn.jsdelivr.net https://unpkg.com;
   style-src 'self' 'unsafe-inline';
   img-src 'self' data:;
   media-src 'self' blob:;
-  connect-src 'self' https://esm.sh https://pot-turn.itsuma-kuramoto.workers.dev https://cdn.jsdelivr.net https://unpkg.com wss://relay.primal.net wss://purplerelay.com wss://bucket.coracle.social wss://yabu.me/v2 wss://x.kojira.io wss://relay.notoshi.win wss://relay.mostr.pub;
+  connect-src 'self' https://esm.sh https://cloudflareinsights.com https://pot-turn.itsuma-kuramoto.workers.dev https://cdn.jsdelivr.net https://unpkg.com wss://relay.primal.net wss://purplerelay.com wss://bucket.coracle.social wss://yabu.me/v2 wss://x.kojira.io wss://relay.notoshi.win wss://relay.mostr.pub;
   manifest-src 'self';
   base-uri 'self';
   form-action 'none';
@@ -90,7 +90,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <!-- Cloudflare Web Analytics（Cookie不使用・匿名のアクセス測定） -->
-<!-- デモなのでアクセス解析は入れない（本番・β の集計に混ぜない） -->
+<!-- Cloudflare Web Analytics（Cookie不使用・匿名のアクセス測定）。本番と同じトークン＝同じ集計に入る。
+     ダッシュボードではパス（/pop_demo/）で分けて見られる。本番の数字を出すときは /pop_demo/ を除くこと -->
+<script type="module" src="https://static.cloudflareinsights.com/beacon.min.js" data-cf-beacon='{"token": "e60980c17cde470c8eaf73907e312feb"}'></script>
 <!-- End Cloudflare Web Analytics -->
 <!-- 泡の質感（bubble.css）とこの画面の見た目（zerog.css）。元の <style> は使わない（見た目を丸ごと差し替えたため） -->
 <link rel="stylesheet" href="bubble.css?v=14">
@@ -494,6 +496,7 @@
     <p class="help-credit">🗣 読み上げの声と顔：フリー素材キャラクター「つくよみちゃん」<a href="https://tyc.rei-yumesaki.net/" target="_blank" rel="noopener">tyc.rei-yumesaki.net</a>（声：つくよみちゃんコーパス／Illustration by 夢前黎）。音声合成は <a href="https://github.com/ayutaz/piper-plus" target="_blank" rel="noopener">piper-plus</a>（MIT）</p>
   </details>
 
+  <p class="help-credit">📊 このサイトはアクセス測定に <a href="https://www.cloudflare.com/web-analytics/" target="_blank" rel="noopener">Cloudflare Web Analytics</a> を利用しています（Cookie不使用・個人を特定する情報は取得しません）。</p>
   <label class="help-hide"><input type="checkbox" id="helpHide"> 今後表示しない</label>
   </div>
   <button id="helpClose" class="help-close" type="button">閉じる</button>
