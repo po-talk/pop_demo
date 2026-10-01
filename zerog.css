@@ -172,8 +172,8 @@
 .opt .ico { font-size: 48cqmin; }
 #panMail { display: flex; flex-direction: column; align-items: center; justify-content: center; }
 #panMail[hidden] { display: none; }
-.mail-head { margin-top: 12%; font-size: 13px; font-weight: 700; text-align: center; max-width: 70%; }
-.mail-body { width: 76%; max-height: 46%; overflow-y: auto; scrollbar-width: none; font-size: 12px; line-height: 1.5; touch-action: pan-y; }
+.mail-head { margin-top: 12%; font-size: 14px; font-weight: 700; text-align: center; max-width: 70%; }
+.mail-body { width: 76%; max-height: 46%; overflow-y: auto; scrollbar-width: none; font-size: 13px; line-height: 1.5; touch-action: pan-y; }
 .mail-form { display: flex; align-items: center; gap: 6px; width: 70%; margin-bottom: 12%; }
 .mail-form[hidden] { display: none; }
 .mail-form input { flex: 1; min-width: 0; }

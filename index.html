@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.2.0（元：ぽっと通話 v0.15.18）
+  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.3.0（元：ぽっと通話 v0.15.18）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -87,8 +87,8 @@
 <!-- デモなのでアクセス解析は入れない（本番・β の集計に混ぜない） -->
 <!-- End Cloudflare Web Analytics -->
 <!-- 泡の質感（bubble.css）とこの画面の見た目（zerog.css）。元の <style> は使わない（見た目を丸ごと差し替えたため） -->
-<link rel="stylesheet" href="bubble.css?v=8">
-<link rel="stylesheet" href="zerog.css?v=8">
+<link rel="stylesheet" href="bubble.css?v=9">
+<link rel="stylesheet" href="zerog.css?v=9">
 <!-- 見た目（昼夜）のエンジン。**モジュールの外・<style> の直後**に置く＝最初の描画より前に
      昼の色を当てるため（モジュールは描画後に走るので、そこに置くと昼でも一瞬紺が見える）。
      アプリの状態には一切触らない（読むのは localStorage の設定と時計だけ）。設定の UI は
@@ -557,7 +557,7 @@ window.__potPcs = () => [...livePcs]   // 診断・テスト用
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.2.0'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.3.0'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.15.18'
 
@@ -5532,7 +5532,7 @@ addEventListener('online', () => initLobby(true, true))
 // （syncShare は joinedId を参照するため、宣言前に呼ぶと TDZ で落ちる）
 syncShare()
 
-const ZG_V = '8'   // bubble.js / *.css のキャッシュ避け（変えたら上げる）
+const ZG_V = '9'   // bubble.js / *.css のキャッシュ避け（変えたら上げる）
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MOD：Zero-G の泡の配置と動き（ここから下は見た目だけ。通話のロジックには触らない）
@@ -5588,7 +5588,7 @@ function startZeroG(Z) {
   $('pfEmoji').addEventListener('click', () => { if (!call.joinedId) setAv(!html.classList.contains('zg-av')) })
   $('createBtn').addEventListener('click', () => {
     const box = $('createBox'); box.open = !box.open
-    if (box.open) space.view(pfB.x + 150, pfB.y + 40, 680)
+    if (box.open) space.view(pfB.x + 210, pfB.y + 50, 800)
   })
 
   // ── 通話中：部屋の泡 ───────────────────────────────────────────
@@ -5738,7 +5738,7 @@ function startZeroG(Z) {
       const R = callB.targetR ?? callB.r
       if (call.tab === 'settings' || call.tab === 'mail') space.view(callB.x - PANEL_R * .9, callB.y, (R + PANEL_R) * 2 + 120)
       else space.view(callB.x + 40, callB.y + 30, R * 2 + CTRL_R * 7)
-    } else space.view(pfB.x + ($('createBox').open ? 150 : 40), pfB.y + 40, $('createBox').open ? 680 : 520)
+    } else space.view(pfB.x + ($('createBox').open ? 210 : 40), pfB.y + 50, $('createBox').open ? 800 : 520)
   }
   space.onFrame = () => {
     tick++

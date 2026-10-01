@@ -13,5 +13,7 @@
 - デザインの参考：`docs/bubble_mock.html`
 - 手元で試す：`python3 test/serve.py`（`/` に本番の画面、`/pop_demo/` にこの版を、本番と同じ並びで配ります）
 - 相互通話テスト：`python3 test/interop.py`（本番の画面とお試し版を同じ部屋に入れ、声が双方向に届くかを確かめます）
+- 写しながら確かめる：`test/duo.py`（2 人の通話・ひとこと・設定・リアクション・無視・QR・話題・ロビーから入る）、`test/bcast.py --role owner|listener`（配信部屋：通話希望・許可・おたより）
+- 泡のエンジンの試作：`lab/engine.html`
 
 ライセンス：MIT（`LICENSE`）。第三者ソフトの表示は `THIRD_PARTY_NOTICES.md`。
