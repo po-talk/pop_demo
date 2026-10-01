@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.4.2（元：ぽっと通話 v0.15.18）
+  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.4.3（元：ぽっと通話 v0.15.18）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -577,7 +577,7 @@ window.__potPcs = () => [...livePcs]   // 診断・テスト用
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.4.2'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.4.3'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.15.18'
 
@@ -1547,6 +1547,8 @@ const renderTabs = () => {
     $(tabId).setAttribute('aria-selected', String(on))
     $(tabId).tabIndex = on ? 0 : -1        // 矢印キーで移る（Tab キーはタブ列を1つとして扱う）
     $(panId).hidden = !on
+    if (key === 'chat') $(tabId).setAttribute('aria-label', on ? 'ひとことを閉じる' : 'ひとこと')
+    if (key === 'mail') $(tabId).setAttribute('aria-label', on ? 'おたよりを閉じる' : 'おたより')
     if (key === 'settings') {
       $(tabId).setAttribute('aria-label', on ? '設定（もう一度押すと閉じる）' : '設定')
       $(tabId).title = on ? '設定を閉じる' : '設定'
@@ -1564,6 +1566,8 @@ const selectTab = key => {
       renderTabs()
       return
     }
+    // MOD：💬 ひとこと・📮 おたよりも、もう一度押すと閉じる（泡の操作はどれも出し入れのトグル）
+    if (key !== 'members') { call.tab = 'members'; renderTabs(); return }
   } else if (call.tab !== 'settings') {
     call.prevTab = call.tab   // 直前にいたタブ（設定以外）を控えておく
   }

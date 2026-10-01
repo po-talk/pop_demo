@@ -79,6 +79,7 @@ try:
             up.eval("(() => { const t = document.getElementById('chatText'); t.value = 'この部屋、泡が浮いてて楽しいですね。ひとことが円に沿って並ぶのを見てみたい'; document.getElementById('chatSend').click() })()")
             pop.eval("(() => { const t = document.getElementById('chatText'); t.value = 'ほんとだ、ふわふわしてる'; document.getElementById('chatSend').click() })()")
             time.sleep(1.5); snap(pop, '3chat'); pop.eval("document.getElementById('tabChat').click()"); time.sleep(1.5)
+            print('  chat toggles closed:', pop.eval("document.getElementById('panChat').hidden && !document.getElementById('callBub').classList.contains('chat-mode')"))
         if st == 'settings':
             pop.eval("document.getElementById('tabSettings').click()"); time.sleep(2.5); snap(pop, '4settings'); pop.eval("document.getElementById('tabSettings').click()"); time.sleep(1.5)
         if st == 'ignore':
