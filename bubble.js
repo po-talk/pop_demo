@@ -303,19 +303,32 @@ export class Space {
   }
 
   // ── 泡のドラッグ（弾く） ─────────────────────────────────────────
+  // 要素ごとには pointerdown だけを付け、動かす・離すは Space 全体で 1 組（_dragGlobal）。
+  // 要素が作り直されても（rebind）window にリスナーが溜まらない
   _drag(b) {
-    let st = null
+    if (b.el._zgDrag) return
+    b.el._zgDrag = true
     b.el.addEventListener('pointerdown', e => {
       if (e.target.closest('input, textarea, select, .no-drag')) return
       if (e.button > 0) return
+      const body = this.bodyOf(e.currentTarget)
+      if (!body || !body.draggable) return
       // 内側の泡を掴んだら、外側の泡は掴まない
-      if (e.target.closest('.bub') !== b.el) return
-      st = { id: e.pointerId, x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, hist: [] }
-      b.wasDragged = false
+      if (e.target.closest('.bub') !== body.el) return
+      this._dragSt = { b: body, id: e.pointerId, x: e.clientX, y: e.clientY, x0: e.clientX, y0: e.clientY, hist: [] }
+      body.wasDragged = false
     })
+    // ドラッグした直後の click は捨てる（弾いたつもりがボタンを押していた、を防ぐ）
+    b.el.addEventListener('click', e => {
+      const body = this.bodyOf(e.currentTarget)
+      if (body && body.wasDragged) { e.stopPropagation(); e.preventDefault(); body.wasDragged = false }
+    }, true)
+    if (this._dragGlobal) return
+    this._dragGlobal = true
     addEventListener('pointermove', e => {
+      const st = this._dragSt
       if (!st || e.pointerId !== st.id) return
-      const s = this.cam.s
+      const b = st.b, s = this.cam.s
       if (!b.dragging && Math.hypot(e.clientX - st.x0, e.clientY - st.y0) > 8) {
         b.dragging = true; b.wasDragged = true
         b.el.classList.add('dragging')
@@ -328,21 +341,29 @@ export class Space {
       st.hist.push({ dx, dy }); if (st.hist.length > 5) st.hist.shift()
     })
     const end = e => {
+      const st = this._dragSt
       if (!st || e.pointerId !== st.id) return
+      const b = st.b
       if (b.dragging && st.hist.length) {
         const n = st.hist.length
         b.vx = clamp(st.hist.reduce((a, h) => a + h.dx, 0) / n * 0.8, -14, 14)
         b.vy = clamp(st.hist.reduce((a, h) => a + h.dy, 0) / n * 0.8, -14, 14)
       }
       b.dragging = false; b.el.classList.remove('dragging')
-      st = null
+      this._dragSt = null
     }
     addEventListener('pointerup', end)
     addEventListener('pointercancel', end)
-    // ドラッグした直後の click は捨てる（弾いたつもりがボタンを押していた、を防ぐ）
-    b.el.addEventListener('click', e => {
-      if (b.wasDragged) { e.stopPropagation(); e.preventDefault(); b.wasDragged = false }
-    }, true)
+  }
+
+  // 泡の要素を差し替える（元の画面が一覧を作り直すたびに呼ぶ）。位置・速度はそのまま引き継ぐ
+  rebind(b, el) {
+    if (b.el === el) return
+    b.el = el
+    el.classList.add('bub', 'bub-' + b.kind)
+    b.size(b.r)
+    if (b.draggable) this._drag(b)
+    this._renderOne(b)
   }
 
   // ── 1 コマ ───────────────────────────────────────────────────────
@@ -400,15 +421,16 @@ export class Space {
     this.drops = this.drops.filter(d => {
       d.t += dt
       // はじめは勢いよく散り、すぐにゆっくり漂う速さまで落ちる（止まりはしない＝そのうち画面の外へ）
-      const sp = Math.hypot(d.vx, d.vy), floor = 0.45
+      const sp = Math.hypot(d.vx, d.vy), floor = 0.9
       const damp = sp > floor ? Math.pow(0.95, dt) : 1
       d.vx = d.vx * damp + Math.sin(this.t * 1.3 + d.ph) * 0.006 * dt
       d.vy = d.vy * damp - 0.004 * dt                 // ほんの少し浮いていく
       d.x += d.vx * dt; d.y += d.vy * dt
       const sx = d.x * c.s + c.x, sy = d.y * c.s + c.y
       const off = sx < -40 || sy < -40 || sx > W + 40 || sy > H + 40
-      if (off || d.t > 60 * 14) { d.el.remove(); return false }   // 画面の外に出たら（最長 14 秒で）消す
+      if (off || d.t > 60 * 9) { d.el.remove(); return false }   // 画面の外に出たら（最長 9 秒で）消す
       d.el.style.transform = `translate3d(${(d.x - d.r).toFixed(1)}px,${(d.y - d.r).toFixed(1)}px,0)`
+      if (d.t > 60 * 7) d.el.style.opacity = Math.max(0, 1 - (d.t - 60 * 7) / 120).toFixed(2)   // 最後の 2 秒で薄れる
       return true
     })
   }
@@ -547,9 +569,11 @@ export class Space {
   }
 
   _render() {
+    for (const b of this.bodies) if (b.visible) this._renderOne(b)
+  }
+  _renderOne(b) {
     const t = this.t, calm = this.calm
-    for (const b of this.bodies) {
-      if (!b.visible) continue
+    {
       // 現れるとき：ほぼ 0 から膨らみ、少し行き過ぎてから落ち着く（シャボン玉を吹いたときの「ぷくっ」）
       if (b.pop < 1) b.pop = Math.min(1, b.pop + (this.reduce ? 1 : 0.055))
       const pop = b.pop < 1 ? inflate(b.pop) : 1

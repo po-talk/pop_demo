@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.1.0（元：ぽっと通話 v0.15.18）
+  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.2.0（元：ぽっと通話 v0.15.18）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -86,758 +86,9 @@
 <!-- Cloudflare Web Analytics（Cookie不使用・匿名のアクセス測定） -->
 <!-- デモなのでアクセス解析は入れない（本番・β の集計に混ぜない） -->
 <!-- End Cloudflare Web Analytics -->
-<style>
-  /* ── 色は全部ここの変数から取る（v0.11.0）。値は**夜＝現行の紺**。
-     昼（ミルクティー／朝の空）と時刻による補間は、この <style> の直後にある小さなスクリプトが
-     documentElement.style に流し込む（最初の描画より前に当てるため、モジュールの外に置いてある）。
-     ★色を直に書かないこと。書いた場所は昼になっても紺のまま残る。
-     ★「墨」（文字・しるし）と「面」（地・パネル・枠）で変数を分けてある。面は時刻で滑らかに
-       混ざるが、墨は面の明るさで一気に入れ替わる（中間の灰色の文字を作らないため）。 */
-  :root{ color-scheme:dark;
-    /* 面 */
-    --g1:#1c2b48; --g2:#0d1424; --g3:#090e1a;                   /* 地（右上の光 → 中 → 端） */
-    --card:rgba(255,255,255,.04); --card-border:rgba(255,255,255,.09);   /* カード・ロビーの膜 */
-    --panel:#0d1526;                                            /* 不透明な面（状態・入力欄・参加者の行・部屋） */
-    --chip:#1d2740; --chip-hover:#26324f; --chip-active:#2f3d5f; /* 小さなボタン（コピー・QR・つなぎ直す・リアクション） */
-    --mute:#2a3550;                                             /* ミュート・閉じる・送信 */
-    --border:rgba(255,255,255,.12); --border-soft:rgba(255,255,255,.10); --border-faint:rgba(255,255,255,.08);
-    --tab-on:#131d30; --accent-dim:#0c2b2a; --dialog:#111a2e; --log:#0a121f;
-    --glass:rgba(34,47,78,.55); --glass-border:rgba(255,255,255,.18); --glass-shadow:rgba(0,0,0,.3);   /* ヘルプの ❌（ガラス風） */
-    --join-bg:#00e5cc;                                          /* 参加する・マイクを使う（昼夜で変えない＝この色が顔） */
-    /* 墨 */
-    --text:#eef2f8; --sub:#9fb0c7; --note:#6f7f96; --ver:#4a5a72; --tab:#8fa0b8; --body:#cfe0f0; --chip-fg:#cfe;
-    --link:#00e5cc;                                             /* ティールの**文字**（昼は暗くしないと読めない） */
-    --accent:#00e5cc; --accent-soft:#8fe9de; --accent-glow:rgba(0,229,204,.45);   /* ティールの**しるし**（点・下線・枠） */
-    --join-fg:#063;
-    --warn:#ffd24d; --warn-bg:rgba(255,210,77,.10); --warn-border:rgba(255,210,77,.35);
-    --red:#ef5a3c; --red-glow:rgba(239,90,60,.30); --relay:#f6821f;
-    --placeholder:#5a6b83; --legal:#5f6f86; --legal-link:#7a90ad; --dot-idle:#48507a }
-  /* 昼夜の切り替えはページ全体のクロスフェード（View Transitions・対応ブラウザだけ。未対応なら瞬時）。
-     出すのは「選び直した」「端末のダークモードが変わった」「夜明け・日没をまたいだ」の3つだけで、
-     1分ごとの小さな変化では出さない（毎分ページを止めるわけにいかない）。判定はエンジン側 */
-  ::view-transition-old(root), ::view-transition-new(root){ animation-duration:.5s }
-  *{ box-sizing:border-box }
-  /* ★hidden 属性は display を書いた要素でも必ず勝つ（!important）。以前は要素ごとに
-     `.x[hidden]{display:none}` を書いていて、書き忘れで「消えない」事故を 4 度踏んだ（2026-08-15 ほか）。
-     これ1行で終わり。hidden を付けたまま CSS で見せる使い方はしない */
-  [hidden]{ display:none !important }
-  body{ margin:0; font-family:system-ui,"Hiragino Sans",sans-serif;
-    background:radial-gradient(1000px 700px at 80% -10%,var(--g1),var(--g2) 60%,var(--g3));
-    color:var(--text); min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:24px }
-  .banner{ width:100%; max-width:440px; margin-bottom:14px; padding:12px 14px; border-radius:12px;
-    background:#4a3a10; border:1px solid #a9871f; color:#ffe9b0; font-size:13px; line-height:1.6 }
-  .banner button{ margin-top:8px; width:100%; padding:9px; border:0; border-radius:8px; background:#ffd24d; color:#3a2c00; font-weight:700; cursor:pointer }
-  .card{ width:100%; max-width:440px; background:var(--card);
-    border:1px solid var(--card-border); border-radius:18px; padding:28px }
-  h1{ margin:0 0 4px; font-size:22px }
-  h1 span{ white-space:nowrap }  /* 「ぽっと通話」と「〈実験版〉」の境目でだけ折り返す */
-  p.sub{ margin:0 0 20px; color:var(--sub); font-size:14px; line-height:1.6 }
-  .head-row{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px }
-  .help-btn{ flex:none; width:auto; margin:2px 0 0; padding:6px 12px; font-size:12px; font-weight:700;
-    background:var(--chip); color:var(--chip-fg); border-radius:999px }
-  /* ヘルプはモーダル（<dialog>）。背景を半透明で覆い、中央にポップアップ。長いので内部スクロール */
-  .help-dialog{ border:0; border-radius:16px; padding:22px; width:calc(100% - 36px); max-width:420px;
-    max-height:86vh; overflow-y:auto; overscroll-behavior:contain;
-    background:var(--dialog); color:var(--text); box-shadow:0 24px 70px rgba(0,0,0,.55) }
-    /* overscroll-behavior:contain … 本文の端まで送っても背面ページへスクロールが連鎖しない */
-  .help-dialog::backdrop{ background:rgba(5,8,15,.62); backdrop-filter:blur(2px) }
-  /* 右上の❌。本文が長く下の「閉じる」まで届かないので、sticky でスクロール中も出しておく。
-     float:right で h2 が横に回り込み、見出しの行を潰さない。 */
-  .help-x{ position:sticky; top:6px; float:right; z-index:2;
-    width:34px; height:34px; margin:-6px -6px 0 10px; padding:0;
-    display:flex; align-items:center; justify-content:center;
-    background:var(--chip); border:1px solid var(--border-faint); color:var(--body);
-    border-radius:999px; font-size:15px; line-height:1 }
-  /* ガラス風（背後の本文が透けてぼける）。未対応ブラウザは上の不透明のままなので文字が透けない */
-  @supports ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
-    .help-x{ background:var(--glass); border-color:var(--glass-border); color:var(--text);
-      -webkit-backdrop-filter:blur(10px) saturate(1.5); backdrop-filter:blur(10px) saturate(1.5);
-      box-shadow:0 2px 10px var(--glass-shadow) }
-  }
-  .help-dialog h2{ margin:0 0 12px; font-size:18px }
-  .help-dialog h3{ margin:22px 0 8px; font-size:14px; color:var(--link) }
-  .help-dialog p{ margin:0 0 12px; font-size:13.5px; color:var(--body); line-height:1.75 }
-  .help-dialog ul, .help-dialog ol{ margin:0 0 12px; padding-left:1.3em; font-size:13.5px; color:var(--body); line-height:1.65 }
-  .help-dialog li{ margin:4px 0 }
-  .help-dialog a{ color:var(--link) }
-  /* 案内ページへの導線（v0.14.25・ヘルプのダイエット：詳しい説明は potalk.app/start/ 以下へ移した）。
-     通話中に同じタブで飛ぶと通話が切れるので、**必ず別タブ**（target=_blank） */
-  .help-links{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:0 0 14px }
-  .help-links a{ display:flex; flex-direction:column; gap:2px; padding:10px 12px; border-radius:12px; background:var(--chip); color:var(--text); text-decoration:none; border:1px solid var(--border-soft) }
-  .help-links a:hover{ background:var(--chip-hover) }
-  .help-links a{ position:relative; padding-right:30px }
-  .help-links a::after{ content:''; position:absolute; right:10px; top:11px; width:14px; height:14px; opacity:.55;
-    background:currentColor; -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h6v6'/%3E%3Cpath d='M10 14 21 3'/%3E%3Cpath d='M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5'/%3E%3C/svg%3E") center/contain no-repeat;
-    mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 3h6v6'/%3E%3Cpath d='M10 14 21 3'/%3E%3Cpath d='M21 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5'/%3E%3C/svg%3E") center/contain no-repeat }
-  .help-links b{ font-size:14px } .help-links span{ font-size:12px; color:var(--note) }
-  .help-links-note{ font-size:12px; color:var(--note); margin:-8px 0 14px !important }
-  .help-dialog code{ background:var(--panel); padding:1px 5px; border-radius:5px; font-size:12px }
-  .help-dialog p.help-sub{ margin:12px 0 3px; font-size:12px; font-weight:700; color:var(--sub) }
-  .help-dialog p.help-tip{ background:var(--panel); border:1px solid var(--border-faint); border-radius:10px; padding:10px 12px; font-size:12.5px; line-height:1.7 }
-  .help-dialog p.help-warn{ color:var(--warn); font-weight:700; font-size:14.5px }
-  /* 見出しごとに開閉するアコーディオン（畳んだ状態で開くので「閉じる」も見つけやすい） */
-  .help-sec{ border-top:1px solid var(--border-faint) }
-  /* 開いた節は本文ごと背景を敷いてカード化。バーが「押せる見出し」だと分かり、もう一度押せば閉じる。
-     モーダル余白(22px)ぶん外へ広げて全幅に。角丸のぶん左右にわずかなパディングを戻す */
-  /* 開いた節は控えめに外へ広げてカード化。本文の左右パディングは触らない
-     （リストの padding-left:1.3em を打ち消すと箇条書きの記号が左端で切れるため） */
-  .help-sec[open]{ background:var(--card); border-top-color:transparent;
-    margin:0 -12px; padding:0 12px; border-radius:12px }
-  .help-sec > summary{ list-style:none; cursor:pointer; display:flex; align-items:center;
-    padding:12px 2px; font-size:14px; font-weight:700; color:var(--link) }
-  /* 開いた見出しはバーごとハイライト。本文(.04)より濃い帯にして、押せる見出しだと際立たせる。
-     パディングを増やしたぶん左右に負マージンを与え、文字位置を閉じたとき(padding 2px)と揃える＝開閉で動かない */
-  .help-sec[open] > summary{ padding:12px 12px; margin:0 -10px 6px;
-    background:rgba(0,229,204,.14); border-radius:10px }
-  .help-sec > summary::-webkit-details-marker{ display:none }
-  .help-sec > summary::after{ content:'▾'; margin-left:auto; font-size:12px; color:var(--sub); transition:transform .15s }
-  .help-sec[open] > summary::after{ transform:rotate(180deg) }
-  .help-sec > *:not(summary):first-of-type{ margin-top:2px }
-  .help-sec > *:last-child{ margin-bottom:10px }
-  .help-dialog p.help-credit{ font-size:12.5px; color:var(--sub) }
-  .help-hide{ display:flex; align-items:center; gap:8px; margin:20px 0 12px; font-size:13px; color:var(--sub); cursor:pointer }
-  .help-hide input{ width:auto; margin:0; padding:0; accent-color:var(--accent) }
-  .help-close{ width:100%; margin:0; padding:12px; background:var(--mute); color:var(--text); border-radius:10px; font-weight:700 }
-  /* 無視の初回説明（ヘルプと同じ器・短いので内部スクロールは要らない） */
-  .ignore-dialog{ max-width:380px }
-  .ignore-dialog h2{ font-size:16px }
-  .ignore-actions{ display:flex; gap:10px; margin-top:6px }
-  .ignore-actions button{ flex:1; width:auto; margin:0; padding:11px; font-size:14px; border-radius:10px }
-  #ignoreYes{ background:var(--red); color:#fff }
-  #ignoreNo{ background:var(--mute); color:var(--text) }
-  /* 共有アクション：コピーとQRを横並び */
-  .share-actions{ display:flex; gap:8px }
-  .share-actions button{ flex:1; width:auto }
-  /* QRコード（参加者リストの下・共有リンクの上にトグル表示）。白背景でスキャンしやすく */
-  .qr-inline{ margin:0 0 12px }
-  .qr-img{ background:#fff; border-radius:12px; padding:14px; display:flex; justify-content:center; align-items:center;
-    min-height:120px; color:#333; font-size:13px }
-  .qr-img svg{ width:min(60vw,200px); height:auto; display:block }
-  .qr-room{ margin-top:8px; text-align:center; font-size:13px; color:var(--body); word-break:break-all }
-  label{ display:block; font-size:13px; color:var(--sub); margin:14px 0 6px }
-  /* 文字数カウンタ：ラベルの右端に添える。上限超過は色で知らせる（超えた分は参加時に切られるため） */
-  .char-count{ font-size:12px; color:var(--note); font-variant-numeric:tabular-nums }
-  .char-count.over{ color:var(--warn); font-weight:700 }
-  input{ width:100%; padding:12px 14px; border-radius:10px; border:1px solid var(--border);
-    background:var(--panel); color:var(--text); font-size:16px }
-  /* touch-action:manipulation ＝ **ダブルタップによるズームだけを止める**（スクロールや
-     ピンチ操作は残る）。素早く2回押せるボタン（リアクション等）で、2回目がズームに
-     化けるのを防ぐ。ボタンは元々ズームの対象ではないので全部に効かせてよい。
-     ※ viewport の user-scalable=no は使わないこと（拡大できないと困る人がいる） */
-  button{ width:100%; margin-top:12px; padding:14px; border:0; border-radius:12px; font-size:16px;
-    font-weight:700; cursor:pointer; touch-action:manipulation; -webkit-tap-highlight-color:transparent }
-  #join{ background:var(--join-bg); color:var(--join-fg); display:flex; align-items:center; justify-content:center; gap:9px }
-  #join svg{ width:22px; height:22px; flex:none }
-  #unlock{ background:#ffd24d; color:#3a2c00; display:none }
-  #mute{ background:var(--mute); color:var(--text); display:none }
-  /* 配信部屋で登壇を許されたときだけ出る「マイクを使う」。ここで初めて getUserMedia を呼ぶので、
-     参加ボタンと同じ色（＝これから許可ダイアログが出る操作）にしてある */
-  #speak{ background:var(--join-bg); color:var(--join-fg); display:none; align-items:center; justify-content:center; gap:9px }
-  #speak svg{ width:22px; height:22px; flex:none }
-  /* 通話希望ボタン（v0.15.9）：聞き役が配信者に手を挙げる。押している間（.on）は色を反転して「挙げている」と分かる */
-  #raise{ display:flex; align-items:center; justify-content:center; gap:9px }
-  #raise svg{ width:22px; height:22px; flex:none }
-  #raise.on{ background:var(--accent); color:#fff; border-color:transparent }
-  /* 退出＝朱色（ティールの補色寄りで相性がよい）。少しだけ発光させる */
-  #leave{ background:var(--red); color:#fff; display:none; box-shadow:0 2px 14px var(--red-glow) }
-  /* アイコン＋文字を中央寄せ。参加時に JS が display:flex にする（未参加は none のまま） */
-  #mute, #leave{ align-items:center; justify-content:center; gap:9px }
-  #mute svg, #leave svg{ width:22px; height:22px; flex:none }   /* 線は currentColor で文字色に追従 */
-  /* ミュートの文字を最長ラベル幅で固定＝「ミュート」⇔「ミュート解除」でマイクが左右に動かない */
-  #mute .lbl{ display:inline-block; min-width:6.2em; text-align:center; white-space:nowrap }
-  /* マイクの斜線は常にDOMに置き、表示/非表示だけ切替（innerHTML差し替えの再描画ちらつきを避ける）。
-     visibility なのでレイアウトは一切動かない */
-  .mic-slash{ visibility:hidden }
-  #mute.muted .mic-slash{ visibility:visible }
-  /* 参加後の操作は横並び（ミュート：退出 ＝ 3：2・下の #mute/#leave） */
-  /* 退出の確認（ページ内・止まらない）。注意の枠と同じ温度で、ボタンは小さく横に */
-  .leave-confirm{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:12px; padding:9px 11px;
-    border-radius:10px; font-size:13px; line-height:1.5; background:var(--warn-bg); border:1px solid var(--warn-border); color:var(--text) }
-  .leave-confirm span{ flex:1; min-width:0 }
-  .leave-confirm button{ flex:none; width:auto; margin:0; padding:6px 12px; font-size:13px; border-radius:999px }
-  #leaveYes{ background:var(--red); color:#fff }
-  .room-ask{ margin-top:-2px }   /* ロビーの部屋の直下（一覧の gap を少し詰める） */
-  #roomAskYes{ background:var(--join-bg); color:var(--join-fg) }
-  #roomAskNo{ background:var(--chip); color:var(--chip-fg) }
-  #leaveNo{ background:var(--chip); color:var(--chip-fg) }
-  .actions{ display:flex; gap:12px }
-  .actions button{ flex:1; width:auto }
-  /* 入口の案内（お休み中／いま開いています）。注意の枠と同じ温度で */
-  .entry-note{ margin-top:12px; padding:10px 12px; border-radius:10px; font-size:13px; line-height:1.6;
-    background:var(--warn-bg); border:1px solid var(--warn-border); color:var(--text) }
-  .entry-note p{ margin:0 }
-  .entry-actions{ display:flex; flex-direction:column; gap:0 }   /* 文言が長いので縦に */
-  .entry-actions button{ flex:1; width:auto; margin-top:8px; padding:9px 6px; font-size:13px;
-    background:var(--chip); color:var(--chip-fg) }
-  #join:disabled{ opacity:.6; cursor:default }
-  /* ミュート（登壇なら「マイクを使う」）：退出 ＝ 3：2（利用者の指定・2026-09-18） */
-  #mute, #speak{ flex:3 }
-  #leave{ flex:2 }
-  /* 通知音のトグル（入室・退出音＝通話カード／新部屋音＝ロビー）。help-hide と同系の控えめな見た目 */
-  .snd-opt{ display:flex; align-items:center; gap:8px; margin-top:12px; font-size:12.5px; color:var(--sub); cursor:pointer; user-select:none }
-  .snd-opt input{ width:auto; margin:0; padding:0; accent-color:var(--accent); flex:none }
-  #sndPeerRow, #sndReactRow, #sndTtsRow{ margin-top:4px }   /* 人数表示のすぐ下に寄せる */
-  /* 音量スライダー。行の形はトグル（.snd-opt）と同じだが、input の扱いが逆
-     （.snd-opt input は width:auto 固定、こちらは横いっぱいに伸ばしたい）ので別クラスにする。
-     range は共通の input{} が持つ枠・背景・余白を全部剥がさないと太い箱に見える */
-  .vol-opt{ display:flex; align-items:center; gap:8px; margin-top:12px; font-size:12.5px; color:var(--sub); user-select:none }
-  .vol-opt input[type=range]{ flex:1; width:auto; min-width:0; margin:0; padding:0; border:0;
-    background:transparent; accent-color:var(--accent); cursor:pointer }
-  .vol-ic, .vol-lbl{ flex:none }
-  .vol-val{ flex:none; width:3.4em; text-align:right; font-variant-numeric:tabular-nums }
-  .vol-note{ margin:4px 0 0; font-size:11.5px; color:var(--note); line-height:1.5 }
-  .bgm-row{ margin-top:14px }
-  #copy{ background:var(--chip); color:var(--chip-fg); margin-top:8px; padding:10px; font-size:14px }
-  /* 版の表示。共有ボタンの右下に、目に留まらない濃さで置く（普段は意識させない） */
-  .ver{ margin-top:6px; text-align:right; font-size:10.5px; color:var(--ver); letter-spacing:.04em }
-  /* 見た目の選択＋版表示を1行に。左に選択（目に留まらない濃さ）、右に版 */
-  .ver-row{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:8px }
-  .ver-row .ver{ margin-top:0 }
-  .theme-pick{ display:inline-flex; align-items:center; gap:4px; font-size:11px; color:var(--note); margin:0 }
-  .theme-pick select{ font:inherit; font-size:11px; color:var(--sub); background:var(--panel);
-    border:1px solid var(--border-faint); border-radius:8px; padding:3px 6px; margin:0; cursor:pointer }
-  /* β（旧URL）にだけ出る安定版への導線。ブログ等から旧URLに来た人が、
-     ここが試験用だと気づけるようにする。版表示と同じ濃さで、探せば見つかる程度に。 */
-  .stable-link{ margin-left:8px; color:var(--note); text-decoration:underline }
-  .stable-link:hover{ color:var(--sub) }
-  #qr{ background:var(--chip); color:var(--chip-fg); margin-top:8px; padding:10px; font-size:14px }
-  .status{ margin-top:18px; padding:14px; border-radius:10px; background:var(--panel); font-size:14px; line-height:1.7 }
-  /* 通話中は入力欄が畳まれて説明文の直下に来る。説明文の下 20px＋18px＝38px は広いので、
-     未参加のとき（説明文→プロフィール枠 24px）と同じ間隔に揃える（2026-09-20・利用者の指摘） */
-  #setupFields.collapsed + .status{ margin-top:4px }
-  /* 状態＝1行／操作＝次の行。部屋名が長くても折り返しがきれいに収まる */
-  .status-head{ display:flex; flex-direction:column; gap:8px }
-  .head-actions{ display:flex; gap:8px; justify-content:flex-end }
-  /* 出すボタンが1つも無いときは行ごと畳む（空の行が余白だけ作るのを防ぐ） */
-  .head-actions:not(:has(button:not([hidden]))){ display:none }
-  .retry-btn{ flex:none; width:auto; margin:0; padding:5px 11px; font-size:12px; font-weight:700;
-    display:inline-flex; align-items:center; gap:5px;
-    background:var(--chip); color:var(--chip-fg); border:1px solid var(--border); border-radius:999px; white-space:nowrap }
-  .retry-btn:disabled{ opacity:.5 }
-  .retry-btn svg{ width:14px; height:14px; flex:none }
-  /* 小窓に映す映像。画面には見せないが、**display:none だと PiP に入れられない**ので画面外へ逃がす */
-  .pip-video{ position:fixed; left:-9999px; top:0; width:160px; height:90px; pointer-events:none }
-  /* 小窓に映す canvas。★**置き方は黒さの原因ではなかった**（2026-09-12 に4条件で実測。
-     画面にそのまま出しても iPhone の小窓は黒い＝iOS は MediaStream の映像を PiP に描けない）。
-     とはいえ本来の大きさで描かせて枠で切り抜くのが素直なので、この形のまま残す。 */
-  .pip-clip{ position:fixed; right:0; bottom:0; width:1px; height:1px; overflow:hidden;
-    opacity:.01; pointer-events:none }
-  .pip-src{ display:block; width:480px; height:270px }
-  /* 状態はこのドットの色だけで表す（文字側に絵文字は置かない）。既定＝グレー＝未参加／退出後 */
-  .dot{ display:inline-block; width:9px; height:9px; border-radius:50%; background:var(--dot-idle); margin-right:7px; vertical-align:middle }
-  .dot.busy { background:#4da3ff; animation:dot-pulse 1.2s ease-in-out infinite }  /* 準備中 */
-  .dot.ok   { background:var(--accent) }   /* 参加・通話中 */
-  .dot.warn { background:var(--warn) }   /* 繋がらない相手がいる */
-  .dot.error{ background:#ff5d5d }   /* 失敗 */
-  @keyframes dot-pulse{ 50%{ opacity:.35 } }
-  @media (prefers-reduced-motion:reduce){ .dot.busy{ animation:none } }
-  .peers{ font-size:26px; font-weight:800; color:var(--link) }
-  /* 共有リンクは長くなりがちなので既定は1行＋末尾を「…」で省略。コピー時とQR表示中だけ全文に開く */
-  a.share{ display:block; color:var(--link); font-size:13px;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-  a.share.full{ white-space:normal; overflow-wrap:anywhere }
-  /* アバター選択（絵文字）。共通の button{width:100%} を打ち消して小さなチップにする */
-  .avatars{ display:grid; grid-template-columns:repeat(8,1fr); gap:6px; margin-top:6px }
-  .avatar{ width:auto; margin:0; padding:8px 0; font-size:20px; line-height:1;
-    background:var(--panel); border:1px solid var(--border); border-radius:10px }
-  .avatar[aria-pressed="true"]{ border-color:var(--link); background:var(--accent-dim) }
-  .avatar:disabled{ opacity:.5; cursor:default }
-  /* プロフィール折りたたみ（初回は開く、以降は閉じる） */
-  /* 参加中に畳む入力欄（名前・部屋名）。grid-template-rows 1fr→0fr は中身の高さを測らずに
-     滑らかに畳めるやり方。display:none だとトランジションが効かないのでこの形にしている */
-  .collapsible{ display:grid; grid-template-rows:1fr; opacity:1;
-    transition:grid-template-rows .3s ease, opacity .22s ease }
-  .collapsible > *{ overflow:hidden; min-height:0 }
-  .collapsible.collapsed{ grid-template-rows:0fr; opacity:0 }
-  @media (prefers-reduced-motion:reduce){ .collapsible{ transition:none } }
-  .profile{ margin-top:4px }
-  /* 「部屋を作る」トグル。畳んでいる間は押しやすい角丸の行として少し目立たせ（v0.14.56）、
-     開いたときは枠を外して素の「部屋名」ラベルに変身させる（プロフィールの summary と同じ作法）。
-     ★経緯：2026-09-12 は「枠（カード）にしない・開いたときの部屋名ラベルと同じ素のテキスト行」が利用者の指定だった
-     （枠があるとプロフィールと同じ重さの選択肢に見えるため）。2026-09-27 に利用者自身が「畳んだ状態を少し目立たせたい」に
-     変えたので、**畳んでいる間だけ**枠を付ける折衷にした。開いたときは 09-12 のまま */
-  .create{ margin-top:12px }
-  .create > summary{ list-style:none; cursor:pointer; display:flex; align-items:center; gap:6px;
-    padding:4px 2px; font-size:13px; color:var(--sub) }
-  .create > summary::-webkit-details-marker{ display:none }
-  .cr-ic{ font-size:16px; line-height:1 }
-  .cr-label{ font-weight:700; font-size:14px; color:var(--chip-fg) }
-  .cr-arrow{ font-size:11px; color:var(--link) }
-  .create[open] .cr-arrow{ transform:rotate(90deg) }
-  /* 畳んでいるときの見た目：押しやすい角丸の行として少し目立たせる */
-  .create:not([open]) > summary{
-    padding:9px 12px; border-radius:10px;
-    background:var(--chip); border:1px solid var(--border-soft);
-    transition:background-color .2s ease, border-color .2s ease;
-  }
-  .create:not([open]) > summary:hover{
-    background:var(--chip-hover); border-color:var(--border);
-  }
-  .create:not([open]) .cr-arrow{ margin-left:auto }
-  /* 開いている間は見出しを「部屋名」ラベルに変身させる（プロフィールの summary と同じ作法）。
-     枠を外して入力欄に繋げる＝独立した行を作らず、ラベルとして一体に見せる */
-  .cr-open-label{ display:none; font-size:13px; color:var(--sub) }
-  .create[open] .cr-ic, .create[open] .cr-label{ display:none }
-  .create[open] .cr-open-label{ display:inline }
-  .create > summary .char-count{ display:none }
-  .create[open] > summary .char-count{ display:inline; margin-left:auto }   /* 文字数だけ右端 */
-  .cr-body > div{ padding-top:2px }
-  .profile > summary{ list-style:none; cursor:pointer; display:flex; align-items:center; gap:10px;
-    padding:12px 14px; border-radius:12px; background:var(--panel); border:1px solid var(--border);
-    transition:padding .28s ease, background-color .28s ease, border-color .28s ease }
-  .profile > summary::-webkit-details-marker{ display:none }
-  .pf-emoji{ font-size:22px; line-height:1 }
-  .pf-name{ font-weight:700; font-size:15px }
-  .pf-edit{ margin-left:auto; font-size:12px; color:var(--link) }
-  .pf-open-label{ display:none; font-size:13px; color:var(--sub) }
-  /* 開いている間は summary を「あなたの名前」ラベル行に変身させ、右端に「閉じる」を置く。
-     枠（背景・境界線）は外し、他のラベルと同じ余白で入力欄に繋げる（独立行を作らず一体化） */
-  /* :not(.pf-collapsed) … 閉じるアニメーション中（openはまだtrue）は閉じた見た目に切り替える */
-  .profile[open]:not(.pf-collapsed) .pf-emoji, .profile[open]:not(.pf-collapsed) .pf-name{ display:none }
-  .profile[open]:not(.pf-collapsed) .pf-open-label{ display:inline }
-  .profile[open]:not(.pf-collapsed) > summary{ background:none; border:0; padding:14px 2px 6px }
-  /* 開閉をスライドさせる。<details> は閉じると中身が display:none になり素直には動かないので、
-     中身をラップして grid-template-rows 1fr→0fr で高さを補間する（JSが .pf-collapsed を付け外し）。
-     部屋名などを畳む .collapsible と同じ仕組み。 */
-  .profile .pf-body{ display:grid; grid-template-rows:1fr; transition:grid-template-rows .28s ease }
-  .profile .pf-body > *{ overflow:hidden; min-height:0 }
-  .profile.pf-collapsed .pf-body{ grid-template-rows:0fr }
-  @media (prefers-reduced-motion:reduce){ .profile .pf-body{ transition:none } }
-  /* 通話中はプロフィール変更不可：summary をグレーアウトして開閉も止める */
-  .profile.locked > summary{ opacity:.5; pointer-events:none }
-  /* 通話中のタブ（👥メンバー／💬ひとこと／⚙️設定）。
-     ★共通の button{} は width:100% と margin-top:12px を持っているので、**両方**打ち消すこと
-       （行に並べるボタンを足すたびに踏んでいる罠。2026-08-14 / 08-15 に既出）。
-     ★display を書いた要素には [hidden] も書くこと（参加前はタブごと出さない）。 */
-  .tabs{ display:flex; align-items:flex-end; gap:4px; margin-top:14px;
-    border-bottom:1px solid var(--border-soft) }
-  /* ★ラベルは**絶対に折り返さない**。実機（CSS幅390px）で4タブのとき「メンバ／ー」と
-     割れた（2026-08-17）。折り返す代わりに、狭い画面では詰めて、最後に設定の文字を落とす。 */
-  .tab{ width:auto; margin:0; padding:8px 11px; font-size:13px; font-weight:700; line-height:1.2;
-    white-space:nowrap; display:inline-flex; align-items:center; gap:5px;
-    background:transparent; color:var(--tab); border-radius:10px 10px 0 0; position:relative }
-  .t-em{ font-size:13px; line-height:1 }
-  /* 未読の点：別のタブを見ている間にひとことが届いたら出す。開いたら消える（v0.13.4・利用者の要望） */
-  .t-dot{ display:none; width:7px; height:7px; border-radius:50%; background:var(--red); margin-left:1px; flex:none }
-  .tab.unread .t-dot{ display:inline-block }
-  .tab:hover{ color:var(--chip-fg) }
-  .tab[aria-selected="true"]{ color:var(--text); background:var(--tab-on) }
-  /* 選択中の下線。border ではなく擬似要素にして、タブの枠線と1px重ねる */
-  .tab[aria-selected="true"]::after{ content:''; position:absolute; left:8px; right:8px; bottom:-1px;
-    height:2px; background:var(--accent); border-radius:2px }
-  .tab-right{ margin-left:auto }
-  /* 設定タブが開いている時は、独立したボタンではなく「いま開いているパネル」であることが一目で伝わるようにする */
-  .tab-right[aria-selected="true"]{ background:var(--chip-hover); border-radius:8px 8px 0 0 }
-  /* 狭い画面：まず詰める → それでも足りないので**設定はアイコンだけ**にする
-     （歯車は単体で意味が通る記号。読み上げ用に aria-label を付けてある）。
-     おたよりが増えるのは配信部屋のときだけなので、4つ並ぶのはその場合に限られる。 */
-  @media (max-width:440px){
-    .tabs{ gap:2px }
-    .tab{ padding:8px 7px; font-size:12.5px; gap:4px }
-    .tab-right .t-label{ display:none }
-    .tab-right{ padding-left:10px; padding-right:10px }
-  }
-  /* ごく狭い画面（初代SE相当）では**全部アイコンだけ**にする。ここを塞がないと、
-     はみ出した設定タブが**画面の外に出て押せなくなる**（実測：320pxで29pxはみ出す）。
-     選択中はどれかは下線と面の色で分かる。 */
-  @media (max-width:360px){
-    .tab .t-label{ display:none }
-    .tab{ padding:8px 11px }
-    .t-em{ font-size:15px }
-  }
-  /* パネル先頭の余白は中身が持っているので、タブ直下は詰める */
-  .panel > .members{ margin-top:10px }
-  /* ★高さは「5人ぶん」で決め打ちにする（可変にしない）。
-     人が出入りするたび・タブを切り替えるたびにカードの高さが動くと、下にある共有リンクや
-     ロビーまで一緒に動いて落ち着かない。リアクションのパレットの位置も固定されるので、
-     連打するときに指の位置が変わらない。6〜8人（上限8）のときだけ素直に伸びる。
-     ★**スクロールは6人以上のときだけ**にしてある。.members を常に overflow:auto にすると、
-       行の上に absolute で出る**吹き出しが先頭の行で切れる**（2026-08-15 に吹き出しを行の中へ
-       入れたのはレイアウト追従のため）。5人までは溢れないので、切る必要が無いなら切らない。
-       6人以上では **5.5人ぶん**だけ見せる＝**半端に切れている行が「まだ下にいる」印**になる
-       （そのぶん先頭行の吹き出しは切れるが、上限8人なので出るのは賑わっている時だけ）。
-     数字は幅430pxの実測（1行40px＋行間6px／リアクション42＋余白8／凡例チップ約30＋余白8）。 */
-  :root{ --members-min:calc(40px * 5 + 6px * 4);      /* 5人ぶん＝既定で確保する高さ */
-         --members-max:calc(40px * 5.5 + 6px * 5);    /* 5.5人ぶん＝はみ出しが見える高さ */
-         --panel-min:calc(var(--members-min) + 98px) }
-  .panel{ min-height:var(--panel-min) }
-  .members{ min-height:var(--members-min) }
-  .members.scroll{ height:var(--members-max); overflow-y:auto; overscroll-behavior:contain;
-    /* ★はみ出した側の端を溶かす。5.5人ぶんで切ると6人目が**文字の途中でスパッと切れる**。行の背景は
-       カードと同じ色なので「箱が切れている」ではなく「文字が欠けている」ように見えた（2026-09-16・
-       7人の部屋で利用者が指摘）。まだ下に行があるときだけ下端を、上にあるときだけ上端を透明にする
-       （JS が scroll のたびに .more-below / .more-above を付け外し）。端まで送れば最後の行は普通に見える */
-    --fade-top:0px; --fade-bottom:0px;
-    -webkit-mask-image:linear-gradient(to bottom, transparent, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent);
-    mask-image:linear-gradient(to bottom, transparent, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent) }
-  .members.scroll.more-below{ --fade-bottom:34px }
-  .members.scroll.more-above{ --fade-top:22px }
-  /* ひとことは**入力欄を下端に置く**（上に向かって流れが伸びる、見慣れた形）。
-。**.panel[hidden] より id のほうが強い**ので、
-       ここを忘れるとタブを切り替えてもひとことが消えない（優先度の罠） */
-  /* ★ここは min-height ではなく **height（固定）**。min-height だと中身が増えたぶんパネルごと
-     伸びてしまい、`flex:1`（余った高さを埋める）が働かない＝**ログが下へ伸び続ける**
-     （2026-08-16 に実際にそうなった）。高さを固定して初めて「入力欄を引いた残り」が決まり、
-     溢れた古い行が上へ抜ける。 */
-  #panChat{ display:flex; flex-direction:column; justify-content:flex-end; height:var(--panel-min) }
-  /* おたより。**高さは他のパネルと同じ固定**（理由は上と同じ）。
-     枠主のときは集まった投稿が伸びるので、本文だけ内部スクロールにする（吹き出しは無いので切れて困らない）。 */
-  #panMail{ display:flex; flex-direction:column; height:var(--panel-min) }
-  .mail-head{ margin-top:10px; font-size:13px; line-height:1.6; color:var(--sub) }
-  .mail-head b{ color:var(--text) }
-  .mail-body{ flex:1; min-height:0; overflow-y:auto; overscroll-behavior:contain; margin-top:8px;
-    display:flex; flex-direction:column; gap:6px }
-  .mail-empty{ color:var(--note); font-size:12.5px; line-height:1.6 }
-  /* 集まった投稿（枠主だけに見える）。行の右端に「公開」 */
-  .mail-item{ display:flex; align-items:flex-start; gap:8px; padding:8px 10px; border-radius:10px;
-    background:var(--panel); font-size:12.5px; line-height:1.5 }
-  .mail-item.shown{ box-shadow:0 0 0 1px var(--accent) inset }
-  .mail-em{ flex:none; font-size:15px; line-height:1.2 }
-  .mail-who{ flex:none; max-width:6em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--sub) }
-  .mail-text{ flex:1; min-width:0; color:var(--text); word-break:break-word }
-  /* 共通 button{} の width と margin を打ち消す（行に並べるボタンの定番の罠） */
-  .mail-pick{ flex:none; width:auto; margin:0; padding:4px 9px; font-size:11.5px; font-weight:700;
-    background:var(--chip); color:var(--chip-fg); border:1px solid var(--border); border-radius:999px; white-space:nowrap }
-  .mail-pick.on{ background:var(--accent-dim); color:var(--link); border-color:var(--link) }
-  /* 募集を立てる欄／お便りを書く欄。入力は全幅にしてボタンを中に重ねる
-     （**iOS は半端な幅の入力欄にフォーカスすると勝手に拡大する**。2026-08-15 に踏んだ） */
-  .mail-form{ position:relative; margin-top:8px }
-  .mail-form input{ padding-right:74px }
-  .mail-form button{ position:absolute; right:5px; top:50%; transform:translateY(-50%);
-    width:auto; margin:0; padding:7px 12px; font-size:13px; background:var(--join-bg); color:var(--join-fg); border-radius:9px }   /* 送信はティール（ひとことと同じ） */
-  /* いま読まれているお便り（タブの外・常時表示）。配信部屋の説明と同じ枠だが、
-     こちらは「中身」なので少し明るく、送り主が分かる形にする */
-  .mail-now{ margin-top:10px; padding:9px 11px; border-radius:10px; font-size:13px; line-height:1.6;
-    background:rgba(0,229,204,.07); border:1px solid rgba(0,229,204,.22); color:var(--text) }
-  .mail-now .mn-cap{ display:block; font-size:11.5px; color:var(--accent-soft); margin-bottom:2px }
-  .mail-now .mn-who{ color:var(--sub) }
-  .mail-now{ cursor:pointer }   /* 押すと下の紙を開き直せる */
-  /* ── 公開されたお便りを大きく出す紙 ──
-     ★**モーダルにしない。**背面を塞ぐと読み上げ中にミュート・退出が押せなくなる。
-       だから覆う層は pointer-events:none にして、**紙の上だけ**操作を受ける。
-       画面はうっすら暗くするが、後ろのボタンはそのまま押せる。 */
-  .mail-pop{ position:fixed; inset:0; z-index:70; display:flex; align-items:center; justify-content:center;
-    padding:20px; background:rgba(3,8,18,.42); pointer-events:none;
-    animation:mail-in .22s ease-out }
-  @keyframes mail-in{ from{ opacity:0 } to{ opacity:1 } }
-  @media (prefers-reduced-motion:reduce){ .mail-pop{ animation:none } }
-  .mp-card{ pointer-events:auto; width:min(100%, 460px); max-height:72vh; overflow-y:auto;
-    background:#f4f7fb; color:#16202f; border-radius:18px; padding:16px 18px 20px;
-    box-shadow:0 18px 50px rgba(0,0,0,.55) }
-  .mp-head{ display:flex; align-items:center; gap:8px; margin-bottom:10px }
-  .mp-em{ font-size:22px; line-height:1 }
-  .mp-who{ font-weight:700; font-size:15px; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
-  /* 共通 button{} の width と margin を打ち消す（毎度の罠） */
-  .mp-x{ margin:0 0 0 auto; width:auto; padding:4px 10px; font-size:15px; line-height:1;
-    background:#e3e9f2; color:#4a5a72; border-radius:999px }
-  .mp-topic{ font-size:12px; color:#5b6b80; margin-bottom:8px }
-  /* お便りは**読ませるもの**なので、アプリの他のどこよりも大きく組む */
-  .mp-body{ font-size:17px; line-height:1.75; word-break:break-word; white-space:pre-wrap }
-  /* 参加者リスト（絵文字＋名前） */
-  .members{ margin-top:12px; display:flex; flex-direction:column; gap:6px }
-  /* 音が届いていない相手のお知らせ。不具合ではなく「試せることがある」の温度で（黄色＝注意止まり） */
-  .audio-warn{ margin-top:10px; padding:9px 11px; border-radius:10px; font-size:13px; line-height:1.5;
-    background:var(--warn-bg); border:1px solid var(--warn-border); color:var(--warn) }
-  /* 配信部屋の説明。注意ではなく状態なので、警告の黄ではなくティール（＝通話中の色）で置く。
-     「いま自分は話せるのか」が一番の関心なので、参加者リストより上に出す */
-  .bc-note{ margin-top:10px; padding:9px 11px; border-radius:10px; font-size:13px; line-height:1.5;
-    background:rgba(0,229,204,.09); border:1px solid rgba(0,229,204,.30); color:var(--accent-soft);
-    display:flex; align-items:flex-start; gap:8px;
-    /* ふわっと縮んで消える（× で閉じる・v0.15.15）。閉じる時は .closing を付けてから hidden にする */
-    overflow:hidden; transform-origin:top;
-    transition:opacity .24s ease, transform .24s ease, max-height .24s ease, margin .24s ease, padding .24s ease }
-  .bc-note #bcNoteText{ flex:1; min-width:0 }
-  .bc-note-x{ flex:none; width:22px; height:22px; padding:0; margin:0; border:0; background:none; cursor:pointer;
-    color:var(--accent-soft); opacity:.7; font-size:18px; line-height:1; border-radius:6px }
-  .bc-note-x:hover{ opacity:1; background:rgba(0,229,204,.14) }
-  .bc-note.closing{ opacity:0; transform:scaleY(.55); max-height:0; margin-top:0; padding-top:0; padding-bottom:0 }
-  /* 部屋の種類（部屋名の下の2択）。通知音トグルと同じ控えめな見た目に揃え、行間だけ詰める。 */
-  .kind{ display:grid; gap:2px; margin-top:8px }
-  .kind .snd-opt{ margin-top:0 }
-  .kind .sel{ color:var(--accent-soft) }   /* 選ばれているほうを少しだけ明るく（点だけでは目が滑るため） */
-  /* 点字ブロック（U+2800〜）で作るオーディオEQ風の飾り。各セルが2×3ドットなので
-     空・下・中・上の4段階がそのまま出せる（⠀⠤⠶⠿）。通話中だけ表示、装飾なので aria-hidden。 */
-  .eq{ margin-top:12px; font-family:'Courier New',ui-monospace,monospace; font-size:20px;
-    line-height:1; letter-spacing:3px; color:var(--link); text-shadow:0 0 7px var(--accent-glow);
-    white-space:nowrap; overflow:hidden; user-select:none; text-align:center }
-  .member{ position:relative; display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:10px; background:var(--panel);
-    transition:background .12s, box-shadow .12s }
-  .member.speaking{ background:var(--accent-dim); box-shadow:0 0 0 1px var(--accent) inset }
-  /* transform は VAD が毎フレーム直接書き換える。中心基準で拡大し、GPUに乗せる */
-  .m-emoji{ font-size:22px; line-height:1; transform-origin:center; will-change:transform }
-  /* 名前の箱。**縮んでよいのは名前だけ**で、成長絵文字と（あなた）は縮ませない。
-     min-width:0 が要点＝これが無いと flex の子は中身より小さくならず、行からはみ出す。 */
-  .m-id{ display:flex; align-items:baseline; gap:4px; min-width:0; flex:1 }
-  .m-name{ font-size:14px; color:var(--text); min-width:0; overflow:hidden;
-    text-overflow:ellipsis; white-space:nowrap }
-  .m-stage{ flex:none; font-size:14px }
-  .m-id .you{ flex:none; color:var(--sub); font-size:12px; white-space:nowrap }
-  /* 状態のまとまり（見るだけ）。**名前の左**に置き、中身が無くても場所は空ける
-     ＝行ごとに名前の左端がずれない。押せるものはここには入れない（右端に集める）。 */
-  .m-state{ flex:none; display:flex; align-items:center; gap:5px }
-  /* ミュート印＝朱色の丸い土台に暗いマイク斜線（退出ボタンと同系）。常に置いて visibility だけ切替 */
-  .m-mute{ flex:none; width:22px; height:22px; border-radius:50%;
-    background:var(--red); display:inline-flex; align-items:center; justify-content:center; visibility:hidden }
-  .m-mute svg{ width:13px; height:13px; color:var(--panel) }
-  .member.muted .m-mute{ visibility:visible }
-  .member.muted .m-emoji{ opacity:.45 }
-  /* 無視の切替。行の右端。共通の button{width:100%} を打ち消す（忘れると行が壊れる）。
-     塗りハート＝受け取っている（目立たない色で静かに置く）／割れたハート＝受け取っていない */
-  /* ★箱の寸法は .m-conn と完全に揃えること。片方だけ大きいと、隣り合った
-     経路アイコンと縦位置がずれて見える（2026-08-14 に実際にずれた） */
-  /* ★共通の button{} は width だけでなく **margin-top:12px** も持っている。ここを打ち消さないと
-     ボタンだけ 6px 下がって、隣の経路アイコン（☁️/↔）と中心が揃わない（2026-08-14 に実測）。
-     行の中で他と並べるボタンを足すときは、必ず margin も殺すこと。 */
-  .m-ig{ flex:none; width:18px; height:18px; padding:0; margin:0; border:0;
-    background:transparent; cursor:pointer; color:var(--red); display:inline-flex;
-    align-items:center; justify-content:center }
-  .m-ig svg{ width:16px; height:16px; display:block }
-  .m-ig:hover{ color:#ff8266 }
-  /* 登壇の切替（配信部屋のオーナーにだけ出る）。寸法は .m-ig／.m-conn と完全に同じにすること
-     （右端に並ぶので、片方だけ大きいと縦位置がずれる）。共通 button{} の width と margin も殺す。
-     消灯＝聞き役／点灯（ティール）＝話してよい、と色だけで状態を表す */
-  .m-mic{ flex:none; width:18px; height:18px; padding:0; margin:0; border:0;
-    background:transparent; cursor:pointer; color:var(--ver); display:inline-flex;
-    align-items:center; justify-content:center }
-  .m-mic svg{ width:16px; height:16px; display:block }
-  .m-mic.on{ color:var(--link) }
-  .m-mic:hover{ color:var(--sub) }
-  .m-mic.on:hover{ color:#7cffee }
-  /* 配信部屋の印（📣＝配信者／🎙＝話してよい人）。**配信部屋のときだけ**枠を作り、
-     誰でもない行では空のまま場所だけ取る（名前の左端を揃えるため） */
-  .m-bc{ flex:none; width:16px; font-size:13px; line-height:1; text-align:center }
-  /* リアクション。参加者リストの真下＝**飛び出す先のすぐ下**に置く（視線がつながる）。
-     共通の button{} の width と margin をどちらも打ち消すこと（.m-ig と同じ罠） */
-  .reactions{ margin-top:8px; display:flex; gap:5px }
-  /*。ブラウザ既定の [hidden]{display:none} より
-     クラス指定のほうが強いので、hidden を付けても消えない（2026-08-15 に踏んだ） */
-  /* 押せると分かる見た目にする：**面をカードより一段明るく**（アプリ内で押せるチップに使っている色）、
-     枠を立て、上辺に細いハイライトを入れて浮かせる。押すと沈んで色が変わる＝指に返る。 */
-  /* 絵文字は文字なので、長押しで選択・コピー・「調べる」が出てしまう。連打する場所なので殺す */
-  .reactions button{ flex:1; width:auto; margin:0; padding:9px 0; font-size:19px; line-height:1.15;
-    border-radius:10px; background:var(--chip); border:1px solid var(--border-soft); cursor:pointer;
-    box-shadow:inset 0 1px 0 rgba(255,255,255,.06), 0 1px 2px rgba(0,0,0,.25);
-    transition:transform .09s ease, background .12s ease;
-    -webkit-user-select:none; user-select:none; -webkit-touch-callout:none }
-  .reactions button:hover{ background:var(--chip-hover) }
-  .reactions button:active{ transform:translateY(1px) scale(.94); background:var(--chip-active);
-    box-shadow:inset 0 2px 4px rgba(0,0,0,.35) }
-  /* 押した人のアバターから浮かぶ。**誰が押したか見えることが抑止力**であり、
-     ミュート（無視）の対象を特定できる唯一の手がかりでもある＝匿名にしないこと。
-     位置は実測して body に置く（#members の中だと親の overflow で切れる） */
-  /* ひとこと。共通の button{} の width と margin をここでも打ち消す（行に並べるので） */
-  /* ★入力欄は**画面いっぱいの幅**にして、送信ボタンはその中に重ねること。
-     iOS はフォーカスした入力欄を**画面幅に合わせて拡大**するので、ボタンと横に
-     並べて半端な幅にすると、タップのたびにズームして左右がずれる（2026-08-15 に踏んだ）。
-     部屋名の欄（共通の input{width:100%}）でこれが起きないのは全幅だから。
-     ★font-size も 16px を下回らせないこと（16px 未満でも iOS は拡大する）。
-     どちらも `user-scalable=no` では解決しない（拡大できないと困る人がいるので使わない）。 */
-  /* 話題タグの行（通話中だけ）。状態の行と同じ温度。タグがあれば本文色、無ければ薄く */
-  .tag-row{ display:flex; align-items:center; gap:7px; margin-top:8px; font-size:13px; line-height:1.5 }
-  .tag-ic{ flex:none }
-  .tag-text{ flex:1; min-width:0; color:var(--sub); overflow-wrap:anywhere }
-  .tag-text b{ color:var(--text); font-size:14px }
-  .tag-text .tag-by{ color:var(--note); font-size:12px; margin-left:4px }
-  .tag-row .retry-btn{ margin:0 }
-  /* ロビー：タグが付いた部屋はタグを大きく・元の部屋名を添える。
-     部屋名は小さく落としつつも埋もれないよう太字・本文色で立てる（2026-09-26・利用者） */
-  .room-sub{ font-size:13px; color:var(--sub); min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; margin-top:3px }
-  .room-sub-name{ font-weight:700; color:var(--body) }
-  .room-sub-by{ font-size:11.5px; color:var(--note); font-weight:400 }
-  .chat-row{ margin-top:6px; position:relative }
-  .chat-row input{ width:100%; padding:9px 76px 9px 11px; border-radius:10px; font-size:16px;
-    background:var(--panel); color:var(--text); border:1px solid var(--border-soft) }
-  .chat-row input::placeholder{ color:var(--placeholder) }
-  .chat-row button{ position:absolute; right:5px; top:50%; transform:translateY(-50%);
-    width:auto; margin:0; padding:6px 13px; font-size:13px; border-radius:8px;
-    background:var(--join-bg); color:var(--join-fg) }   /* ★ティール＝「参加する」と同じ「これから行動する」色。灰色だとすぐ下の朱の退出を押しがち（2026-09-20・利用者） */
-  .chat-row button:hover{ filter:brightness(.95) }
-  .chat-row button:disabled{ opacity:.45 }
-  /* 吹き出し。**中身は必ず textContent で入れる**（他人が決めた文字がここに出る）。
-     ★position:fixed で座標を計算して置いてはいけない。**一度置いたら動かない**ので、
-     キーボードの開閉やスクロールでレイアウトが動くと、行から離れた場所に取り残される
-     （2026-08-15 に踏んだ。リアクションは1.3秒で消えるので目立たないが、こちらは4.6秒残る）。
-     行（.member）を基準にした absolute にすれば、行と一緒に動くので計算そのものが要らない。 */
-  .chat-bubble{ position:absolute; left:0; bottom:calc(100% + 4px); z-index:5;
-    pointer-events:none; max-width:min(88%, 260px);
-    padding:7px 10px; border-radius:12px; border-bottom-left-radius:3px;
-    background:var(--chip-hover); color:var(--text); font-size:13px; line-height:1.5;
-    box-shadow:0 4px 14px rgba(0,0,0,.35); word-break:break-word;
-    animation:chat-pop 4.6s ease-out forwards }
-  @keyframes chat-pop{
-    0%   { opacity:0; transform:translateY(6px) scale(.85) }
-    6%   { opacity:1; transform:translateY(0) scale(1) }
-    82%  { opacity:1; transform:translateY(-6px) }
-    100% { opacity:0; transform:translateY(-14px) }
-  }
-  /* ひとことのタイムライン（入力欄の真上）。**高さを固定して中でスクロール**させる＝
-     行が増えてもページ全体が伸びず、下の共有リンクやロビーが押し出されない。 */
-  /* **パネルの高さを目一杯使い、下から上へ流す。**スクロールはしない＝古い行は上へ抜けて消える
-     （読み返すためのものではなく「見逃した直後の受け皿」なので、追える範囲だけ残ればよい）。
-     justify-content:flex-end ＋ overflow:hidden で、新しい行が下に積まれ、溢れた分は上で切れる。 */
-  .chat-log{ flex:1; min-height:0; display:flex; flex-direction:column; justify-content:flex-end;
-    gap:3px; margin-top:8px; overflow:hidden;
-    padding:6px 8px; border-radius:10px; background:var(--log); font-size:12.5px; line-height:1.5 }
-  .cl-row{ display:flex; align-items:baseline; gap:5px }
-  .cl-em{ flex:none; font-size:13px; line-height:1 }
-  /* 名前は詰めてよい（誰かはアバター絵文字でも分かる）。本文は折り返して全部見せる */
-  .cl-who{ flex:none; max-width:6.5em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--sub) }
-  .cl-text{ flex:1; min-width:0; color:var(--text); word-break:break-word }
-  /* 入室通知など中立のシステム行（v0.15.11）：控えめに・中央寄せで会話と区別 */
-  .cl-sys{ justify-content:center }
-  .cl-sys .cl-text{ flex:none; text-align:center; color:var(--sub); font-size:12px }
-  /* ひとことの行から無視（v0.15.17）：一覧に出ない聞き役でも、コメントした瞬間に行ができる＝そこから無視できる。
-     ハートはメンバー行（.m-ig）と同じ形で**名前の直後**（ハートは「コメント」でなく「人」に向いているので、右端に置かない）。
-     行は密なので常設せず、**行をタップすると出る 2 段階**（誤タップ防止）。自分の行・システム行は対象外。 */
-  .cl-row.can{ cursor:pointer; border-radius:6px }
-  .cl-row.pick{ background:var(--chip) }
-  .cl-ig{ flex:none; width:18px; height:18px; padding:0; margin:0; border:0; background:transparent; cursor:pointer;
-    color:var(--red); display:none; align-items:center; justify-content:center; align-self:center }
-  .cl-ig svg{ width:14px; height:14px; display:block }
-  .cl-row.pick .cl-ig, .cl-ign .cl-ig{ display:inline-flex }
-  .cl-hid{ display:none }                                   /* 無視した人の過去の行（取り消すと戻る） */
-  .cl-ign .cl-text{ color:var(--sub); font-size:12px }
-  .cl-undo{ flex:none; width:auto; margin:0 0 0 4px; padding:0 6px; border:0; background:transparent;
-    color:var(--accent-soft); cursor:pointer; font-size:12px; text-decoration:underline }
-  /* 🤫 静かに入る（ロビーのタップ確認の中）。**独立した 1 行**にする（flex-wrap の行に混ぜると
-     文の span が潰れる・2026-09-30 に実機で発覚）。幅 100% で自分の行を確保し、文とボタンの並びを壊さない。 */
-  .room-quiet{ flex-basis:100%; width:100%; margin:6px 0 2px; font-size:12.5px }
-  .room-quiet input{ flex:none }
-  .react-fly{ position:fixed; z-index:60; pointer-events:none; font-size:22px; line-height:1;
-    animation:react-fly 1.3s ease-out forwards }
-  @keyframes react-fly{
-    0%   { opacity:0; transform:translate(-50%,0) scale(.6) }
-    18%  { opacity:1; transform:translate(-50%,-14px) scale(1.15) }
-    100% { opacity:0; transform:translate(-50%,-58px) scale(1) }
-  }
-  /* 無視中の行。**自分にだけ見える印**（相手には何も伝わらない）。忘れて混乱しないための表示 */
-  .member.ignored{ opacity:.5 }
-  .member.virtual{ box-shadow:0 0 0 1px var(--accent-dim) inset }   /* 読み上げの仮想メンバー（🗣 つくよみちゃん）。人ではない印に薄い枠 */
-  /* 「ほか N 人が聞いています」（v0.15.6）：一覧に出さない聞き役の数だけを名前なしで示す。人ではないので控えめに */
-  /* position:relative は必須：隠れ聞き役の吹き出し（.chat-bubble・position:absolute）の基準になる（v0.15.8） */
-  .m-more{ position:relative; padding:7px 12px; font-size:13px; color:var(--sub); border-radius:10px; background:var(--log) }
-  /* 仮想行の顔＝公式イラスト（img/tsukuyomi-128.png）。絵文字と同じ 1em の丸で置き、跳ね（transform）も人と揃う。
-     規約上「自作アプリ内の顔グラフィック」は可・アプリアイコンやファビコンには使わない（THIRD_PARTY_NOTICES.md） */
-  .m-emoji img.m-face{ width:1em; height:1em; border-radius:50%; object-fit:cover; display:inline-block; vertical-align:-0.12em }
-  /* 読み上げ中の「解析器の無い行」（配信者の画面のつくよみちゃん・聞き役の画面の投稿者など）は CSS の拍で弾ませる。
-     解析器のある行は vadTick が transform を毎フレーム書くので、こちらは付けない（ttsMark が振り分ける） */
-  @keyframes tts-pulse{ from{ transform:scale(1) } to{ transform:scale(1.16) } }
-  .member.reading .m-emoji{ animation:tts-pulse .55s ease-in-out infinite alternate }
-  .member.ignored .m-name{ text-decoration:line-through }
-  .member.muted .m-name{ color:var(--sub) }
-  /* 接続経路アイコン＝行の右端。中継=Cloudflareオレンジ雲／直結=アプリ色ティール矢印。
-     プロフィール未着（経路不明）の相手には出さない。色だけで意味を持たせる（案A）＝title で補足。 */
-  .m-conn{ flex:none; display:inline-flex; align-items:center; justify-content:center; width:18px; height:18px }
-  .m-conn svg{ width:16px; height:16px }
-  .m-conn.relay{ color:var(--relay) }
-  .m-conn.direct{ color:var(--link) }
-  /* 経路アイコンの凡例（通話中だけ）。**主語は常に「その行の人」**にしてある＝自分の行にも
-     相手の行にも同じ文が当たり、読み手が立場を切り替えずに済む（逆転させない言い方を選ぶ）。
-     参加直後だけ開いて出し、数秒で畳む＝アイコンと言葉の対応（☁️中継／↔直接）は常に残しつつ、
-     2行を出しっぱなしにしない。畳んだ後もタップでいつでも開き直せる。 */
-  .conn-legend{ margin:8px 2px 0; font-size:12px; color:var(--note); line-height:1.9 }
-  .conn-legend > summary{ list-style:none; cursor:pointer }
-  .conn-legend > summary::-webkit-details-marker{ display:none }
-  .conn-legend .cl-line{ display:flex; align-items:center; gap:6px }
-  .conn-legend .m-conn{ width:16px; height:16px }
-  .conn-legend .m-conn svg{ width:14px; height:14px }
-  /* 閉じている＝チップ型のボタン。開いている＝summary が凡例の1行目に化ける。
-     こうすると開いたときに「☁️中継／↔直接 詳細…」が重複せず、それでいて summary が残るので
-     押して閉じられる（summary を消すと、自分で開いたときに閉じる手段が無くなる）。 */
-  .conn-legend .cl-mini{ display:inline-flex; align-items:center; gap:5px;
-    padding:4px 11px; background:var(--chip); border:1px solid var(--border);
-    border-radius:999px; color:var(--sub); line-height:1.5 }
-  .conn-legend .cl-mini .sep{ color:var(--ver) }
-  .conn-legend .cl-mini .more{ margin-left:2px; color:var(--note) }
-  .conn-legend[open] .cl-mini{ display:none }
-  .conn-legend .cl-full{ display:none }
-  .conn-legend[open] .cl-full{ display:flex }
-  /* 2カラム：左＝通話カード／右＝ロビー。狭い画面では縦に積む */
-  .wrap{ width:100%; display:flex; flex-wrap:wrap; gap:18px; align-items:flex-start; justify-content:center }
-  .lobby{ width:100%; max-width:440px; background:var(--card);
-    border:1px solid var(--card-border); border-radius:18px; padding:22px }
-  .lobby h2{ margin:0 0 10px; font-size:17px }
-  .lobby-head{ display:flex; align-items:center; gap:10px; margin-bottom:10px }
-  .lobby-head h2{ margin:0 }
-  .lobby-head .retry-btn{ margin-left:auto }
-  .lobby-status{ font-size:13px; color:var(--sub); margin-bottom:12px }
-  .lobby-more{ font-size:12px; color:var(--note); padding:6px 2px }   /* 上限で省略した部屋数の注記 */
-  .lobby-viewers{ margin:12px 0 0; font-size:12.5px; color:var(--note) }
-  .lobby-note{ margin:12px 0 0; font-size:12px; color:var(--note); line-height:1.6 }
-  .legal{ width:100%; max-width:900px; margin:20px auto 0; text-align:center; font-size:11px; color:var(--legal); line-height:1.7 }
-  .legal a{ color:var(--legal-link) }
-  .lobby-list{ display:flex; flex-direction:column; gap:10px; max-height:56vh; overflow-y:auto }
-  .room{ width:100%; margin:0; padding:12px 14px; text-align:left; font-weight:400; font-size:14px;
-    background:var(--panel); border:1px solid var(--card-border); border-radius:12px }
-  .room:hover{ border-color:var(--link) }
-  .room.here{ border-color:var(--link); background:var(--accent-dim) }
-  /* 活発さ：内側にリングを描いて濃さ・太さを段階変化させる。box-shadow の inset なので
-     border と違って内寸が変わらず中身がずれない。静的な状態なので、5秒ごとの再描画でも
-     アニメーションのように途中で切れてガクつくことがない */
-  .room.act1{ box-shadow:inset 0 0 0 1px rgba(0,229,204,.30) }
-  .room.act2{ box-shadow:inset 0 0 0 2px rgba(0,229,204,.48) }
-  .room.act3{ box-shadow:inset 0 0 0 3px rgba(0,229,204,.68) }
-  /* 部屋名は1行に収め、はみ出したら「…」で省略する（長文を書く場所ではないので伸ばさない）。
-     人数は縮まず折り返さないよう固定（min-width:0 が無いと flex 要素は内容幅より縮まず人数を押し出す） */
-  .room-top{ display:flex; align-items:center; gap:8px }
-  .room-name{ font-weight:700; font-size:15px; min-width:0;
-    white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
-  .room-count{ margin-left:auto; flex:none; white-space:nowrap; color:var(--link); font-weight:700; font-size:13px }
-  /* 満室は**目安**なので、押せなくはしない（色だけ落として「たぶん入れない」と伝える） */
-  .room-count.full{ color:var(--warn) }
-  .room-share{ flex:none; display:inline-flex; align-items:center; justify-content:center;
-    width:24px; height:24px; border-radius:6px; color:var(--sub); cursor:pointer;
-    transition:color .15s, background .15s, transform .15s; margin-left:2px }
-  .room-share svg{ width:14px; height:14px }
-  .room-share:hover{ color:var(--link); background:var(--chip) }
-  .room-share:active{ transform:scale(0.92) }
-  .room-share.copied{ color:var(--accent); background:var(--accent-dim) }
-  .room-dur{ margin-top:4px; font-size:12px; color:var(--sub); display:flex; align-items:center; gap:8px }
-  .room-eq{ margin-left:auto; font-family:'Courier New',ui-monospace,monospace; font-size:15px;
-    line-height:1; letter-spacing:1px; color:var(--link); text-shadow:0 0 6px var(--accent-glow) }
-  .room-people{ margin-top:8px; display:flex; flex-wrap:wrap; gap:6px }
-  .rp{ display:inline-flex; align-items:center; gap:4px; background:var(--log); padding:3px 9px; border-radius:999px; font-size:13px; color:var(--body) }
-  .rp.mut{ opacity:.6 }
-  /* ロビーのカードに出す つくよみちゃん の顔。部屋の中の仮想行（.m-face）と同じ丸い切り抜きを、
-     隣の絵文字と同じ大きさで置く（.rp は 13px なので 1.15em ≒ 15px。丸い顔は絵文字より小さく見えるため少し大きめ）。
-     規約上「自作アプリ内の顔グラフィック」は可・アプリアイコンやファビコンには使わない（THIRD_PARTY_NOTICES.md） */
-  .rp img.rp-face{ width:1.15em; height:1.15em; border-radius:50%; object-fit:cover; display:inline-block }
-  /* ロビーチップのミュート印＝参加者リストと同じ朱丸バッジの縮小版（15px） */
-  .rp-mute{ flex:none; width:15px; height:15px; border-radius:50%; background:var(--red);
-    display:inline-flex; align-items:center; justify-content:center; margin-left:1px }
-  .rp-mute svg{ width:9px; height:9px; color:var(--panel) }
-  /* 成長（ブラウザを育てる遊び）の自分向け表示 */
-  .grow-note{ margin-top:14px; font-size:13px; color:var(--sub) }
-
-  /* --- スマホ：枠に横幅を使うのがもったいないので、カードを画面いっぱいに広げる ---
-     body余白24＋カード余白28＋境界線1＝左右で106px（390px幅の27%）が枠に消えていた。
-     左右の境界線と角丸を落として全幅にし、内側の余白だけ残す。ノッチ/ホームバーは
-     env(safe-area-inset-*) で避ける（viewport-fit=cover を指定済み）。 */
-  @media (max-width:560px){
-    body{ padding:0 0 env(safe-area-inset-bottom); justify-content:flex-start; min-height:100dvh }
-    .wrap{ gap:10px }
-    .card, .lobby, .banner{
-      max-width:none; border-radius:0; border-left:0; border-right:0;
-      padding-left:max(14px, env(safe-area-inset-left));
-      padding-right:max(14px, env(safe-area-inset-right)) }
-    .card{ padding-top:22px; padding-bottom:22px }
-    .lobby{ padding-top:18px; padding-bottom:18px }
-    .banner{ margin-bottom:10px; padding-top:12px; padding-bottom:12px }
-    .legal{ padding:0 14px }
-    .help-dialog{ width:calc(100% - 20px); padding:18px }   /* ヘルプも同じ理由で少し広く */
-    /* 「招待リンクをコピー」が2行に折れるのを防ぐ。#copy/#qr はIDセレクタなので同じ強さで上書きする */
-    #copy, #qr{ font-size:13px; padding-left:6px; padding-right:6px }
-  }
-
-  /* ホーム追加（PWA）は status-bar-style=black-translucent のため画面最上部から描画され、
-     時計・電波・バッテリー表示と重なる。PWAのときだけ上に余白を足す（ブラウザのタブでは不要）。
-     display-mode で振り分け、iOS の古い版向けには JS が付ける html.pwa でも同じ指定を効かせる。
-     ※上のスマホ用 body{padding:0 …} を打ち消せるよう、必ずその後ろに置くこと。 */
-  @media (display-mode:standalone){
-    body{ padding-top:max(env(safe-area-inset-top), 14px) }
-  }
-  html.pwa body{ padding-top:max(env(safe-area-inset-top), 14px) }
-</style>
+<!-- 泡の質感（bubble.css）とこの画面の見た目（zerog.css）。元の <style> は使わない（見た目を丸ごと差し替えたため） -->
+<link rel="stylesheet" href="bubble.css?v=6">
+<link rel="stylesheet" href="zerog.css?v=6">
 <!-- 見た目（昼夜）のエンジン。**モジュールの外・<style> の直後**に置く＝最初の描画より前に
      昼の色を当てるため（モジュールは描画後に走るので、そこに置くと昼でも一瞬紺が見える）。
      アプリの状態には一切触らない（読むのは localStorage の設定と時計だけ）。設定の UI は
@@ -965,287 +216,207 @@
 </script>
 </head>
 <body>
-<div id="banner" class="banner" hidden>
-  ⚠️ アプリ内ブラウザではマイクが使えないことがあります。<b>Safari / Chrome で開いて</b>ください。
-  <button id="copyTop">🔗 このリンクをコピー</button>
-</div>
+<!-- ═══ Zero-G の画面 ═══
+     ★元の index.html の要素は **ID をそのまま**残し、泡に作り替えて並べ直している（ロジックは元のまま触る）。
+     ★入れ物（元のカードやパネル）は display:contents＝箱を作らない。中身の 1 つ 1 つが泡になり、
+       #world（カメラで動く平面）の上で bubble.js の物理に置かれる。入れ物に hidden が付けば中身ごと弾けて消える。
+     ★画面に固定するもの（状態・お知らせ・音声の有効化・左下の小さな操作）は #hud に置く（#world の外）。 -->
+<div class="nebula" aria-hidden="true"></div>
+<div id="viewport"><div id="world">
 
-<div class="wrap">
-<div class="card">
-  <div class="head-row">
-    <!-- 見出しの絵文字だけ、旧URL（ベータ路）では 🦞 に戻す。あちらの顔だったので。
-         中身は JS が入れる（hostname 判定なので beta ブランチに差分を持たずに済む） -->
-    <h1><span><span id="brandMark">🫖</span> ぽっと通話</span><span>〈実験版〉</span></h1>
-    <button id="help" class="help-btn" type="button" aria-haspopup="dialog">これはなに？</button>
-  </div>
-  <p class="sub">同じ部屋を開いた人どうし、声でつながります。</p>
-
-  <div id="setupFields" class="collapsible"><div>
-  <details id="profileBox" class="profile">
-    <summary>
-      <span class="pf-emoji" id="pfEmoji">🦞</span>
-      <span class="pf-name" id="pfName">名前・アバターを設定</span>
-      <span class="pf-open-label">あなたの名前</span>
-      <span class="pf-edit" id="pfEdit">変更 ▾</span>
-    </summary>
-    <div class="pf-body"><div>
+  <!-- ── 参加前：プロフィールの泡（あなた） ── -->
+  <div id="setupFields" class="zc">
+    <details id="profileBox" class="stub"><summary></summary></details>
+    <div id="pfBub" class="tone-violet" role="group" aria-label="あなたのプロフィール">
+      <button id="pfEmoji" type="button" class="pf-emoji" aria-label="アバター（絵文字）を選ぶ" aria-haspopup="true">🫧</button>
       <input id="name" placeholder="ゲスト" autocomplete="off" maxlength="20" aria-label="あなたの名前">
-
-      <label>アバター</label>
-      <div id="avatars" class="avatars"></div>
-
-      <div class="grow-note" id="growNote"></div>
-    </div></div>
-  </details>
-
-  <!-- ★導線の優先順位：**名前を決める → ロビーから部屋を選ぶ**。部屋を新しく作るのは
-       そのつぎなので、**既定では畳んでおく**（2026-09-12・利用者の指定）。
-       共有リンクから来た人は部屋名が入っているので、その場合だけ自動で開く。 -->
-  <details id="createBox" class="create">
-    <summary><span class="cr-ic">🏠</span><span class="cr-label">部屋を作る</span><span class="cr-open-label">部屋名</span><span id="roomCount" class="char-count"></span><span class="cr-arrow">▸</span></summary>
-    <div class="cr-body"><div>
-  <div id="roomField">
-    <!-- maxlength は貼り付け暴走の上限だけ（30 文字の本当の判定は文字数カウンタと参加時の capRoom。絵文字は 2 単位なので 60） -->
-    <input id="room" placeholder="◯◯の部屋" autocomplete="off" aria-label="部屋名" maxlength="60">
-    <!-- 部屋の種類。**既定は雑談部屋**（今までの部屋と同じ）。配信部屋を選んだ瞬間に鍵を作って
-         共有リンクを確定させる（＝先に配ってから入れる）。
-         他人の配信部屋のリンクを開いている間は JS がこの2つごと隠す（部屋の正体はURLで決まっているため） -->
-    <div id="kindRow" class="kind" role="radiogroup" aria-label="部屋の種類">
-      <label class="snd-opt"><input type="radio" name="kind" id="kindBc"> 📣 配信部屋にする（あなたの声だけ流れます）</label>
-      <label class="snd-opt"><input type="radio" name="kind" id="kindChat" checked> 🏠 雑談部屋にする（全員で話せます）</label>
+      <span id="growNote" class="pf-grow" aria-label="成長"></span>
+      <span id="pfName" hidden></span><span id="pfEdit" hidden></span>
     </div>
-  </div>
-      <!-- 参加ボタンもこの中。**部屋名と対で使うもの**なので、畳んだときに一緒に消えるのが素直
-           （ロビーから入るときはこのボタンを通らない） -->
-  <button id="join"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg><span id="joinLbl">部屋を作る</span></button>
-  <!-- 入口の案内（リンクで来た人だけ・v0.12.0）。ロビーでその部屋が開いているかを見てから入る。
-       開いていなければ「お休み中」と案内してロビーへ誘導し、作る意思があれば「この名前で新しく開く」。 -->
-  <div id="entryNote" class="entry-note" hidden>
-    <p id="entryText"></p>
-    <div id="entryActions" class="entry-actions" hidden>
-      <!-- 文言は利用者の指定（2026-09-18）。ロビーはすぐ下にあるので「ロビーで」とは言わない。
-           「名前をつけて参加」＝参加ボタンを戻して部屋名の欄にフォーカス（名前を見直してから押す） -->
-      <button id="entryLobby" type="button">☎️ 通話中の部屋から選んで参加</button>
-      <button id="entryOpen" type="button">✏️ 部屋の名前をつけて参加</button>
-    </div>
-  </div>
-    </div></div>
-  </details>
-  </div></div>
+    <div id="avatars" class="zc"></div>
 
-  <div class="status" id="statusCard">
-    <!-- ★状態は1行まるごと使う。チップと同じ行に入れると、**部屋名が長いときに
-         変なところで折れて不細工になる**（2026-09-13・利用者の指摘）。操作は次の行へ。 -->
-    <div class="status-head">
-      <div class="status-line"><span class="dot" id="dot"></span><span id="state">未参加</span></div>
-      <div class="head-actions">
-        <!-- アイコンは**動画プレイヤーで広く使われている PiP の形**（枠の右下に小さい四角）。
-             「ピクチャインピクチャ」という語は表記も揺れていて一般語とは言えないので、
-             **記号だけ借りて、言葉は「小窓」**にしてある（2026-09-13・利用者と検討） -->
-        <button id="pip" class="retry-btn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><rect x="12" y="12" width="8" height="6" rx="1" fill="currentColor" stroke="none"/></svg><span class="pip-lbl">小窓</span></button>
-        <button id="retry" class="retry-btn" type="button" hidden>🔄 つなぎ直す</button>
+    <!-- ── 部屋を作る／参加する（🏠 を押すと泡が並ぶ。リンクで来た人は最初から開いている） ── -->
+    <details id="createBox" class="stub"><summary></summary></details>
+    <button id="createBtn" type="button" aria-label="部屋を作る・参加する" aria-expanded="false"><span class="ico">🏠</span></button>
+    <div id="createWrap" class="zc">
+      <div id="roomField" class="zc">
+        <div id="roomBub" class="tone-glass" role="group" aria-label="部屋名">
+          <span class="cap rb-head">部屋の名前</span>
+          <input id="room" placeholder="◯◯の部屋" autocomplete="off" aria-label="部屋名" maxlength="60">
+          <span id="roomCount" class="char-count"></span>
+        </div>
+        <div id="kindRow" class="zc" role="radiogroup" aria-label="部屋の種類">
+          <label class="kind-opt" id="kindBcL" aria-label="配信部屋にする（あなたの声だけ流れます）"><input type="radio" name="kind" id="kindBc"><span class="ico">📣</span></label>
+          <label class="kind-opt" id="kindChatL" aria-label="雑談部屋にする（全員で話せます）"><input type="radio" name="kind" id="kindChat" checked><span class="ico">🏠</span></label>
+        </div>
+      </div>
+      <button id="join" class="tone-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg><span id="joinLbl" class="cap">部屋を作る</span></button>
+      <div id="entryNote" class="note-bub" hidden>
+        <p id="entryText"></p>
+        <div id="entryActions" class="sprouts" hidden>
+          <button id="entryLobby" type="button" aria-label="通話中の部屋から選んで参加"><span class="ico">☎️</span></button>
+          <button id="entryOpen" type="button" aria-label="部屋の名前をつけて参加"><span class="ico">✏️</span></button>
+        </div>
       </div>
     </div>
-    <div style="margin-top:8px">いま一緒にいる人：<span class="peers" id="count">0</span> 人</div>
-    <!-- 人数が多くなってきたときだけ出る注意（上限に達したら言い方が変わる） -->
-    <!-- 話題タグ（v0.13.1）。話題が変わった部屋に「今の話題」を後付けする。誰でも上書き（最新1つ・履歴なし）。
-         抑止として付けた人の名前を全員に出す。 -->
-    <div id="tagRow" class="tag-row" hidden>
-      <span class="tag-ic" aria-hidden="true">🏷</span>
-      <span id="tagText" class="tag-text"></span>
-      <button id="tagEdit" class="retry-btn" type="button">つける</button>
+  </div>
+
+  <!-- ── 通話中：部屋の泡（中に参加者・ひとこと） ── -->
+  <div id="statusCard" class="zc">
+    <div id="callBub" class="tone-room" hidden>
+      <div class="call-title"><span id="callName"></span><small><span id="callCount">1</span>人</small><span class="peers sr" id="count">0</span></div>
+      <div id="panMembers" class="zc" role="tabpanel" aria-labelledby="tabMembers">
+        <div id="members" class="zc"></div>
+        <details id="connLegend" class="stub"><summary id="connLegendSum"></summary><div id="connLegendBody"></div></details>
+      </div>
+      <div id="panChat" class="zc" role="tabpanel" aria-labelledby="tabChat" hidden>
+        <div id="chatLog" class="chat-log scroll-in" hidden></div>
+        <div id="chatRow" class="chat-row" hidden>
+          <input id="chatText" name="message" type="text" placeholder="ひとこと…" maxlength="60" aria-label="ひとことを書く"
+                 inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false">
+          <button id="chatSend" type="button" class="bub-mini" aria-label="送信"><span class="ico">➤</span></button>
+        </div>
+      </div>
     </div>
-    <div id="tagForm" class="chat-row" hidden>
-      <input id="tagInput" name="topic" type="text" maxlength="30" placeholder="いまの話題（例：お昼ご飯の献立）"
+    <!-- 話題タグ（部屋の泡の上にくっつく） -->
+    <div id="tagRow" class="note-bub tag-bub" hidden>
+      <span class="tag-ic" aria-hidden="true">🏷</span><span id="tagText" class="tag-text"></span>
+      <button id="tagEdit" type="button" class="sprout" aria-label="話題をつける・変える"><span class="ico">✏️</span></button>
+    </div>
+    <div id="tagForm" class="note-bub tag-form" hidden>
+      <input id="tagInput" name="topic" type="text" maxlength="30" placeholder="いまの話題" aria-label="いまの話題"
              inputmode="text" enterkeyhint="done" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false">
-      <button id="tagSend" type="button">確定</button>
+      <button id="tagSend" type="button" class="sprout tone-ok" aria-label="話題を確定"><span class="ico">✓</span></button>
     </div>
-    <div id="crowdNote" class="audio-warn" hidden></div>
-    <!-- 配信部屋のときだけ出る説明（自分がいま話せるのかを一言で言う） -->
-    <div id="bcNote" class="bc-note" hidden><span id="bcNoteText"></span><button id="bcNoteClose" class="bc-note-x" type="button" aria-label="この案内を閉じる">×</button></div>
-    <!-- いま枠主が読んでいるお便り。**タブの外**に置く＝どのタブを見ていても、
-         いま何が読まれているかが分かる（ラジオで読み上げられているハガキ） -->
-    <div id="mailNow" class="mail-now" hidden></div>
-    <!-- 通話中のタブ。**要素はどれもDOMから消さず、表示/非表示だけをここが握る**
-         （消すと吹き出し・VAD・リアクションの座標など、行に紐づいた仕掛けが全部作り直しになる）。
-         既定は「メンバー」。参加していない間はタブごと出さない。 -->
-    <div id="tabs" class="tabs" role="tablist" aria-label="通話中の表示" hidden>
-      <button id="tabMembers" class="tab" type="button" role="tab" aria-selected="true" aria-controls="panMembers"><span class="t-em">👥</span><span class="t-label">メンバー</span></button>
-      <button id="tabChat" class="tab" type="button" role="tab" aria-selected="false" aria-controls="panChat"><span class="t-em">💬</span><span class="t-label">ひとこと</span><span class="t-dot" aria-hidden="true"></span></button>
-      <!-- おたよりは**配信部屋のときだけ**出す（枠主がはっきりしている部屋でしか成立しないため） -->
-      <button id="tabMail" class="tab" type="button" role="tab" aria-selected="false" aria-controls="panMail" hidden><span class="t-em">📮</span><span class="t-label">おたより</span></button>
-      <button id="tabSettings" class="tab tab-right" type="button" role="tab" aria-selected="false" aria-controls="panSettings" aria-label="設定"><span class="t-em">⚙️</span><span class="t-label">設定</span></button>
+
+    <!-- 操作の泡（部屋の外壁に吸着。見えているものだけでハニカムを組み直す） -->
+    <div id="tabs" class="zc" role="tablist" aria-label="通話中の表示" hidden>
+      <button id="tabMembers" class="tab stub" type="button" role="tab" aria-selected="true" aria-controls="panMembers"><span class="t-label">メンバー</span></button>
+      <button id="tabChat" class="tab ctl" type="button" role="tab" aria-selected="false" aria-controls="panChat" aria-label="ひとこと"><span class="ico">💬</span></button>
+      <button id="tabMail" class="tab ctl" type="button" role="tab" aria-selected="false" aria-controls="panMail" aria-label="おたより" hidden><span class="ico">📮</span></button>
+      <button id="tabSettings" class="tab ctl" type="button" role="tab" aria-selected="false" aria-controls="panSettings" aria-label="設定"><span class="ico">⚙️</span></button>
     </div>
-    <div id="panMembers" class="panel" role="tabpanel" aria-labelledby="tabMembers" hidden>
-      <div id="members" class="members"></div>
-      <!-- リアクション。中身は JS が REACTIONS から作る（一覧の定義を1か所に保つ） -->
-      <div id="reactions" class="reactions" hidden></div>
-      <!-- 経路アイコンの凡例。参加した直後だけ開いて出し、数秒で畳んで1行のボタンに戻る。
-           中身は JS が入れる（行内アイコンと同じSVG定数を使い、見た目を必ず一致させるため） -->
-      <details id="connLegend" class="conn-legend" hidden>
-        <summary id="connLegendSum"></summary>
-        <div id="connLegendBody"></div>
-      </details>
+    <div class="zc actions">
+      <button id="raise" class="ctl" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V5a2 2 0 0 1 4 0v6"/><path d="M13 7a2 2 0 0 1 4 0v6a6 6 0 0 1-6 6H9a5 5 0 0 1-5-5c0-1 .5-2 1.5-2.5"/></svg><span class="sr">通話希望</span></button>
+      <button id="speak" class="ctl tone-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8.5" y1="21" x2="15.5" y2="21"/></svg><span class="sr">マイクを使う</span></button>
+      <button id="mute" class="ctl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8.5" y1="21" x2="15.5" y2="21"/><line class="mic-slash" x1="4" y1="3" x2="20" y2="21"/></svg><span class="lbl sr">ミュート</span></button>
+      <button id="leave" class="ctl tone-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h8"/><path d="M14 3v18"/><path d="M18 12h4"/><path d="m19 9 3 3-3 3"/></svg><span class="sr">退出</span></button>
     </div>
-    <div id="panChat" class="panel" role="tabpanel" aria-labelledby="tabChat" hidden>
-      <!-- ひとことのタイムライン。**自分が受け取った分だけ**を自分の画面に貯める。
-           後から来た人には送らない（＝その場だけのものという性質は変えない）。
-           入力欄の真上に置くのは「読む→打つ」で視線が繋がるため。1件も無いうちは出さない。 -->
-      <div id="chatLog" class="chat-log" hidden></div>
-      <!-- ひとこと。履歴は持たない（後から来た人には出ない）＝その場だけのもの -->
-      <div id="chatRow" class="chat-row" hidden>
-        <!-- ★入力の候補に「カード番号」等が出ないようにする属性一式（Android で報告あり）。
-             name を message と明示するのは、名前が無いと自動入力側が位置や形から
-             推測して支払い欄と誤判定することがあるため。inputmode/enterkeyhint は
-             キーボードを文章向きにする。 -->
-        <input id="chatText" name="message" type="text" placeholder="ひとこと…" maxlength="60"
-               inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off"
-               autocapitalize="sentences" spellcheck="false">
-        <button id="chatSend" type="button">送信</button>
+    <button id="reactBtn" class="ctl" type="button" aria-label="リアクション" aria-expanded="false"><span class="ico">👏</span></button>
+    <div id="reactions" class="zc" hidden></div>
+    <button id="pip" class="ctl" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><rect x="12" y="12" width="8" height="6" rx="1" fill="currentColor" stroke="none"/></svg><span class="pip-lbl sr">小窓</span></button>
+    <button id="retry" class="ctl" type="button" hidden aria-label="つなぎ直す"><span class="ico">🔄</span><span class="sr">🔄 つなぎ直す</span></button>
+
+    <!-- 招待（参加前は「部屋を作る」の泡に、通話中は操作の泡に並ぶ） -->
+    <div id="shareWrap" class="zc" hidden>
+      <span id="shareLabel" class="sr">共有リンク：</span><a class="share sr" id="share" href="#"></a>
+      <button id="copy" class="ctl" aria-label="招待リンクをコピー"><span class="ico">🔗</span><span class="sr">🔗 招待リンクをコピー</span></button>
+      <button id="qr" class="ctl" aria-expanded="false" aria-label="QRコード"><span class="ico">📱</span><span class="sr">📱 QRコード</span></button>
+      <div id="qrBox" class="qr-bub" hidden>
+        <div id="qrImg" class="qr-img">生成中…</div>
+        <div id="qrRoom" class="qr-room"></div>
       </div>
     </div>
-    <!-- おたより（配信部屋のみ）。**枠主とリスナーで中身が入れ替わる**：
-         枠主＝募集を立てる欄＋集まった投稿＋公開ボタン／リスナー＝募集の見出し＋投稿欄。
-         **投稿は枠主にしか届かない**ので、枠主が選んだものしか部屋に出ない（＝枠主が検閲者）。 -->
-    <div id="panMail" class="panel" role="tabpanel" aria-labelledby="tabMail" hidden>
+
+    <!-- 退出の確認：部屋の右上の外にぽこんと出る。✓ ✕ は右下から生える -->
+    <div id="leaveConfirm" class="ask-bub" hidden>
+      <span id="leaveConfirmText" class="q"></span>
+      <button id="leaveYes" type="button" class="sprout tone-red" aria-label="退出する"><span class="ico">✓</span></button>
+      <button id="leaveNo" type="button" class="sprout sprout2" aria-label="やめる"><span class="ico">✕</span></button>
+    </div>
+
+    <!-- 設定・おたより：部屋の泡の左に寄り添う大きな泡 -->
+    <div id="panMail" class="panel-bub" role="tabpanel" aria-labelledby="tabMail" hidden>
       <div id="mailHead" class="mail-head"></div>
       <div id="mailBody" class="mail-body"></div>
       <div id="mailForm" class="mail-form" hidden>
         <input id="mailText" name="mail" type="text" maxlength="120" placeholder="お便りを書く…"
                inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off"
                autocapitalize="sentences" spellcheck="false">
-        <button id="mailSend" type="button">送る</button>
+        <button id="mailSend" type="button" class="bub-mini">送る</button>
       </div>
     </div>
-    <div id="panSettings" class="panel" role="tabpanel" aria-labelledby="tabSettings" hidden>
-      <!-- 音量。相手ごとの差ではなく、**同じ端末の他の音（YouTube 等）との相対バランス**を
-           変えるためのもの。OS の音量は全部まとめて上下するので比率が変えられない -->
-      <label class="vol-opt" id="volRow"><span class="vol-ic" id="volIc">🔊</span><span class="vol-lbl">音量</span>
-        <input id="vol" type="range" min="0" max="100" step="5" value="100" aria-label="音量">
-        <span class="vol-val" id="volVal">100%</span>
-      </label>
-      <p class="vol-note">この通話の音だけが変わります（他のアプリの音はそのまま）。</p>
-      <!-- BGM。**既定は「なし」**（通話アプリで勝手に音が鳴るのは事故）。
-           選択肢は性格が一番遠い2つだけ＝曲を流すか、地の音を敷くか。
-           部屋名から曲を決めるので**通信は一切増えない**（送らずに導出する。リアクションで
-           絵文字ではなく添字を送ると決めたのと同じ原理）。 -->
-      <div id="bgmRow" class="kind bgm-row" role="radiogroup" aria-label="BGM">
-        <label class="snd-opt"><input type="radio" name="bgm" id="bgmOff" checked> 🔇 BGMなし</label>
-        <label class="snd-opt"><input type="radio" name="bgm" id="bgmTune"> 🎵 軽快な音楽</label>
-        <label class="snd-opt"><input type="radio" name="bgm" id="bgmAmb"> 🌫 アンビエント空間</label>
-        <label class="snd-opt"><input type="radio" name="bgm" id="bgmFire"> 🔥 焚き火</label>
-      </div>
-      <label class="vol-opt" id="bgmVolRow" hidden><span class="vol-ic">🎚</span><span class="vol-lbl">BGM</span>
-        <input id="bgmVol" type="range" min="0" max="100" step="5" value="30" aria-label="BGMの音量">
-        <span class="vol-val" id="bgmVolVal">30%</span>
-      </label>
-      <p class="vol-note" id="bgmNote" hidden>自分にだけ鳴ります（相手には送っていません）。
-        スピーカーだと自分のマイクが拾って相手に流れるので、イヤホンをおすすめします。</p>
-      <label class="snd-opt" id="sndPeerRow" style="display:none"><input type="checkbox" id="sndPeer"> 🔔 入室・退出を音で知らせる</label>
-      <label class="snd-opt" id="sndReactRow" style="display:none"><input type="checkbox" id="sndReact"> 🎵 リアクションを音で鳴らす</label>
-      <!-- ひとことの読み上げ v2（v0.14.42）：**配信部屋のオーナーだけ**。合成はブラウザ内の piper-plus（つくよみちゃん）で、
-           音は BGM と同じ出口（Web Audio → appAudio）から出す。OS の合成（Web Speech API）は v0.14.33〜41 で iOS に勝てず撤去
-           （経緯は internal/HANDOFF と PLAN-tts-piper-2026-09-26.md）。**既定はオフ**＝オンにした操作が約 100MB の読み込みの合図 -->
-      <label class="snd-opt" id="sndTtsRow" hidden><input type="checkbox" id="sndTts"> 🗣 ひとことを つくよみちゃんが読み上げる</label>
-      <p class="vol-note" id="sndTtsNote" hidden>部屋の全員に聞こえます（🗣 つくよみちゃんの行に音が付きます）。初回は約 40 MB を読み込みます（Wi-Fi 推奨。2 回目からは端末に残ります）。
-        ミュート中でも読みます。人が話している間は待って、間が空いてから読みます。この設定は保存されず、ページを開くたびにオフから始まります。</p>
-      <!-- 名前を読まない（v0.14.55・利用者の要望）。こちらは保存する（読み方の好みなので） -->
-      <label class="snd-opt" id="sndTtsNameRow" hidden><input type="checkbox" id="sndTtsNoName"> 🙊 投稿した人の名前は読まない</label>
-      <!-- 通話希望者募集（v0.15.9・配信者だけ）：オンにすると聞き役に「通話希望」ボタンが出て、希望した人が
-           メンバーに 🙋 で並ぶ。配信者は従来どおり 🎙 で許可する（許可後は本人が「マイクを使う」でミュート解除）。 -->
-      <label class="snd-opt" id="reqOpenRow" hidden><input type="checkbox" id="reqOpen"> 🙋 通話希望者募集（聞き役が「通話希望」を出せます）</label>
-      <p class="vol-note" id="sndTtsProg" hidden></p>
-      <p class="vol-note" id="sndTtsSent" hidden></p>
-      <p class="vol-note" id="sndTtsCrash" hidden></p>
-    </div>
-    <!-- 音が届かない相手がいるときだけ出る。頼んでも直らなかった＝本人の操作が要る場合の最終手段 -->
-    <div id="audioWarn" class="audio-warn" hidden></div>
-    <!-- 「退出した」のか「接続が切れた」のかを書き分けて出す。切れたときだけ表示する。
-         本物の回線障害でも出るが、**集団で無視されたときに「自分の回線のせい」と
-         思い込まされないため**でもある（HANDOFF「無視」の項の"秘密の部屋"参照） -->
-    <div id="peerNotice" class="audio-warn" hidden></div>
-    <!-- β だけの診断窓（🔬）。既定は隠し、**4本指タップ／版数の長押し**で出し入れする（下の diag 参照） -->
-    <div id="diag" class="audio-warn" hidden></div>
-    <!-- 小窓（PiP）の中身。canvas に描いた絵を映像トラックにして、この <video> を PiP に入れる。
-         **display:none にしないこと**（消えている要素は PiP に入れられない）。画面外に置く。 -->
-    <!-- このアプリが合成する音（BGM・効果音・音量調整を通した相手の声）の出口。
-         **スピーカーへ直接ではなく、この要素に流す**（iPhone で音量が確保でき、背面でも中断されない） -->
-    <audio id="appAudio" playsinline aria-hidden="true"></audio>
-    <video id="pipVideo" class="pip-video" playsinline muted aria-hidden="true"></video>
-    <div id="eq" class="eq" hidden aria-hidden="true"></div>
-    <!-- ミュート／退出は**イコライザーと招待リンクの間**（2026-09-18・利用者の指定）。
-         カードの上に置くと、スマホでは参加者リストを見ている間に画面の外へ出て目に入らない。
-         比率は ミュート：退出 ＝ 3：2（よく押すほうを大きく／退出は誤タップしにくく）。
-         🔊 音声を有効化も同じ理由でここ（v0.11.8）。出ている間は最優先なので、ミュート／退出の直上 -->
-    <button id="unlock">🔊 音声を有効化（タップ）</button>
-    <!-- 退出の確認（v0.14.2）。★confirm() は使わない：ダイアログが開いている間はページの JS が止まり、
-         BGM の譜面送りも復帰の見張りも止まる→閉じた瞬間にまとめて動いて音が連なる（v0.11.9 で直した
-         連射がこの経路で再発した・2026-09-20）。ページ内の2択なら何も止まらない。 -->
-    <div id="leaveConfirm" class="leave-confirm" hidden>
-      <span id="leaveConfirmText"></span>
-      <button id="leaveYes" type="button">退出する</button>
-      <button id="leaveNo" type="button">やめる</button>
-    </div>
-    <div class="actions">
-      <!-- 配信部屋で登壇を許されたときだけ出る。**押すまでマイクは取らない**（許可ダイアログが
-           何の脈絡もなく出るのを避ける＝聞き役でいるつもりの人を驚かせない） -->
-      <!-- 通話希望（v0.15.9）：配信者が「通話希望者募集」をオンのときだけ聞き役に出る。押すと配信者に手が挙がり、
-           配信者が 🎙 で許可すると下の「マイクを使う」に変わる（押すまでマイクは取らない）。 -->
-      <button id="raise" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V5a2 2 0 0 1 4 0v6"/><path d="M13 7a2 2 0 0 1 4 0v6a6 6 0 0 1-6 6H9a5 5 0 0 1-5-5c0-1 .5-2 1.5-2.5"/></svg><span>通話希望</span></button>
-      <button id="speak"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8.5" y1="21" x2="15.5" y2="21"/></svg><span>マイクを使う</span></button>
-      <button id="mute"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8.5" y1="21" x2="15.5" y2="21"/><line class="mic-slash" x1="4" y1="3" x2="20" y2="21"/></svg><span class="lbl">ミュート</span></button>
-      <button id="leave"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h8"/><path d="M14 3v18"/><path d="M18 12h4"/><path d="m19 9 3 3-3 3"/></svg><span>退出</span></button>
-    </div>
-    <div style="margin-top:10px" id="shareWrap" hidden>
-      <div id="qrBox" class="qr-inline" hidden>
-        <div id="qrImg" class="qr-img">生成中…</div>
-        <div id="qrRoom" class="qr-room"></div>
-      </div>
-      <span id="shareLabel">共有リンク：</span><br><a class="share" id="share" href="#"></a>
-      <div class="share-actions">
-        <button id="copy">🔗 招待リンクをコピー</button>
-        <button id="qr" aria-expanded="false">📱 QRコード</button>
+    <div id="panSettings" class="panel-bub" role="tabpanel" aria-labelledby="tabSettings" hidden>
+      <div class="panel-in scroll-in">
+        <label class="vol-opt" id="volRow"><span class="vol-ic" id="volIc">🔊</span><span class="sr">音量</span>
+          <input id="vol" type="range" min="0" max="100" step="5" value="100" aria-label="音量">
+          <span class="vol-val" id="volVal">100%</span>
+        </label>
+        <p class="vol-note">この通話の音だけが変わります</p>
+        <div id="bgmRow" class="opt-row" role="radiogroup" aria-label="BGM">
+          <label class="opt" aria-label="BGMなし"><input type="radio" name="bgm" id="bgmOff" checked><span class="ico">🔇</span></label>
+          <label class="opt" aria-label="軽快な音楽"><input type="radio" name="bgm" id="bgmTune"><span class="ico">🎵</span></label>
+          <label class="opt" aria-label="アンビエント空間"><input type="radio" name="bgm" id="bgmAmb"><span class="ico">🌫</span></label>
+          <label class="opt" aria-label="焚き火"><input type="radio" name="bgm" id="bgmFire"><span class="ico">🔥</span></label>
+        </div>
+        <label class="vol-opt" id="bgmVolRow" hidden><span class="vol-ic">🎚</span><span class="sr">BGM</span>
+          <input id="bgmVol" type="range" min="0" max="100" step="5" value="30" aria-label="BGMの音量">
+          <span class="vol-val" id="bgmVolVal">30%</span>
+        </label>
+        <p class="vol-note" id="bgmNote" hidden>BGM は自分にだけ鳴ります。スピーカーだとマイクが拾うのでイヤホンがおすすめ</p>
+        <div class="opt-row">
+          <label class="opt" id="sndPeerRow" style="display:none" aria-label="入室・退出を音で知らせる"><input type="checkbox" id="sndPeer"><span class="ico">🔔</span></label>
+          <label class="opt" id="sndReactRow" style="display:none" aria-label="リアクションを音で鳴らす"><input type="checkbox" id="sndReact"><span class="ico">🎵</span></label>
+          <label class="opt" id="sndTtsRow" hidden aria-label="ひとことを つくよみちゃんが読み上げる"><input type="checkbox" id="sndTts"><span class="ico">🗣</span></label>
+          <label class="opt" id="sndTtsNameRow" hidden aria-label="投稿した人の名前は読まない"><input type="checkbox" id="sndTtsNoName"><span class="ico">🙊</span></label>
+          <label class="opt" id="reqOpenRow" hidden aria-label="通話希望者募集（聞き役が「通話希望」を出せます）"><input type="checkbox" id="reqOpen"><span class="ico">🙋</span></label>
+        </div>
+        <p class="vol-note" id="sndTtsNote" hidden>読み上げは部屋の全員に聞こえます。初回は約 40 MB を読み込みます（Wi-Fi 推奨）。ページを開くたびにオフから始まります</p>
+        <p class="vol-note" id="sndTtsProg" hidden></p>
+        <p class="vol-note" id="sndTtsSent" hidden></p>
+        <p class="vol-note" id="sndTtsCrash" hidden></p>
       </div>
     </div>
+
+    <div id="eq" class="stub" hidden aria-hidden="true"></div>
   </div>
-  <!-- 版の表示。不具合の報告で「どの版か」が分かるように。中身は APP_VERSION から入れる。
-       β は #ver の**外**に置くこと（中に入れると test/smoke.py の T15 が版番号と誤認する）。
-       ★**状態カードの外**に置くこと：初期画面ではそのカードごと畳むので、中に入れると
-       版と「安定版へ」の導線が初回訪問者に見えなくなる（β から来た人の逃げ道が消える） -->
-  <!-- 見た目（昼夜）の選択は**版表示と同じ行**に置く＝参加前でも通話中でも常に見える。
-       ⚙️ タブは通話中しか出ないうえ、4行足すと設定パネルが伸びてタブ切り替えで高さが動く
-       （T30 が捕まえた）。中身は <style> 直後のスクリプト。ここは選ぶだけ -->
-  <div class="ver-row">
-    <label class="theme-pick"><span aria-hidden="true">🌗</span><select id="theme" aria-label="見た目">
+
+  <!-- ── ロビー：通話中の部屋が、親の泡（中に参加者の小泡）として漂う ── -->
+  <aside class="lobby zc">
+    <div class="lobby-list zc" id="lobbyList"></div>
+  </aside>
+</div></div>
+
+<!-- 音の出口と小窓の映像。#world（transform される）の外に置く＝画面外に確実に逃がせる -->
+<audio id="appAudio" playsinline aria-hidden="true"></audio>
+<video id="pipVideo" class="pip-video" playsinline muted aria-hidden="true"></video>
+<!-- ═══ 画面に固定するもの ═══ -->
+<div id="hud">
+  <div id="banner" class="banner" hidden>
+  ⚠️ アプリ内ブラウザではマイクが使えないことがあります。<b>Safari / Chrome で開いて</b>ください。
+  <button id="copyTop">🔗 このリンクをコピー</button>
+</div>
+  <div id="stateBub" class="hud-bub">
+    <span class="dot" id="dot"></span><span id="state">未参加</span>
+  </div>
+  <div id="notices">
+    <div id="crowdNote" class="hud-note" hidden></div>
+    <div id="bcNote" class="hud-note" hidden><span id="bcNoteText"></span><button id="bcNoteClose" class="sprout" type="button" aria-label="この案内を閉じる"><span class="ico">✕</span></button></div>
+    <div id="mailNow" class="hud-note mail-now" hidden></div>
+    <div id="audioWarn" class="hud-note" hidden></div>
+    <div id="peerNotice" class="hud-note" hidden></div>
+    <div id="diag" class="hud-note diag" hidden></div>
+    <div id="lobbyStatus" class="hud-note lobby-status">🛰 ロビーに接続中…</div>
+  </div>
+  <button id="unlock" class="hud-unlock"><span class="ico">🔊</span><span class="cap">音声を有効化<br>（タップ）</span></button>
+  <!-- 左下：いつでも使う小さな操作（ハニカムに整列・動かない） -->
+  <div id="hub">
+    <button id="help" class="hub-b" type="button" aria-haspopup="dialog" aria-label="これはなに？（ヘルプ）"><span class="ico">❔</span></button>
+    <label class="hub-b theme-pick" aria-label="見た目（時刻で変わる・端末に合わせる・昼・夜）"><span class="ico">🌗</span><select id="theme" aria-label="見た目">
       <option value="time">時刻で変わる</option>
       <option value="auto">端末に合わせる</option>
       <option value="day">ずっと昼</option>
       <option value="night">ずっと夜</option>
     </select></label>
-    <div class="ver"><span id="ver"></span><span id="chan"></span></div>
+    <button id="lobbyRefresh" class="hub-b" type="button" aria-label="通話中の部屋を更新"><span class="ico">🔄</span><span class="sr">🔄 更新</span></button>
+    <label class="hub-b" aria-label="新しい部屋ができたら音で知らせる"><input type="checkbox" id="sndRoom"><span class="ico">🔔</span></label>
+    <button id="homeBtn" class="hub-b" type="button" aria-label="真ん中に戻る"><span class="ico">🎯</span></button>
+    <div class="hub-b ver-b"><span class="brand" id="brandMark" aria-hidden="true">🫧</span><span id="ver"></span><span id="chan"></span></div>
   </div>
+  <div id="lobbyViewers" class="hud-viewers"></div>
+  <div id="tip" hidden></div>
 </div>
 
-<aside class="lobby">
-  <div class="lobby-head">
-    <h2>☎️ 通話中の部屋</h2>
-    <button id="lobbyRefresh" class="retry-btn" type="button">🔄 更新</button>
-  </div>
-  <div class="lobby-status" id="lobbyStatus">🛰 ロビーに接続中…</div>
-  <div class="lobby-list" id="lobbyList"></div>
-  <label class="snd-opt"><input type="checkbox" id="sndRoom"> 🔔 新しい部屋ができたら音で知らせる</label>
-  <div class="lobby-viewers" id="lobbyViewers"></div>
-  <p class="lobby-note">部屋をタップするとそのまま入室します。通話中は確認のうえ移動します。<br>新しい部屋の音は、このタブを開いている間だけ鳴ります（スマホは裏に回ると鳴りません）。</p>
-</aside>
-</div>
-
-<footer class="legal">
-  このサイトはアクセス測定に <a href="https://www.cloudflare.com/web-analytics/" target="_blank" rel="noopener">Cloudflare Web Analytics</a> を利用しています（Cookie不使用・個人を特定する情報は取得しません）。
-</footer>
-
-<!-- 公開されたお便りを大きく出す紙。**モーダルにしない**のが要点で、後ろの通話操作
-     （ミュート・退出・つなぎ直す）は塞がない＝読み上げ中でも必ず操作できる。
-     閉じても、状態カードの「📮 いま読まれているお便り」の行は残る（そこを押すと開き直せる）。 -->
 <div id="mailPop" class="mail-pop" hidden aria-live="polite">
   <div class="mp-card" role="status">
     <div class="mp-head">
@@ -1257,9 +428,9 @@
     <div class="mp-body" id="mailPopText"></div>
   </div>
 </div>
-
 <dialog id="helpDialog" class="help-dialog">
   <button id="helpX" class="help-x" type="button" aria-label="閉じる">✕</button>
+  <div class="help-scroll scroll-in">
   <h2>🫖 これはなに？</h2>
 
   <p>登録なし・インストールなしで、居合わせた人と<b>声だけで話せる</b>小さなお茶の席です。同じ部屋を開いた人どうしが、そのまま話せます。配信アプリ POPOPO にインスパイアされて作りました。</p>
@@ -1307,11 +478,11 @@
   </details>
 
   <label class="help-hide"><input type="checkbox" id="helpHide"> 今後表示しない</label>
+  </div>
   <button id="helpClose" class="help-close" type="button">閉じる</button>
 </dialog>
-<!-- 無視の初回説明（v0.14.6）。★confirm() 不可の理由は #leaveConfirm のコメント。<dialog>.showModal() は
-     操作を止めても JS は止めない。初回だけ出す（ignoreSeen） -->
 <dialog id="ignoreDlg" class="help-dialog ignore-dialog" aria-labelledby="ignoreTitle">
+  <div class="help-scroll">
   <h2 id="ignoreTitle">🙈 この人の音を受け取らないようにします</h2>
   <ul>
     <li>押したことは相手には伝わりません（通知も出ません）</li>
@@ -1319,12 +490,12 @@
     <li>ただし相手には、<b>あなたの声が聞こえたままです</b>。本当に離れたいときは退出してください</li>
     <li>なお相手が部屋に入り直すと無視は外れます</li>
   </ul>
+  </div>
   <div class="ignore-actions">
     <button id="ignoreYes" type="button">無視する</button>
     <button id="ignoreNo" type="button">やめる</button>
   </div>
 </dialog>
-
 <script type="module">
 // ───────────────────────────────────────────────────────────────────────────
 // 目次（1ファイルに全部入っているので、探すときの手がかり）
@@ -1386,7 +557,7 @@ window.__potPcs = () => [...livePcs]   // 診断・テスト用
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.1.0'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.2.0'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.15.18'
 
@@ -2412,6 +1583,7 @@ const renderMembers = () => {
   if (!call.joinedId) { chatLogEl.replaceChildren(); chatLogEl.hidden = true; return }
   const add = (uid, emoji, name, you, isMuted, stage, relay, action, bc) => {
     const row = memberRow(emoji, name, you, isMuted, stage, relay, action, bc)
+    row.dataset.uid = uid   // MOD：作り直しても同じ人の泡に位置を引き継ぐための目印
     emojiEls.set(uid, row.querySelector('.m-emoji'))
     membersEl.appendChild(row)
     return row
@@ -2458,7 +1630,7 @@ const renderMembers = () => {
   renderTtsSent()
   if (ttsVisible()) {
     const v = memberRow('🗣', 'つくよみちゃん', false, false, '', undefined, null, call.bcast ? { mark: '' } : null)
-    v.classList.add('virtual'); v.title = '読み上げ（配信者の端末で合成）。声と顔：フリー素材キャラクター「つくよみちゃん」'
+    v.classList.add('virtual'); v.dataset.uid = 'tts'; v.title = '読み上げ（配信者の端末で合成）。声と顔：フリー素材キャラクター「つくよみちゃん」'
     const av = v.querySelector('.m-emoji'); av.textContent = ''
     const im = document.createElement('img'); im.className = 'm-face'; im.src = 'img/tsukuyomi-128.png'; im.alt = 'つくよみちゃん'; im.width = 22; im.height = 22
     av.append(im)
@@ -2468,7 +1640,7 @@ const renderMembers = () => {
   // ★「ほか N 人が聞いています」（v0.15.6・②）：一覧に出さなかった聞き役の数だけを、名前なしで伝える。
   //   賑わい（人数）は残しつつ、誰が居るかは隠す。**.member は付けない**＝人数の数え方（MEMBERS）に混ぜない。
   if (hiddenListeners > 0) {
-    const more = document.createElement('div'); more.className = 'm-more'; more.id = 'membersMore'
+    const more = document.createElement('div'); more.className = 'm-more'; more.id = 'membersMore'; more.dataset.uid = 'more'
     more.textContent = '🙂 ほか ' + hiddenListeners + ' 人が聞いています'
     membersEl.appendChild(more)
   }
@@ -6087,6 +5259,7 @@ const renderLobby = () => {
     const act = Math.max(0, ...people.map(p => p.talk || 0))
     const btn = document.createElement('button')
     btn.className = 'room' + (room === call.joinedId ? ' here' : '') + (act ? ' act' + act : '')
+    btn.dataset.room = room; btn.dataset.n = people.length   // MOD：作り直しても同じ部屋の泡に位置を引き継ぐ
     const top = document.createElement('div'); top.className = 'room-top'
     // 配信部屋は 📣 で区別する（一覧では「入ると何が起きるか」が違うので、家の絵文字では足りない）。
     // 指紋そのものは出さない＝長いだけで読み手には意味がない。
@@ -6358,6 +5531,263 @@ addEventListener('online', () => initLobby(true, true))
 // 招待リンクの初期表示。joinedId の宣言より後で呼ぶ必要があるのでここに置いている
 // （syncShare は joinedId を参照するため、宣言前に呼ぶと TDZ で落ちる）
 syncShare()
+
+const ZG_V = '6'   // bubble.js / *.css のキャッシュ避け（変えたら上げる）
+
+// ═══════════════════════════════════════════════════════════════════════════
+// MOD：Zero-G の泡の配置と動き（ここから下は見た目だけ。通話のロジックには触らない）
+// ★元の画面の要素（ID はそのまま）を bubble.js の泡として #world に置く。状態（参加中か・どのタブか・
+//   どれが見えているか）は毎コマ call と DOM から読むだけ＝元の関数を書き換えずに追従する。
+// ★エンジンは動的 import。読めなくても通話そのものは動く（見た目が崩れるだけ）＝段階読み込みと同じ考え方。
+// ═══════════════════════════════════════════════════════════════════════════
+import('./bubble.js?v=' + ZG_V).then(Z => startZeroG(Z)).catch(e => console.warn('Zero-G engine', e))
+function startZeroG(Z) {
+  const { Space, hexHug, hexOut, foam, toWall, calmWhileTyping, tips, fitCircle } = Z
+  const deg = d => d * Math.PI / 180
+  const html = document.documentElement
+  const world = $('world')
+  const space = new Space($('viewport'), world, { minScale: 0.28, maxScale: 1.7 })
+  calmWhileTyping(space)
+  tips($('tip'))
+  html.classList.add('zg')
+
+  // 背景の飾りの泡（物理なし）
+  for (let i = 0; i < 46; i++) {
+    const m = document.createElement('div'), sz = Math.random() * 30 + 8
+    m.className = 'mote'
+    Object.assign(m.style, { width: sz + 'px', height: sz + 'px', left: (Math.random() * 3000 - 1500) + 'px', top: (Math.random() * 2600 - 1300) + 'px', opacity: (Math.random() * .4 + .12).toFixed(2) })
+    world.prepend(m)
+  }
+
+  // ── 参加前：プロフィールの泡と、部屋を作る泡 ─────────────────────────────
+  const PF_R = 108
+  const pfB = space.add($('pfBub'), { kind: 'float', r: PF_R, x: 0, y: 0, home: 0.003, drift: 0.5 })
+  const createB = space.add($('createBtn'), { kind: 'dock', parent: pfB, r: 34, wall: { a: deg(28), d: 38 } })
+  const ROOMIN_R = 92
+  const roomInB = space.add($('roomBub'), { kind: 'slot', parent: pfB, r: ROOMIN_R, wall: { a: deg(-12), d: ROOMIN_R + 16 } })
+  space.add($('kindBcL'), { kind: 'slot', parent: roomInB, r: 28, wall: { a: deg(-62), d: 32 } })
+  space.add($('kindChatL'), { kind: 'slot', parent: roomInB, r: 28, wall: { a: deg(-22), d: 32 } })
+  const JOIN_R = 60
+  const joinB = space.add($('join'), { kind: 'slot', parent: roomInB, r: JOIN_R, wall: { a: deg(62), d: JOIN_R + 8 } })
+  space.add($('entryNote'), { kind: 'slot', parent: joinB, r: 84, wall: { a: deg(10), d: 88 } })
+  // 絵文字を押すと、16 個の絵文字がプロフィールの泡の左下にハニカムで抱きつく
+  const avBtns = [...$('avatars').querySelectorAll('.avatar')]
+  const avSlots = hexHug(avBtns.length, 60, 128, PF_R, 27, 6)   // 左下に抱きつく（右側は「部屋を作る」の泡が使う）
+  avBtns.forEach((b, i) => {
+    const e = b.textContent
+    b.innerHTML = '<span class="av-ico"></span>'; b.firstChild.textContent = e
+    b.setAttribute('aria-label', 'アバター ' + e)
+    b.addEventListener('click', () => setAv(false))
+    space.add(b, { kind: 'slot', parent: pfB, r: 27, x: avSlots[i].x, y: avSlots[i].y })
+  })
+  const setAv = on => {
+    html.classList.toggle('zg-av', on); pfB.pinned = on
+    $('pfEmoji').setAttribute('aria-expanded', String(on))
+    if (on) { const cx = avSlots.reduce((a, p) => a + p.x, 0) / avSlots.length, cy = avSlots.reduce((a, p) => a + p.y, 0) / avSlots.length; space.view(pfB.x + cx * .5, pfB.y + cy * .5, 600) }
+  }
+  $('pfEmoji').addEventListener('click', () => { if (!call.joinedId) setAv(!html.classList.contains('zg-av')) })
+  $('createBtn').addEventListener('click', () => {
+    const box = $('createBox'); box.open = !box.open
+    if (box.open) space.view(pfB.x + 150, pfB.y + 40, 680)
+  })
+
+  // ── 通話中：部屋の泡 ───────────────────────────────────────────
+  const callB = space.add($('callBub'), { kind: 'float', r: 200, x: 0, y: 0, home: 0.003, drift: 0.5, breath: 0.01 })
+  callB.innerPad = 12
+  const CTRL_R = 32
+  // 部屋の外壁に吸着する操作。**見えているものだけで**二段の泡を組み直す（順＝よく使うものが壁ぎわ）
+  const CTRLS = ['mute', 'speak', 'raise', 'leave', 'tabChat', 'reactBtn', 'copy', 'qr', 'tabSettings', 'tabMail', 'pip', 'retry']
+    .map(id => space.add($(id), { kind: 'dock', parent: callB, r: CTRL_R, wall: { a: 0, d: CTRL_R + 4 } }))
+  const copyB = CTRLS[6], qrB = CTRLS[7]
+  const qrBoxB = space.add($('qrBox'), { kind: 'slot', parent: callB, r: 92, wall: { a: deg(150), d: 100 } })
+  const askB = space.add($('leaveConfirm'), { kind: 'slot', parent: callB, r: 84, wall: { a: deg(-42), d: 94 } })
+  const tagB = space.add($('tagRow'), { kind: 'slot', parent: callB, r: 58, wall: { a: deg(-118), d: 62 } })
+  space.add($('tagForm'), { kind: 'slot', parent: callB, r: 70, wall: { a: deg(-80), d: 74 } })
+  const PANEL_R = 196
+  space.add($('panSettings'), { kind: 'slot', parent: callB, r: PANEL_R, wall: { a: deg(180), d: PANEL_R + 14 } })
+  space.add($('panMail'), { kind: 'slot', parent: callB, r: PANEL_R, wall: { a: deg(180), d: PANEL_R + 14 } })
+  // リアクション：👏 を押すと 8 つの泡がハニカムで外に並ぶ（押すと、元どおり自分の泡から湧き上がる）
+  const rxBtns = [...$('reactions').children]
+  rxBtns.forEach(b => { const e = b.textContent; b.innerHTML = '<span class="rx-ico"></span>'; b.firstChild.textContent = e; b.setAttribute('aria-label', 'リアクション ' + e) })
+  const rxB = rxBtns.map(b => space.add(b, { kind: 'slot', parent: callB, r: 26, wall: { a: 0, d: 0 } }))
+  const setRx = on => {
+    html.classList.toggle('zg-rx', on); $('reactBtn').setAttribute('aria-expanded', String(on))
+    if (!on) return
+    const rb = CTRLS[5], a = rb.wall.a, R = callB.targetR ?? callB.r
+    const D = R + CTRL_R * 4 + 92
+    const pts = hexOut(rxB.length, 4, 56, a * 180 / Math.PI, D), c = { x: D * Math.cos(a), y: D * Math.sin(a) }
+    rxB.forEach((b, i) => { b.wall = toWall(pts[i], R, c) })
+    // 並びが画面の外に切れないよう、部屋と並びが両方収まるところへ寄る
+    space.view(callB.x + c.x * .45, callB.y + c.y * .45, (R + CTRL_R * 4 + 92 + 120) * 1.6)
+  }
+  $('reactBtn').addEventListener('click', () => setRx(!html.classList.contains('zg-rx')))
+
+  // 参加者の泡（#members の行）。行は描き直しのたびに作り直されるので、uid で泡を引き継ぐ
+  const memB = new Map()
+  const memR = () => { const n = memB.size; return n <= 4 ? 44 : n <= 8 ? 38 : 31 }
+  const roomR = () => { const n = memB.size; return Math.min(250, Math.max(170, Math.sqrt(n) * 78 + 70)) }
+  const syncMembers = () => {
+    const seen = new Set()
+    for (const el of $('members').children) {
+      if (!el.classList.contains('member') && !el.classList.contains('m-more')) continue
+      const uid = el.dataset.uid || el.id || 'row'
+      seen.add(uid)
+      const b = memB.get(uid)
+      if (b) space.rebind(b, el)
+      else {
+        const a = Math.random() * Math.PI * 2, d = Math.random() * 40
+        memB.set(uid, space.add(el, { kind: 'inner', parent: callB, r: 40, x: Math.cos(a) * d, y: Math.sin(a) * d }))
+      }
+    }
+    memB.forEach((b, uid) => { if (!seen.has(uid)) { if (b.visible && b.el.isConnected === false) space.pop(b); space.remove(b); memB.delete(uid) } })
+    const r = memR()
+    memB.forEach((b, uid) => { const rr = uid === 'more' ? r * 1.15 : uid === 'self' ? r * 1.12 : r; if (Math.abs(b.r - rr) > .5) b.grow(rr) })
+    chatLayout()
+  }
+  new MutationObserver(syncMembers).observe($('members'), { childList: true })
+
+  // ── ひとこと：部屋の泡が膨らみ、参加者は右に寄り、左側いっぱいが読み物 ─────────────────
+  let chatOn = false, chatRight = null
+  const chatLayout = () => {
+    const R = roomR() + (chatOn ? 70 : 0)
+    if (Math.abs((callB.targetR ?? callB.r) - R) > .5) callB.grow(R)
+    const list = [...memB.values()]
+    if (!chatOn) { list.forEach(b => { b.tx = b.ty = null }); return }
+    const r = memR(), cols = list.length > 6 ? 3 : 2
+    const pts = Z.hexGrid(list.length, cols, r * 2 + 6)
+    const maxX = Math.max(...pts.map(p => p.x)), minX = Math.min(...pts.map(p => p.x))
+    const cx = R - 16 - r - maxX
+    list.forEach((b, i) => { b.tx = cx + pts[i].x; b.ty = pts[i].y })
+    chatRight = R + cx + minX - r - 10
+    $('callBub').style.setProperty('--chat-right', ((1 - chatRight / (R * 2)) * 100).toFixed(1) + '%')
+  }
+  const log = $('chatLog')
+  const refit = () => { if (chatOn && !log.hidden) fitCircle(log, [...log.children], { pad: 14, right: chatRight, circle: { cx: log.clientWidth / 2, cy: log.clientHeight / 2, R: log.clientWidth / 2 - 6 } }) }
+  log.addEventListener('scroll', () => requestAnimationFrame(refit), { passive: true })
+  new MutationObserver(() => { requestAnimationFrame(refit) }).observe(log, { childList: true })
+
+  // ── ロビー：通話中の部屋が親の泡として漂う ───────────────────────────────
+  const lobB = new Map()
+  let lobN = 0
+  const syncLobby = () => {
+    const seen = new Set()
+    for (const el of $('lobbyList').children) {
+      if (el.id === 'roomAsk') continue
+      if (!el.classList.contains('room') || el.classList.contains('here')) continue
+      const key = el.dataset.room
+      seen.add(key)
+      const n = +el.dataset.n || 1, r = Math.min(150, 58 + Math.sqrt(n) * 24)
+      el.setAttribute('aria-label', (el.querySelector('.room-name')?.textContent || '部屋') + '（' + n + '人）')
+      let b = lobB.get(key)
+      if (b) { space.rebind(b, el); if (Math.abs(b.r - r) > .5) b.grow(r) }
+      else {
+        // 置き場所：中心の周りの輪に、黄金角で散らす（来た順に）
+        const i = lobN++, a = i * 2.39996, d = 470 + (i % 3) * 150
+        b = space.add(el, { kind: 'float', r, x: Math.cos(a) * d, y: Math.sin(a) * d, home: 0.0012, drift: 1 })
+        b.x = b.ox; b.y = b.oy
+        lobB.set(key, b)
+      }
+    }
+    lobB.forEach((b, key) => { if (!seen.has(key)) { space.pop(b); space.remove(b); lobB.delete(key) } })
+    // 「参加しますか？」は、その部屋の泡の右上にぽこんと（✓ ✕ は CSS で右下から生える）
+    const ask = $('roomAsk')
+    if (ask) {
+      const host = lobB.get(ask.previousElementSibling?.dataset.room)
+      if (host) {
+        if (!syncLobby.askB) syncLobby.askB = space.add(ask, { kind: 'slot', parent: host, r: 80, wall: { a: deg(-40), d: 86 } })
+        else { space.rebind(syncLobby.askB, ask); syncLobby.askB.parent = host }
+        host.pinned = true
+      }
+    } else if (syncLobby.askB) { lobB.forEach(b => { b.pinned = false }) }
+  }
+  new MutationObserver(syncLobby).observe($('lobbyList'), { childList: true })
+
+  // ── 画面に固定するお知らせ：文字数に合わせて円の大きさを決める ─────────────────────
+  const sizeNote = el => { const n = [...(el.textContent || '')].length; el.style.setProperty('--d', Math.round(Math.max(76, Math.min(210, Math.sqrt(n) * 18 + 40))) + 'px') }
+  document.querySelectorAll('.hud-note').forEach(el => {
+    sizeNote(el)
+    new MutationObserver(() => sizeNote(el)).observe(el, { childList: true, characterData: true, subtree: true })
+  })
+  // 成長：泡には段階の絵文字だけ（文は長押しの名前で読める）
+  const growIco = document.createElement('span'); growIco.className = 'pf-grow-ico'; $('growNote').after(growIco)
+  const syncGrow = () => { const t = $('growNote').textContent; growIco.textContent = [...t][0] || ''; growIco.setAttribute('aria-label', t); growIco.dataset.tip = t }
+  syncGrow(); new MutationObserver(syncGrow).observe($('growNote'), { childList: true, characterData: true, subtree: true })
+
+  // ── 状態に追従する（毎コマ。読むだけで、元の状態は変えない） ───────────────────────
+  let joined = null, tick = 0, ctrlSig = '', lastTab = ''
+  const isVis = el => el.checkVisibility ? el.checkVisibility() : !!el.offsetParent
+  const relayoutCtrls = () => {
+    const vis = CTRLS.filter(b => isVis(b.el))
+    const sig = vis.map(b => b.el.id).join(',') + '|' + Math.round(callB.targetR ?? callB.r)
+    if (sig === ctrlSig) return
+    ctrlSig = sig
+    const R = callB.targetR ?? callB.r
+    const pts = foam(vis.length, R, CTRL_R, 14, 3)
+    vis.forEach((b, i) => { b.wall = toWall(pts[i], R) })
+    const q = qrB.wall ? qrB.wall.a : deg(60)
+    qrBoxB.parent = callB; qrBoxB.wall = { a: q + deg(26), d: CTRL_R * 4 + 100 }
+    if (html.classList.contains('zg-rx')) setRx(true)
+  }
+  const view = () => {
+    if (call.joinedId) {
+      const R = callB.targetR ?? callB.r
+      if (call.tab === 'settings' || call.tab === 'mail') space.view(callB.x - PANEL_R * .9, callB.y, (R + PANEL_R) * 2 + 120)
+      else space.view(callB.x + 40, callB.y + 30, R * 2 + CTRL_R * 7)
+    } else space.view(pfB.x + ($('createBox').open ? 150 : 40), pfB.y + 40, $('createBox').open ? 680 : 520)
+  }
+  space.onFrame = () => {
+    tick++
+    const j = !!call.joinedId
+    if (j !== joined) {
+      joined = j
+      setAv(false); setRx(false)
+      $('callBub').hidden = !j
+      $('pfBub').hidden = j; $('createBtn').hidden = j
+      $('reactBtn').hidden = !j
+      // 入った瞬間：プロフィールの泡がいた所に部屋の泡が膨らむ（あなたが部屋になる）
+      if (j) { callB.x = callB.ox = pfB.x; callB.y = callB.oy = pfB.y; callB.size(140); callB.pop = 0 }
+      else { pfB.x = pfB.ox = callB.x; pfB.y = pfB.oy = callB.y }
+      // 招待の泡：参加前は「部屋を作る」の泡の下に、通話中は操作として部屋の外壁に
+      if (j) { copyB.kind = qrB.kind = 'dock'; copyB.parent = qrB.parent = callB; ctrlSig = '' }
+      else {
+        copyB.kind = qrB.kind = 'slot'; copyB.parent = qrB.parent = joinB
+        copyB.wall = { a: deg(132), d: CTRL_R + 6 }; qrB.wall = { a: deg(172), d: CTRL_R + 6 }
+        qrBoxB.parent = joinB; qrBoxB.wall = { a: deg(110), d: 92 + CTRL_R * 2 + 16 }
+      }
+      setTimeout(view, 60)
+    }
+    // 部屋を作る：<details id="createBox"> の open をそのまま使う（元の判定＝リンクで来たら開く、が生きる）
+    const open = !j && $('createBox').open
+    $('createWrap').hidden = !open
+    $('createBtn').setAttribute('aria-expanded', String(open))
+    $('stateBub').hidden = $('statusCard').hidden
+    if (j) {
+      if (tick % 8 === 0) relayoutCtrls()
+      if (call.tab !== lastTab) {
+        lastTab = call.tab
+        const on = call.tab === 'chat'
+        if (on !== chatOn) { chatOn = on; $('callBub').classList.toggle('chat-mode', on); callB.pinned = on; chatLayout(); setTimeout(() => { log.scrollTop = log.scrollHeight; refit() }, 450) }
+        setTimeout(view, 30)
+      }
+      if (chatOn && tick % 10 === 0) refit()
+      if (tick % 30 === 0) { $('callName').textContent = (call.bcast ? '📣 ' : '') + roomLabel(call.joinedId); $('callCount').textContent = call.peers.size + 1 }
+      askB.el.classList.toggle('open', !$('leaveConfirm').hidden)
+      callB.pinned = chatOn || !$('leaveConfirm').hidden || call.tab === 'settings' || call.tab === 'mail'
+    }
+    if (tick % 60 === 0) html.classList.toggle('zg-day', html.style.colorScheme === 'light')
+  }
+  $('callName').textContent = ''
+  // 退出の確認：出たら部屋と一緒に見えるところへ
+  new MutationObserver(() => { if (!$('leaveConfirm').hidden) { const t = askB.target(); space.view(callB.x + (t.x - callB.x) * .4, callB.y + (t.y - callB.y) * .4, (callB.r + 84) * 2 + 140) } })
+    .observe($('leaveConfirm'), { attributes: true, attributeFilter: ['hidden'] })
+  // 「通話中の部屋から選ぶ」：元はページを下へスクロールしていた。ここではカメラを引いてロビーを見せる
+  $('entryLobby').addEventListener('click', () => space.view(0, 0, 1500))
+  $('homeBtn').addEventListener('click', view)
+  addEventListener('resize', () => setTimeout(view, 100))
+  syncMembers(); syncLobby()
+  view(); space.view(pfB.x + 40, pfB.y + 40, 520, { now: true })
+  window.__zg = { space, view }   // 試験・調整用
+}
 
 // MOD：外から状態を読む口（test/interop.py 用）。見た目を作り替えても同じ物差しで測れるよう、
 // DOM ではなく call から読む。書き込みは join/leave だけ（人が押すのと同じ関数を呼ぶ）

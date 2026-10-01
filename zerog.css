@@ -1,0 +1,380 @@
+/* zerog.css — ぽっと通話 Zero-G のアプリ用の見た目（泡の質感そのものは bubble.css）
+   ★元の index.html の要素を ID ごと残し、泡として並べ直している。入れ物は .zc（display:contents）。
+   ★時刻で変わるテーマのスクリプトは元のまま動く（--g1 などを書く）。この画面は宇宙が地なので色は使わず、
+     昼の側だけ星雲を明るくする（html.zg-day） */
+
+:root { color-scheme: dark !important; }
+.zc { display: contents; }
+.zc[hidden] { display: none; }
+.stub { display: none !important; }
+
+/* 泡になる要素の共通（bubble.js が .bub を付ける前でも崩れないように） */
+#pfBub, #createBtn, #roomBub, .kind-opt, #join, #entryNote, #callBub, .member, .ctl, #reactions > button,
+#avatars > button, #tagRow, #tagForm, #leaveConfirm, .panel-bub, #qrBox, button.room, #roomAsk, .m-more { position: absolute; left: 0; top: 0; }
+
+/* SVG のアイコン（元のボタンの絵）を泡の大きさに合わせる */
+.bub > svg { width: 44cqmin; height: 44cqmin; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
+
+/* ── プロフィール ─────────────────────────────── */
+#pfBub { padding: 0; gap: 3cqmin; }
+.pf-emoji { font-size: 34cqmin; line-height: 1; background: none; border: 0; padding: 0; cursor: pointer; filter: drop-shadow(0 4px 8px rgba(0,0,0,.35));
+  transition: transform .2s cubic-bezier(.34,1.56,.64,1); touch-action: manipulation; }
+.pf-emoji:hover { transform: scale(1.08); }
+.pf-emoji:disabled { cursor: default; }
+#pfBub input { width: 70%; font-weight: 600; }
+.pf-grow { font-size: 12cqmin; line-height: 1; margin-top: 1cqmin; color: var(--ink-dim); }
+#avatars > button[aria-pressed="true"] { border-color: var(--blue); box-shadow: 0 0 0 2px var(--blue), 0 0 18px rgba(56,189,248,.7); }
+.av-ico { font-size: 52cqmin; line-height: 1; pointer-events: none; }
+
+/* ── 部屋を作る ─────────────────────────────── */
+#createBtn[aria-expanded="true"] { border-color: var(--blue); box-shadow: 0 0 0 1.5px var(--blue), 0 0 22px rgba(56,189,248,.6); }
+.tone-glass { border-color: rgba(147,197,253,.6); }
+#roomBub { gap: 2cqmin; }
+#roomBub .rb-head { font-size: max(10px, 9cqmin); color: var(--ink-dim); margin: 0; }
+#roomBub input { width: 76%; font-weight: 600; }
+.char-count { font-size: max(10px, 8cqmin); color: var(--ink-faint); min-height: 1.2em; }
+.char-count.over { color: var(--danger); font-weight: 700; }
+.kind-opt input, .opt input, .hub-b input { position: absolute; opacity: 0; width: 1px; height: 1px; pointer-events: none; }
+.kind-opt.sel, .opt:has(input:checked), .hub-b:has(input:checked) { border-color: var(--blue); box-shadow: 0 0 0 1.5px var(--blue), 0 0 18px rgba(56,189,248,.55), inset 0 0 14px rgba(56,189,248,.3); }
+.opt:has(input:disabled) { opacity: .45; }
+#join { gap: 2cqmin; }
+#join > svg { width: 36cqmin; height: 36cqmin; }
+#join .cap { font-size: max(10px, 11cqmin); white-space: normal; line-height: 1.25; max-width: 78%; }
+#join:disabled { opacity: .6; }
+
+/* 文字の泡（入口の案内・話題など）：中の文は円の内側に収まる幅で折り返す */
+.note-bub { position: absolute; left: 0; top: 0; padding: 0; background: radial-gradient(circle at 35% 30%, #33285f 0%, #1a1440 75%, #251b50 100%); }
+.note-bub p, .note-bub .tag-text { margin: 0; max-width: 74%; font-size: max(11px, 9.5cqmin); line-height: 1.45; font-weight: 600; }
+.sprouts { position: absolute; inset: 0; pointer-events: none; }
+.sprouts > button, .sprout { position: absolute; width: 42%; height: 42%; pointer-events: auto; }
+#entryActions > button:nth-child(1) { left: 78%; top: 70%; }
+#entryActions > button:nth-child(2) { left: 46%; top: 92%; }
+.sprout, #leaveYes, #leaveNo { container-type: size; }
+
+/* ── 通話中の部屋 ─────────────────────────────── */
+#callBub { overflow: visible; }
+.call-title { position: absolute; top: 5%; left: 50%; transform: translateX(-50%); font-size: 14px; font-weight: 700; white-space: nowrap;
+  text-shadow: 0 1px 4px rgba(0,0,0,.9); pointer-events: none; max-width: 70%; overflow: hidden; text-overflow: ellipsis; z-index: 2; }
+.call-title small { color: var(--blue); font-weight: 600; margin-left: 5px; }
+
+/* 参加者（部屋の泡の中の泡） */
+.member { padding: 0; gap: 0; transition: opacity .3s, box-shadow .25s, border-color .25s; }
+.member .m-emoji { font-size: 40cqmin; line-height: 1; pointer-events: none; display: block; transition: transform .08s; }
+.member .m-face { width: 46cqmin; height: 46cqmin; border-radius: 50%; display: block; }
+.member .m-id { font-size: max(9px, 12.5cqmin); font-weight: 600; max-width: 84%; display: flex; justify-content: center; gap: 2px; margin-top: 2cqmin;
+  text-shadow: 0 1px 3px rgba(0,0,0,.8); pointer-events: none; white-space: nowrap; }
+.member .m-name { overflow: hidden; text-overflow: ellipsis; }
+.member .you { display: none; }
+.member .m-stage { flex: none; }
+.member .m-state { position: absolute; inset: 0; pointer-events: none; }
+.member .m-mute { position: absolute; right: -2%; bottom: 4%; width: 30%; height: 30%; border-radius: 50%; display: none; place-items: center;
+  background: var(--danger-deep); color: #fff; border: 1.5px solid rgba(255,255,255,.7); box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+.member.muted .m-mute { display: grid; }
+.member .m-mute svg { width: 64%; height: 64%; }
+.member .m-conn { position: absolute; left: 2%; top: 6%; width: 22%; height: 22%; border-radius: 50%; display: grid; place-items: center;
+  background: rgba(15,23,42,.8); border: 1px solid var(--rim-soft); pointer-events: auto; }
+.member .m-conn svg { width: 70%; height: 70%; }
+.member .m-conn.relay { color: #f6a04d; }
+.member .m-conn.direct { color: #5eead4; }
+.member .m-bc { position: absolute; right: 2%; top: 2%; font-size: 22cqmin; line-height: 1; pointer-events: none; }
+.member .m-ig, .member .m-mic { position: absolute; width: 30%; height: 30%; border-radius: 50%; padding: 0; display: grid; place-items: center; cursor: pointer;
+  background: rgba(15,23,42,.85); border: 1.5px solid var(--rim); color: var(--pink); box-shadow: 0 2px 6px rgba(0,0,0,.4); }
+.member .m-ig { left: -4%; bottom: 2%; }
+.member .m-mic { right: -6%; top: 34%; color: var(--ink-faint); }
+.member .m-mic.on { color: var(--blue); border-color: var(--blue); }
+.member .m-ig svg, .member .m-mic svg { width: 62%; height: 62%; }
+.member .m-ig.off { color: var(--ink-faint); }
+.member.ignored { opacity: .45; }
+.member.ignored .m-emoji { filter: grayscale(1); }
+.member.virtual { border-style: dashed; }
+.member.speaking, .member:has(.m-emoji.speaking) { border-color: var(--blue); animation: speak 1.6s ease-in-out infinite; }
+.m-more { padding: 0; font-size: max(9px, 11cqmin); line-height: 1.35; color: var(--ink-dim); }
+/* ひとことの吹き出し：その人の泡の上にぽこっと出る円 */
+.chat-bubble { position: absolute; left: 50%; bottom: 100%; transform: translate(-50%, -6px); width: 118px; height: 118px; box-sizing: border-box;
+  border-radius: 50%; display: grid; place-items: center; text-align: center; padding: 14px; font-size: 12px; line-height: 1.35; font-weight: 600;
+  color: var(--ink); word-break: break-word; pointer-events: none; z-index: 30;
+  background: radial-gradient(circle at 35% 30%, rgba(56,40,110,.96) 0%, rgba(20,16,52,.96) 100%); border: 1.5px solid var(--rim);
+  box-shadow: 0 6px 20px rgba(0,0,0,.4); animation: say 4.7s ease-out forwards; }
+@keyframes say { 0% { transform: translate(-50%,-6px) scale(.3); opacity: 0 } 8% { transform: translate(-50%,-6px) scale(1.06); opacity: 1 }
+  14% { transform: translate(-50%,-6px) scale(1) } 85% { opacity: 1 } 100% { opacity: 0; transform: translate(-50%,-20px) } }
+
+/* ひとこと：部屋の泡の左側いっぱい（参加者は右へ寄る）。行頭は円に沿う（fitCircle） */
+.chat-log { position: absolute; inset: 0; border-radius: 50%; overflow-y: auto; scrollbar-width: none; touch-action: pan-y; box-sizing: border-box;
+  padding: 24% 0 32%; font-size: 14px; line-height: 1.5; z-index: 1;
+  -webkit-mask-image: linear-gradient(transparent 12%, #000 24%, #000 68%, transparent 79%); mask-image: linear-gradient(transparent 12%, #000 24%, #000 68%, transparent 79%); }
+.chat-log::-webkit-scrollbar { display: none; }
+.chat-log[hidden] { display: none; }
+.cl-row { padding-top: 3px; padding-bottom: 6px; text-align: left; word-break: break-word; position: relative; }
+.cl-row .cl-em { margin-right: 3px; }
+.cl-row .cl-who { font-size: 11px; color: var(--ink-faint); font-weight: 600; margin-right: 6px; }
+.cl-row .cl-text { color: var(--ink); display: block; }
+.cl-row.mine .cl-text, .cl-row:not(.can) .cl-text { color: var(--blue-hi); }
+.cl-row.sys .cl-text { color: var(--ink-faint); font-size: 12px; }
+.cl-ig, .cl-undo { margin-left: 6px; width: 24px; height: 24px; border-radius: 50%; padding: 0; vertical-align: middle; cursor: pointer;
+  background: rgba(15,23,42,.85); border: 1px solid var(--rim); color: var(--pink); display: inline-grid; place-items: center; }
+.cl-ig svg { width: 14px; height: 14px; }
+.cl-undo { width: auto; border-radius: 999px; padding: 0 8px; font-size: 11px; color: var(--ink); } /* 「取り消す」は文字のまま（短い文の中の操作） */
+.chat-row { position: absolute; left: 14%; right: var(--chat-right, 18%); bottom: 9%; display: flex; align-items: center; gap: 6px; z-index: 3; }
+.chat-row[hidden] { display: none; }
+.chat-row input { flex: 1; min-width: 0; background: transparent; border: 0; border-bottom: 1.5px solid var(--rim-soft); color: var(--ink);
+  font: inherit; font-size: 16px; padding: 3px 2px; outline: none; touch-action: auto; user-select: text; -webkit-user-select: text; }
+.chat-row input:focus { border-bottom-color: var(--blue); }
+.bub-mini { position: relative; flex: none; width: 36px; height: 36px; border-radius: 50%; padding: 0; cursor: pointer; display: grid; place-items: center;
+  color: var(--ink); border: 1.5px solid var(--rim); background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.3) 0%, rgba(255,255,255,.06) 62%, rgba(147,197,253,.24) 100%);
+  font: inherit; font-size: 15px; container-type: size; }
+#callBub:not(.chat-mode) #panChat { display: none; }
+
+/* 未読の点（ひとこと） */
+#tabChat.unread::after { content: ''; position: absolute; right: 8%; top: 8%; left: auto; width: 22%; height: 22%; border-radius: 50%;
+  background: var(--danger); border: 1.5px solid #fff; transform: none; }
+.ctl[aria-selected="true"], #reactBtn[aria-expanded="true"], #qr[aria-expanded="true"], #raise.on {
+  border-color: var(--blue); box-shadow: 0 0 0 1.5px var(--blue), 0 0 22px rgba(56,189,248,.6), inset 0 0 18px rgba(56,189,248,.3); }
+#mute.muted { background: radial-gradient(circle at 35% 30%, rgba(203,213,225,.16) 0%, rgba(30,41,59,.25) 70%, rgba(148,163,184,.25) 100%);
+  border-color: rgba(148,163,184,.55); color: var(--ink-faint); }
+#mute:not(.muted) .mic-slash { display: none; }
+#reactions > button { font-size: 0; }
+.rx-ico { font-size: 52cqmin; line-height: 1; pointer-events: none; }
+
+/* 話題タグ */
+.tag-bub { gap: 2cqmin; }
+.tag-bub .tag-ic { font-size: 18cqmin; line-height: 1; }
+.tag-bub .tag-text { font-size: max(10px, 9cqmin); }
+#tagEdit { left: 76%; top: 64%; }
+.tag-form input { width: 74%; }
+#tagSend { left: 74%; top: 66%; }
+
+/* 退出の確認 */
+.ask-bub { position: absolute; left: 0; top: 0; padding: 0; z-index: 30;
+  background: radial-gradient(circle at 35% 30%, #3b2a6b 0%, #1e1640 75%, #2a1d55 100%); border-color: rgba(192,132,252,.7); }
+.ask-bub .q, #roomAsk .q { font-size: max(11px, 10.5cqmin); line-height: 1.4; padding: 0 15%; font-weight: 600; }
+#leaveYes, #roomAskYes { left: 92%; top: 46%; width: 40%; height: 40%; }
+#leaveNo, #roomAskNo { left: 66%; top: 86%; width: 40%; height: 40%; }
+
+/* 設定・おたより（大きな泡。中はスクロールできる円） */
+.panel-bub { padding: 0; z-index: 20; background: radial-gradient(circle at 35% 30%, rgba(40,32,90,.97) 0%, rgba(16,14,44,.97) 78%, rgba(30,24,70,.97) 100%); }
+.panel-in, #panMail > div { box-sizing: border-box; }
+.panel-in { position: absolute; inset: 9%; border-radius: 50%; overflow-y: auto; scrollbar-width: none; display: flex; flex-direction: column;
+  align-items: center; gap: 10px; padding: 14% 6% 18%; touch-action: pan-y; }
+.panel-in::-webkit-scrollbar { display: none; }
+.vol-opt { display: flex; align-items: center; gap: 8px; width: 88%; }
+.vol-opt[hidden] { display: none; }
+.vol-ic { font-size: 20px; }
+.vol-opt input[type=range] { flex: 1; accent-color: var(--blue); touch-action: pan-x; }
+.vol-val { font-size: 11px; color: var(--ink-dim); min-width: 3em; text-align: right; }
+.vol-note { margin: 0; font-size: 11px; line-height: 1.45; color: var(--ink-faint); text-align: center; max-width: 92%; }
+.vol-note[hidden] { display: none; }
+/* 選択肢はハニカム（半個ずらしの行）。4 つの BGM は 4 個並び、トグルは 3＋2 */
+.opt-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px 8px; max-width: 250px; }
+.opt { position: relative; width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; cursor: pointer; box-sizing: border-box;
+  border: 1.5px solid var(--rim); container-type: size;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.28) 0%, rgba(255,255,255,.06) 62%, rgba(147,197,253,.22) 100%); }
+.opt[hidden] { display: none; }
+.opt .ico { font-size: 48cqmin; }
+#panMail { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+#panMail[hidden] { display: none; }
+.mail-head { margin-top: 12%; font-size: 13px; font-weight: 700; text-align: center; max-width: 70%; }
+.mail-body { width: 76%; max-height: 46%; overflow-y: auto; scrollbar-width: none; font-size: 12px; line-height: 1.5; touch-action: pan-y; }
+.mail-form { display: flex; align-items: center; gap: 6px; width: 70%; margin-bottom: 12%; }
+.mail-form[hidden] { display: none; }
+.mail-form input { flex: 1; min-width: 0; }
+.mail-body button, .mail-head button { border-radius: 999px; border: 1px solid var(--rim); background: rgba(56,189,248,.15); color: var(--ink);
+  font: inherit; font-size: 11px; padding: 2px 10px; cursor: pointer; }
+
+/* QR：円の中に四角を内接させる */
+.qr-bub { padding: 0; background: radial-gradient(circle at 35% 30%, #2b2560 0%, #15123a 80%); }
+.qr-img { width: 62%; aspect-ratio: 1; background: #fff; border-radius: 6px; display: grid; place-items: center; color: #333; font-size: 11px; overflow: hidden; }
+.qr-img img, .qr-img svg { width: 100%; height: 100%; display: block; }
+.qr-room { margin-top: 4%; font-size: 11px; font-weight: 600; max-width: 70%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ── ロビーの部屋（親の泡） ─────────────────────────── */
+button.room { padding: 0; cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
+  border-color: var(--rim-soft); opacity: .9; }
+button.room:hover { opacity: 1; }
+button.room.here { display: none !important; }   /* 自分の部屋は大きな部屋の泡で出ている */
+button.room.act1 { box-shadow: 0 0 22px rgba(56,189,248,.25), inset 0 0 30px rgba(255,255,255,.12), 0 8px 28px var(--shadow); }
+button.room.act2 { box-shadow: 0 0 32px rgba(56,189,248,.45), inset 0 0 36px rgba(255,255,255,.16), 0 8px 28px var(--shadow); }
+button.room.act3 { box-shadow: 0 0 44px rgba(167,139,250,.7), inset 0 0 40px rgba(255,255,255,.2), 0 8px 28px var(--shadow); }
+button.room .room-top { display: flex; flex-direction: column; align-items: center; max-width: 80%; pointer-events: none; }
+button.room .room-name { font-size: max(10px, 9.5cqmin); font-weight: 700; line-height: 1.3; text-shadow: 0 1px 4px rgba(0,0,0,.9);
+  overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; word-break: break-all; }
+button.room .room-count { font-size: max(9px, 8cqmin); color: var(--blue); font-weight: 600; }
+button.room .room-count.full { color: var(--warn); }
+button.room .room-sub { font-size: max(8px, 7cqmin); color: var(--ink-faint); max-width: 76%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; pointer-events: none; }
+button.room .room-sub-by { display: none; }
+button.room .room-dur { font-size: max(8px, 7cqmin); color: var(--ink-faint); pointer-events: none; }
+button.room .room-eq { display: none; }
+button.room .room-people { display: flex; flex-wrap: wrap; justify-content: center; gap: 3px; max-width: 74%; margin-top: 2px; pointer-events: none; }
+button.room .rp { position: relative; width: max(18px, 17cqmin); height: max(18px, 17cqmin); border-radius: 50%; display: grid; place-items: center;
+  border: 1px solid var(--rim-soft); background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.3) 0%, rgba(255,255,255,.06) 70%); }
+button.room .rp > span:first-child { font-size: max(11px, 10cqmin); line-height: 1; }
+button.room .rp > span:nth-child(2) { display: none; }
+button.room .rp-face { width: 80%; height: 80%; border-radius: 50%; }
+button.room .rp.mut { opacity: .7; }
+button.room .rp-mute { position: absolute; right: -3px; bottom: -3px; width: 9px; height: 9px; border-radius: 50%; background: var(--danger-deep); color: #fff; display: grid; place-items: center; }
+button.room .rp-mute svg { width: 80%; height: 80%; }
+button.room .room-share { position: absolute; left: 86%; top: -4%; width: 26%; height: 26%; border-radius: 50%; display: grid; place-items: center;
+  border: 1.5px solid var(--rim); background: rgba(15,23,42,.85); color: var(--ink); pointer-events: auto; }
+button.room .room-share svg { width: 56%; height: 56%; }
+button.room .room-share.copied { color: var(--ok); border-color: var(--ok); }
+.lobby-more { display: none; }
+#roomAsk { padding: 0; z-index: 30; background: radial-gradient(circle at 35% 30%, #3b2a6b 0%, #1e1640 75%, #2a1d55 100%); border: 1.5px solid rgba(192,132,252,.7); }
+#roomAsk #roomAskText { font-size: max(10px, 9.5cqmin); line-height: 1.4; padding: 0 14%; font-weight: 600; }
+#roomAsk > button { position: absolute; font-size: 0; }
+#roomAsk > button::before { content: '✓'; font-size: 16px; position: static; border: 0; transform: none; inset: auto; }
+#roomAsk > #roomAskNo::before { content: '✕'; }
+#roomAsk .room-quiet { position: absolute; left: 28%; top: 92%; width: 34%; height: 34%; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
+  font-size: 0; border: 1.5px solid var(--rim); background: rgba(15,23,42,.9); }
+#roomAsk .room-quiet::after { content: '🤫'; font-size: 18px; position: static; width: auto; height: auto; background: none; transform: none; }
+#roomAsk .room-quiet:has(input:checked) { border-color: var(--blue); box-shadow: 0 0 0 1.5px var(--blue), 0 0 14px rgba(56,189,248,.6); }
+#roomAsk .room-quiet input { position: absolute; opacity: 0; }
+
+/* ── 画面に固定するもの（#hud） ─────────────────────── */
+#hud { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
+#hud > *, #hud button, #hud label, #hud select, #notices > * { pointer-events: auto; }
+#hud #notices { pointer-events: none; }
+.hud-bub, .hud-note, .hud-unlock, .hub-b, .hud-viewers, #banner {
+  box-sizing: border-box; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  color: var(--ink); border: 1.5px solid var(--rim);
+  background: radial-gradient(circle at 35% 30%, rgba(48,38,100,.95) 0%, rgba(18,16,48,.95) 100%); box-shadow: 0 6px 24px rgba(0,0,0,.4); }
+#stateBub { position: fixed; left: max(10px, env(safe-area-inset-left)); top: max(10px, env(safe-area-inset-top)); width: 92px; height: 92px; padding: 12px;
+  font-size: 10.5px; line-height: 1.35; font-weight: 600; gap: 4px; }
+#stateBub[hidden] { display: none; }
+#stateBub #state { display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; word-break: break-all; }
+.dot { width: 10px; height: 10px; border-radius: 50%; background: #64748b; flex: none; }
+.dot.ok { background: var(--ok); box-shadow: 0 0 8px var(--ok); }
+.dot.warn, .dot.busy { background: var(--warn); box-shadow: 0 0 8px var(--warn); }
+.dot.error { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+#notices { position: fixed; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; align-items: center; gap: 6px;
+  width: min(60vw, 260px); }
+.hud-note { width: var(--d, 120px); height: var(--d, 120px); padding: 14px; font-size: 11.5px; line-height: 1.4; font-weight: 600; word-break: break-word;
+  animation: inflate .45s cubic-bezier(.34,1.56,.64,1); position: relative; }
+.hud-note[hidden] { display: none; }
+.hud-note:empty { display: none; }
+.hud-note.lobby-status { font-size: 10px; color: var(--ink-dim); opacity: .9; }
+#bcNoteClose { position: absolute; left: 78%; top: 64%; width: 32%; height: 32%; }
+.mail-now { cursor: pointer; }
+.diag { font-family: ui-monospace, monospace; font-size: 9px; font-weight: 400; }
+@keyframes inflate { 0% { transform: scale(.2); opacity: 0 } 70% { transform: scale(1.08); opacity: 1 } 100% { transform: scale(1) } }
+.hud-unlock { position: fixed; left: 50%; top: 50%; width: 150px; height: 150px; margin: -75px 0 0 -75px; display: none; z-index: 60; cursor: pointer; container-type: size;
+  border-color: var(--warn); box-shadow: 0 0 0 2px var(--warn), 0 0 40px rgba(251,191,36,.5); font: inherit; }
+.hud-unlock .cap { white-space: normal; font-size: 12px; }
+#hub { position: fixed; left: max(10px, env(safe-area-inset-left)); bottom: max(10px, env(safe-area-inset-bottom)); width: 160px; height: 110px; pointer-events: none; }
+.hub-b { position: absolute; width: 48px; height: 48px; padding: 0; cursor: pointer; font: inherit; container-type: size; overflow: visible; }
+.hub-b .ico { font-size: 46cqmin; }
+/* 半個ずらしの 2 段（3 個＋3 個） */
+#hub > :nth-child(1) { left: 0; bottom: 54px; }
+#hub > :nth-child(2) { left: 52px; bottom: 54px; }
+#hub > :nth-child(3) { left: 104px; bottom: 54px; }
+#hub > :nth-child(4) { left: 26px; bottom: 9px; }
+#hub > :nth-child(5) { left: 78px; bottom: 9px; }
+#hub > :nth-child(6) { left: 130px; bottom: 9px; }
+.theme-pick select { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.ver-b { cursor: default; font-size: 7.5px; line-height: 1.2; color: var(--ink-faint); gap: 0; }
+.ver-b .brand { font-size: 13px; }
+.ver-b #chan { display: none; }
+.ver-b .stable-link { position: absolute; left: 26px; top: -46px; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; text-align: center;
+  font-size: 8.5px; line-height: 1.2; font-weight: 700; color: var(--ink); text-decoration: none; padding: 4px; box-sizing: border-box;
+  border: 1.5px solid var(--rim); background: radial-gradient(circle at 35% 30%, rgba(74,222,128,.4) 0%, rgba(21,128,61,.3) 100%); }
+.hud-viewers { position: fixed; right: max(10px, env(safe-area-inset-right)); bottom: max(10px, env(safe-area-inset-bottom)); width: 76px; height: 76px; padding: 10px;
+  font-size: 9.5px; line-height: 1.3; color: var(--ink-dim); }
+.hud-viewers:empty { display: none; }
+#banner { position: fixed; left: 50%; top: 50%; width: 220px; height: 220px; margin: -110px 0 0 -110px; padding: 26px; font-size: 12px; line-height: 1.5; z-index: 70; gap: 8px;
+  border-color: var(--warn); }
+#banner[hidden] { display: none; }
+#copyTop { border-radius: 999px; border: 1px solid var(--rim); background: rgba(56,189,248,.2); color: var(--ink); font: inherit; font-size: 11px; padding: 4px 10px; }
+
+/* リアクションの飛び（元の flyReaction が画面座標で出す） */
+.react-fly { position: fixed; z-index: 80; width: 44px; height: 44px; margin: -22px 0 0 -22px; border-radius: 50%; pointer-events: none;
+  display: grid; place-items: center; font-size: 24px;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.55) 0%, rgba(255,255,255,.1) 70%, rgba(244,114,182,.4) 100%);
+  border: 1px solid rgba(255,255,255,.65); box-shadow: 0 0 18px rgba(244,114,182,.6); animation: fly 1.4s forwards cubic-bezier(.1,.8,.3,1); }
+
+/* おたよりの紙：画面の真ん中に円で */
+.mail-pop { position: fixed; inset: 0; display: grid; place-items: center; z-index: 75; pointer-events: none; }
+.mail-pop[hidden] { display: none; }
+.mp-card { pointer-events: auto; width: min(78vmin, 320px); aspect-ratio: 1; border-radius: 50%; box-sizing: border-box; padding: 16% 14%;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; text-align: center; position: relative;
+  background: radial-gradient(circle at 35% 30%, #fff8ec 0%, #f3e6cf 80%, #e9d7b6 100%); color: #3b2f22; border: 2px solid rgba(255,255,255,.8);
+  box-shadow: 0 0 40px rgba(251,191,36,.35), 0 20px 60px rgba(0,0,0,.5); animation: inflate .5s cubic-bezier(.34,1.56,.64,1); }
+.mp-head { display: flex; align-items: center; gap: 6px; font-weight: 700; font-size: 13px; }
+.mp-em { font-size: 22px; }
+.mp-x { position: absolute; right: 6%; top: 10%; width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid rgba(59,47,34,.3); background: rgba(255,255,255,.6); color: #3b2f22; font-size: 16px; cursor: pointer; }
+.mp-topic { font-size: 11px; color: #7a6650; }
+.mp-body { font-size: 15px; line-height: 1.6; font-weight: 600; max-height: 50%; overflow-y: auto; word-break: break-word; }
+
+/* ヘルプ・無視の説明：大きな円のダイアログ（中はスクロール） */
+dialog.help-dialog { box-sizing: border-box; width: min(94vmin, 560px); height: min(94vmin, 560px); max-width: none; max-height: none; border-radius: 50%; padding: 0; overflow: hidden;
+  border: 1.5px solid var(--rim); color: var(--ink);
+  background: radial-gradient(circle at 35% 30%, #2d2566 0%, #141236 75%, #1f1a4d 100%); box-shadow: 0 0 60px rgba(167,139,250,.35), 0 30px 80px rgba(0,0,0,.6); }
+dialog.help-dialog[open] { display: block; animation: inflate .45s cubic-bezier(.34,1.56,.64,1); }
+dialog.help-dialog::backdrop { background: rgba(4,4,13,.65); }
+.help-scroll { position: absolute; inset: 7%; border-radius: 50%; overflow-y: auto; scrollbar-width: none; padding: 16% 13% 22%; box-sizing: border-box;
+  font-size: 13px; line-height: 1.6; touch-action: pan-y;
+  -webkit-mask-image: linear-gradient(transparent 4%, #000 14%, #000 84%, transparent 96%); mask-image: linear-gradient(transparent 4%, #000 14%, #000 84%, transparent 96%); }
+.help-scroll::-webkit-scrollbar { display: none; }
+.help-dialog h2 { font-size: 16px; text-align: center; margin: 0 0 8px; }
+.help-dialog a { color: var(--blue-hi); }
+.help-links { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; margin: 10px 0; }
+.help-links a { width: 74px; height: 74px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  text-decoration: none; color: var(--ink); border: 1.5px solid var(--rim); font-size: 11px; line-height: 1.25;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.22) 0%, rgba(255,255,255,.05) 62%, rgba(147,197,253,.2) 100%); }
+.help-links a span { font-size: 9px; color: var(--ink-faint); }
+.help-links-note { font-size: 11px; color: var(--ink-faint); text-align: center; margin: 0 0 6px; }
+.help-warn { color: var(--warn); text-align: center; }
+.help-sec { margin: 8px 0; }
+.help-sec summary { cursor: pointer; font-weight: 700; text-align: center; list-style: none; padding: 6px; border-radius: 999px; }
+.help-sec summary::-webkit-details-marker { display: none; }
+.help-sec summary::before { content: '◦ '; color: var(--blue); }
+.help-sec[open] summary::before { content: '• '; }
+.help-sec ol, .help-sec ul { padding-left: 1.2em; margin: 6px 0; }
+.help-credit { font-size: 11px; color: var(--ink-dim); }
+.help-hide { display: flex; justify-content: center; align-items: center; gap: 6px; font-size: 12px; margin-top: 10px; }
+.help-x, .help-close { position: absolute; border-radius: 50%; cursor: pointer; color: var(--ink); border: 1.5px solid var(--rim); font: inherit; z-index: 2;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.3) 0%, rgba(255,255,255,.06) 62%, rgba(147,197,253,.24) 100%); }
+.help-x { right: 13%; top: 9%; width: 44px; height: 44px; font-size: 16px; }
+.help-close { left: 50%; bottom: 3.5%; width: 64px; height: 64px; margin-left: -32px; font-size: 12px; font-weight: 700; }
+.ignore-dialog { width: min(86vmin, 380px) !important; height: min(86vmin, 380px) !important; }
+.ignore-dialog .help-scroll { padding: 18% 14% 26%; font-size: 12px; }
+.ignore-dialog h2 { font-size: 14px; }
+.ignore-actions { position: absolute; left: 0; right: 0; bottom: 6%; display: flex; justify-content: center; gap: 14px; z-index: 2; }
+.ignore-actions button { width: 66px; height: 66px; border-radius: 50%; cursor: pointer; font: inherit; font-size: 11px; font-weight: 700; color: var(--ink); border: 1.5px solid var(--rim);
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.3) 0%, rgba(255,255,255,.06) 62%, rgba(147,197,253,.24) 100%); }
+#ignoreYes { background: radial-gradient(circle at 35% 30%, rgba(251,113,133,.42) 0%, rgba(190,18,60,.18) 70%, rgba(225,29,72,.45) 100%); border-color: rgba(251,113,133,.75); }
+
+/* 小窓の映像は画面外に（消すと PiP に入れられない） */
+.pip-video { position: fixed; left: -9999px; top: 0; width: 2px; height: 2px; opacity: 0; pointer-events: none; }
+
+/* 昼の側（テーマ：時刻で変わる／ずっと昼）：星雲を明け方の空へ */
+html.zg-day body { background: radial-gradient(circle at 50% 30%, #4b3f8f 0%, #2a2460 60%, #171338 100%) fixed; }
+html.zg-day .nebula { opacity: 1.6; filter: saturate(1.3) brightness(1.4); }
+
+/* 入力中は、キーボードの上で読みやすく（左下の操作は隠す） */
+html.typing #hub, html.typing .hud-viewers { opacity: 0; pointer-events: none; }
+
+/* 元の CSS が既定で隠していたもの（JS が style.display で出す） */
+#speak, #mute, #leave { display: none; }
+#avatars > button, #reactions > button { display: none; }
+html.zg-av #avatars > button, html.zg-rx #reactions > button { display: flex; }
+/* 成長は絵文字だけを見せる（「🌱（←話して育てよう）」の文は長押しの名前で読める） */
+.pf-grow { display: none; }
+.pf-grow-ico { font-size: 13cqmin; line-height: 1; }
+
+/* 物理を持たない小さな泡（文字の泡から生える ✓ ✕ ✏️ など）にも同じ質感 */
+.sprout, .bub-mini, #roomAsk > button, #leaveYes, #leaveNo {
+  border-radius: 50%; padding: 0; cursor: pointer; color: var(--ink); font: inherit; display: grid; place-items: center; box-sizing: border-box;
+  border: 1.5px solid var(--rim);
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.32) 0%, rgba(255,255,255,.07) 62%, rgba(147,197,253,.26) 100%);
+  box-shadow: inset 0 0 12px rgba(255,255,255,.25), 0 6px 18px rgba(0,0,0,.4); container-type: size; animation: inflate .4s cubic-bezier(.34,1.56,.64,1) both; }
+.sprout.tone-red, #leaveYes, #roomAskYes { background: radial-gradient(circle at 35% 30%, rgba(251,113,133,.45) 0%, rgba(190,18,60,.2) 70%, rgba(225,29,72,.45) 100%); border-color: rgba(251,113,133,.8); }
+.sprout.tone-ok, #tagSend { background: radial-gradient(circle at 35% 30%, rgba(74,222,128,.42) 0%, rgba(21,128,61,.18) 70%, rgba(34,197,94,.42) 100%); border-color: rgba(134,239,172,.8); }
+.sprout .ico { font-size: 46cqmin; }
+#leaveYes .ico, #leaveNo .ico { font-size: 44cqmin; }
+/* 話題の「つける／変える」：文字は JS が書き換えるので、見た目は ✏️ に固定（名前は長押しで） */
+#tagEdit { font-size: 0; }
+#tagEdit::before { content: '✏️'; font-size: 18px; position: static; inset: auto; border: 0; transform: none; }
+/* 小窓に映す canvas（元の CSS と同じ置き方：本来の大きさで描かせ、1px の枠で切り抜いて見せない） */
+.pip-clip { position: fixed; right: 0; bottom: 0; width: 1px; height: 1px; overflow: hidden; opacity: .01; pointer-events: none; }
+.pip-src { display: block; width: 480px; height: 270px; }
+
+/* ひとこと・設定のタブでも、参加者は部屋の泡の中に居続ける（元はタブで隠していた） */
+#panMembers[hidden] { display: contents !important; }
