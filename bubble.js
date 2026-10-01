@@ -360,9 +360,11 @@ export class Space {
         b.x += (tg.x - b.x) * 0.5; b.y += (tg.y - b.y) * 0.5
         b.vx = b.vy = 0
       } else if (b.kind === 'inner') {
-        const a = calm ? 0 : 0.05 * b.drift
-        b.vx += (-b.x * 0.0012 + Math.sin(t * 1.6 + ph) * a) * dt
-        b.vy += (-b.y * 0.0012 + Math.cos(t * 1.3 + ph) * a) * dt
+        // 既定は親の中心へゆるく寄る。b.tx/b.ty（親の中心からの位置）があればそこへ寄る（輪に並べるときなど）
+        const a = calm ? 0 : 0.05 * b.drift * (b.tx == null ? 1 : 0.12)
+        const k = b.tx == null ? 0.0012 : 0.02
+        b.vx += ((( b.tx ?? 0) - b.x) * k + Math.sin(t * 1.6 + ph) * a) * dt
+        b.vy += ((( b.ty ?? 0) - b.y) * k + Math.cos(t * 1.3 + ph) * a) * dt
         b.vx *= Math.pow(calm ? 0.7 : 0.97, dt); b.vy *= Math.pow(calm ? 0.7 : 0.97, dt)
       }
     }
@@ -528,4 +530,22 @@ export const tips = (tipEl, root = document) => {
   root.addEventListener('click', e => { if (swallow) { e.stopPropagation(); e.preventDefault(); swallow = false } }, true)
   root.addEventListener('contextmenu', e => { if (target(e)) e.preventDefault() })   // 長押しのメニューを出さない
   addEventListener('scroll', hide, true)
+}
+
+// ── 円の中の読み物：行頭を円に沿わせる ────────────────────────────────
+// box は円の中の、縦に流れる（スクロールする）入れ物。中の各ブロック（items）について、いま見えている高さで
+// 円が切り取る幅を求め、左右の余白にする＝行頭と行末が円の縁に沿う。スクロール・追加のたびに呼ぶ。
+// ブロックは短い（ひとことは 60 字まで＝1〜3 行）ので、1 ブロック内は同じ余白で十分に円らしく見える
+export const fitCircle = (box, items, pad = 8, minFrac = 0.5) => {
+  // ★ブロックの「中心の高さ」で幅を決める。縁で測ると、狭める→折り返して背が伸びる→さらに狭める、が
+  //   繰り返されて 1 文字幅まで潰れる（試作で踏んだ）。最小幅も直径の minFrac に留める
+  const R = box.clientWidth / 2, cy = box.clientHeight / 2, st = box.scrollTop
+  const maxSide = R * (1 - minFrac)
+  for (const it of items) {
+    const mid = it.offsetTop - st + it.offsetHeight / 2
+    const dy = Math.min(R - 1, Math.abs(mid - cy))
+    const half = Math.sqrt(Math.max(0, R * R - dy * dy))
+    const side = Math.min(maxSide, Math.max(pad, R - half + pad))
+    it.style.paddingLeft = it.style.paddingRight = side.toFixed(0) + 'px'
+  }
 }

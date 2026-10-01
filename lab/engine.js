@@ -1,5 +1,5 @@
 // 泡のエンジンの試作ページ。通話はしない（見た目と手触りだけ）
-import { Space, hexGrid, hexOut, foam, calmWhileTyping, tips } from '../bubble.js'
+import { Space, hexGrid, hexOut, foam, calmWhileTyping, tips, fitCircle } from '../bubble.js?v=10020142'
 
 const world = document.getElementById('world')
 const space = new Space(document.getElementById('viewport'), world)
@@ -89,21 +89,85 @@ const fly = (from, e) => {
   }, i * 70)
 }
 
+// ── ひとこと：💬 で部屋の泡の中身を切り替える ─────────────────────────────
+// 参加者は内壁に沿った輪へ退き（誰が話しているかは見えたまま）、真ん中の円が読み物になる。
+// 行頭・行末は円の縁に沿わせる（fitCircle）。入力欄も円の下のほうに置く
+const RING_W = 38 * 2 + 16
+const chat = put(el('div', 'chatview', `<div class="chat-log scroll-in" aria-live="polite"></div>
+  <div class="chat-row"><input id="chatText" maxlength="60" placeholder="ひとこと…" aria-label="ひとことを書く" enterkeyhint="send" autocomplete="off">
+  <button class="bub chat-send" aria-label="送信"><span class="ico">➤</span></button></div>`), roomEl)
+chat.hidden = true
+const log = chat.querySelector('.chat-log')
+const SAMPLE = [['🐱', 'Cat', 'こんばんは〜'], ['🐼', 'Panda', '今日はちょっと寒いですね'], ['🦊', 'あなた', 'こんばんは！はじめて来ました'],
+  ['🐻', 'Bear', 'ようこそ〜。ゆっくりしていってね'], ['🐰', 'Bunny', 'さっきの話の続きなんだけど、駅前に新しくできたパン屋さんがすごく美味しかった'],
+  ['🦌', 'Deer', 'どこどこ？'], ['🐰', 'Bunny', '北口の本屋さんの隣です'], ['🐼', 'Panda', '明日行ってみよう 🍞']]
+const addMsg = (e, n, x, mine = false) => {
+  const m = el('div', 'msg' + (mine ? ' mine' : ''))
+  m.innerHTML = `<span class="who">${e} ${n}</span><span class="txt"></span>`
+  m.querySelector('.txt').textContent = x
+  log.appendChild(m)
+  while (log.children.length > 30) log.firstChild.remove()
+  log.scrollTop = log.scrollHeight
+  refit()
+}
+const refit = () => fitCircle(log, [...log.children], 10)
+log.addEventListener('scroll', () => requestAnimationFrame(refit))
+SAMPLE.forEach(([e, n, x]) => addMsg(e, n, x, n === 'あなた'))
+const say = (b, text) => {   // 話した人の泡のそばに、ひとことの小泡（本番の吹き出しの代わり）
+  const d = Math.max(70, Math.min(150, Math.sqrt([...text].length) * 26 + 30))
+  const sv = put(el('div', 'say'))
+  sv.textContent = text
+  Object.assign(sv.style, { width: d + 'px', height: d + 'px', left: (b.wx - d / 2) + 'px', top: (b.wy - b.r - d - 6) + 'px' })
+  setTimeout(() => sv.remove(), 4700)
+}
+const chatInput = chat.querySelector('#chatText')
+const send = () => {
+  const x = chatInput.value.trim()
+  if (!x) return
+  addMsg(pf.querySelector('#pfEmoji').textContent, 'あなた', x, true)
+  say(meB, x)
+  chatInput.value = ''
+}
+chat.querySelector('.chat-send').addEventListener('click', send)
+chatInput.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.isComposing) send() })
+const chatMode = on => {
+  chat.hidden = !on
+  roomEl.classList.toggle('chat-mode', on)
+  ctrl.chat.el.classList.toggle('tone-on', on)
+  ctrl.chat.el.setAttribute('aria-label', on ? 'ひとことを閉じる' : 'ひとこと')
+  const n = memberB.length, rr = ROOM_R - 38 - 14
+  memberB.forEach((b, i) => {
+    const a = -Math.PI / 2 + (i + 0.5) / n * Math.PI * 2
+    b.tx = on ? Math.cos(a) * rr : null; b.ty = on ? Math.sin(a) * rr : null
+  })
+  room.pinned = on
+  if (on) { space.view(room.x, room.y, ROOM_R * 2 + 40); requestAnimationFrame(() => { log.scrollTop = log.scrollHeight; refit() }) }
+}
+ctrl.chat.el.addEventListener('click', () => chatMode(chat.hidden))
+// 他の人のひとことの見本
+setInterval(() => {
+  if (space.calm) return
+  const i = 1 + Math.floor(Math.random() * (memberB.length - 1)), [e, n] = people[i]
+  const x = ['なるほど〜', 'たしかに', 'それいいね！', 'わかる', 'あとで調べてみます', '🍵 お茶いれてきた'][Math.floor(Math.random() * 6)]
+  addMsg(e, n, x); say(memberB[i], x)
+}, 9000)
+
 // 退出：確認は 2 つの泡（✓ と ✕）＋問いの泡
 const ask = put(el('div', 'tone-violet', '<span class="q">「ポッポの森」から退出しますか？</span>', { id: 'ask' }))
 ask.hidden = true
-// 置き場所は親（部屋）の右上の外側に固定。中の参加者と重ならないので読みやすい。✓ ✕ は問いの泡の右の外壁に
+// 部屋の右上の外にぽこんと出す 1 つの泡。問いの文と ✓ ✕ を中に収める（別々の泡にすると重なって読みにくい）
 const ASK_R = 84, ASK_DEG = -42, ASK_D = ROOM_R + ASK_R + 10
-const askB = space.add(ask, { kind: 'slot', parent: room, r: ASK_R,
+ask.innerHTML = `<span class="q">「ポッポの森」から退出しますか？</span>
+  <span class="ask-btns"><button class="bub tone-red" aria-label="退出する"><span class="ico">✓</span></button><button class="bub" aria-label="やめる"><span class="ico">✕</span></button></span>`
+space.add(ask, { kind: 'slot', parent: room, r: ASK_R,
   x: ASK_D * Math.cos(ASK_DEG * Math.PI / 180), y: ASK_D * Math.sin(ASK_DEG * Math.PI / 180) })
-const yes = put(el('button', 'tone-red', '<span class="ico">✓</span>', { 'aria-label': '退出する' }))
-const no = put(el('button', '', '<span class="ico">✕</span>', { 'aria-label': 'やめる' }))
-yes.hidden = no.hidden = true
-const onAsk = (deg, r = 34) => { const d = ASK_R + r + 6, a = deg * Math.PI / 180; return { x: d * Math.cos(a), y: d * Math.sin(a) } }
-space.add(yes, { kind: 'slot', parent: askB, r: 34, ...onAsk(-15) })
-space.add(no, { kind: 'slot', parent: askB, r: 34, ...onAsk(35) })
+const [yes, no] = ask.querySelectorAll('.ask-btns button')
 let askTimer = 0
-const showAsk = on => { ask.hidden = yes.hidden = no.hidden = !on; room.pinned = on; clearTimeout(askTimer); if (on) askTimer = setTimeout(() => showAsk(false), 8000) }
+const askAt = { x: ASK_D * Math.cos(ASK_DEG * Math.PI / 180), y: ASK_D * Math.sin(ASK_DEG * Math.PI / 180) }
+const showAsk = on => {
+  // 問いの泡が画面の外に出ないよう、部屋と問いの泡の両方が収まるところへカメラを寄せる
+  if (on) space.view(room.x + askAt.x * 0.45, room.y + askAt.y * 0.45, (ROOM_R + ASK_D + ASK_R) * 1.15)
+  ask.hidden = !on; room.pinned = on; clearTimeout(askTimer); if (on) askTimer = setTimeout(() => showAsk(false), 8000) }
 ctrl.leave.el.addEventListener('click', () => showAsk(ask.hidden))
 no.addEventListener('click', () => showAsk(false))
 yes.addEventListener('click', () => { showAsk(false); fly(meB, '👋') })

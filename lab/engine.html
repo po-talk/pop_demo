@@ -6,17 +6,42 @@
 <meta name="robots" content="noindex, nofollow">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; base-uri 'self'; form-action 'none'; object-src 'none'">
 <title>泡のエンジン（試作）</title>
-<link rel="stylesheet" href="../bubble.css">
+<link rel="stylesheet" href="../bubble.css?v=10020142">
 <style>
   .hint { position: fixed; left: 50%; top: auto; bottom: max(10px, env(safe-area-inset-bottom)); transform: translateX(-50%);
     width: 104px; height: 104px; z-index: 5; font-size: 11px; line-height: 1.35; padding: 12px; pointer-events: none; color: var(--ink-dim); }
   .m-name { font-size: max(9px, 14cqmin); }
   #ask { z-index: 30; background: radial-gradient(circle at 35% 30%, #3b2a6b 0%, #1e1640 75%, #2a1d55 100%); }
-  #ask .q { font-size: max(11px, 11cqmin); line-height: 1.4; padding: 0 14%; font-weight: 600; }
+  #ask .q { font-size: max(11px, 10.5cqmin); line-height: 1.4; padding: 0 16%; font-weight: 600; margin-top: -4%; }
+  #ask .ask-btns { display: flex; gap: 10cqmin; margin-top: 7cqmin; }
+  #ask .ask-btns .bub { position: relative; width: 30cqmin; height: 30cqmin; }
   .room-name { position: absolute; top: 6%; left: 50%; transform: translateX(-50%); font-size: 13px; font-weight: 700; white-space: nowrap;
     text-shadow: 0 1px 4px rgba(0,0,0,.9); pointer-events: none; }
   .room-name small { color: var(--blue); font-weight: 600; margin-left: 4px; }
   .lobby-room .room-name { font-size: 11px; }
+  /* ひとこと：部屋の泡の中の円（参加者の輪の内側） */
+  .chatview { position: absolute; inset: 92px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; }
+  .chatview[hidden] { display: none; }
+  .chat-log { position: absolute; inset: 0 0 auto 0; height: 80%; border-radius: 50%; overflow-y: auto; scrollbar-width: none; touch-action: pan-y;
+    padding: 30% 0 32%; box-sizing: border-box; bottom: 20%; font-size: 13px; line-height: 1.45;
+    -webkit-mask-image: radial-gradient(circle, #000 62%, transparent 72%); mask-image: radial-gradient(circle, #000 62%, transparent 72%); }
+  .chat-log::-webkit-scrollbar { display: none; }
+  .msg { padding-top: 3px; padding-bottom: 5px; text-align: left; word-break: break-word; }
+  .msg .who { display: block; font-size: 11px; color: var(--ink-faint); font-weight: 600; }
+  .msg .txt { color: var(--ink); }
+  .msg.mine { text-align: right; }
+  .msg.mine .txt { color: var(--blue-hi); }
+  .chat-row { position: absolute; left: 18%; right: 18%; bottom: 7%; display: flex; align-items: center; gap: 6px; }
+  .chat-row input { flex: 1; min-width: 0; background: transparent; border: 0; border-bottom: 1.5px solid var(--rim-soft); color: var(--ink);
+    font: inherit; font-size: 16px; padding: 3px 2px; outline: none; text-align: center; touch-action: auto; user-select: text; -webkit-user-select: text; }
+  .chat-row input:focus { border-bottom-color: var(--blue); }
+  .chat-send { position: relative !important; width: 34px; height: 34px; flex: none; }
+  .chat-mode > .member { opacity: .95; }
+  .say { position: absolute; z-index: 40; border-radius: 50%; display: grid; place-items: center; text-align: center; box-sizing: border-box;
+    padding: 12px; font-size: 12px; line-height: 1.35; pointer-events: none; color: var(--ink);
+    background: radial-gradient(circle at 35% 30%, rgba(56,40,110,.95) 0%, rgba(20,16,52,.95) 100%); border: 1.5px solid var(--rim);
+    box-shadow: 0 6px 20px rgba(0,0,0,.4); animation: say 4.7s ease-out forwards; word-break: break-word; }
+  @keyframes say { 0% { transform: scale(.4); opacity: 0 } 8% { transform: scale(1.06); opacity: 1 } 14% { transform: scale(1) } 85% { opacity: 1 } 100% { opacity: 0; transform: translateY(-14px) } }
 </style>
 </head>
 <body>
@@ -24,6 +49,6 @@
 <div id="viewport"><div id="world"></div></div>
 <div id="tip" hidden></div>
 <div class="bub hint" id="hint">背景をドラッグで移動・ピンチで拡大。ボタンは長押しで名前</div>
-<script type="module" src="engine.js"></script>
+<script type="module" src="engine.js?v=10020142"></script>
 </body>
 </html>
