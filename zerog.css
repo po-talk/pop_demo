@@ -232,7 +232,7 @@ button.room .room-share.copied { color: var(--ok); border-color: var(--ok); }
 
 /* ── 画面に固定するもの（#hud） ─────────────────────── */
 #hud { position: fixed; inset: 0; pointer-events: none; z-index: 50; }
-#hud > *, #hud button, #hud label, #hud select, #notices > * { pointer-events: auto; }
+#hud > *, #hud button, #hud label, #hud select, #hud a, #notices > * { pointer-events: auto; }   /* a：「いつもの画面で開く」（#hub の中なので明示が要る） */
 #hud #notices { pointer-events: none; }
 .hud-bub, .hud-note, .hud-unlock, .hub-b, .hud-viewers, #banner {
   box-sizing: border-box; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;

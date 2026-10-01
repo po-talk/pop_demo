@@ -93,6 +93,7 @@ try:
             pop.eval("(() => { const t = document.getElementById('tagInput'); t.value = 'お昼ご飯の献立'; document.getElementById('tagSend').click() })()"); time.sleep(1.5); snap(pop, '8tag')
         if st == 'leave':
             pop.eval("document.getElementById('leave').click()"); time.sleep(1); pop.eval("document.getElementById('leaveYes').click()"); time.sleep(3); snap(pop, '9left')
+            print('  after leave: room =', pop.eval("document.getElementById('room').value"), ' hash =', pop.eval('location.hash'), ' create open =', pop.eval("document.getElementById('createBox').open"))
         if st == 'react':
             pop.eval("document.getElementById('reactBtn').click()"); time.sleep(1.5)
             up.eval("document.querySelectorAll('#reactions button')[6].click()")
