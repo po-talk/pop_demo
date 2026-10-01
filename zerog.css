@@ -437,3 +437,4 @@ button.room.linked { display: none !important; }
 .tag-bub .tag-text { text-align: center; }
 .tag-bub .tag-text b, .tag-bub .tag-text .tag-by { display: block; }
 .tag-bub .tag-text .tag-by:empty { display: none; }
+.tag-bub .tag-text .tag-by { font-size: .82em; font-weight: 600; color: var(--ink-dim); margin-top: 2px; }
