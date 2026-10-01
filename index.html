@@ -87,8 +87,8 @@
 <!-- デモなのでアクセス解析は入れない（本番・β の集計に混ぜない） -->
 <!-- End Cloudflare Web Analytics -->
 <!-- 泡の質感（bubble.css）とこの画面の見た目（zerog.css）。元の <style> は使わない（見た目を丸ごと差し替えたため） -->
-<link rel="stylesheet" href="bubble.css?v=6">
-<link rel="stylesheet" href="zerog.css?v=6">
+<link rel="stylesheet" href="bubble.css?v=8">
+<link rel="stylesheet" href="zerog.css?v=8">
 <!-- 見た目（昼夜）のエンジン。**モジュールの外・<style> の直後**に置く＝最初の描画より前に
      昼の色を当てるため（モジュールは描画後に走るので、そこに置くと昼でも一瞬紺が見える）。
      アプリの状態には一切触らない（読むのは localStorage の設定と時計だけ）。設定の UI は
@@ -5532,7 +5532,7 @@ addEventListener('online', () => initLobby(true, true))
 // （syncShare は joinedId を参照するため、宣言前に呼ぶと TDZ で落ちる）
 syncShare()
 
-const ZG_V = '6'   // bubble.js / *.css のキャッシュ避け（変えたら上げる）
+const ZG_V = '8'   // bubble.js / *.css のキャッシュ避け（変えたら上げる）
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MOD：Zero-G の泡の配置と動き（ここから下は見た目だけ。通話のロジックには触らない）
@@ -5694,9 +5694,14 @@ function startZeroG(Z) {
     if (ask) {
       const host = lobB.get(ask.previousElementSibling?.dataset.room)
       if (host) {
+        const fresh = !syncLobby.askB || syncLobby.askB.parent !== host || !syncLobby.askB.visible
         if (!syncLobby.askB) syncLobby.askB = space.add(ask, { kind: 'slot', parent: host, r: 80, wall: { a: deg(-40), d: 86 } })
         else { space.rebind(syncLobby.askB, ask); syncLobby.askB.parent = host }
+        ask.querySelector('#roomAskYes')?.setAttribute('aria-label', ask.querySelector('#roomAskYes').textContent)
+        ask.querySelector('#roomAskNo')?.setAttribute('aria-label', 'やめる')
         host.pinned = true
+        // 出たら、その部屋と問いの泡が両方見えるところへ（✓ ✕ が画面の外に切れない）
+        if (fresh) space.view(host.x + 60, host.y - 30, (host.r + 80) * 2 + 220)
       }
     } else if (syncLobby.askB) { lobB.forEach(b => { b.pinned = false }) }
   }
@@ -5770,6 +5775,11 @@ function startZeroG(Z) {
         setTimeout(view, 30)
       }
       if (chatOn && tick % 10 === 0) refit()
+      if (tick % 30 === 0) {
+        // 話題の泡は文の長さに合わせて膨らむ（「いまの話題：…（◯◯が付けた）」は長くなる）
+        const n = [...($('tagText').textContent || '')].length, tr = Math.round(Math.max(58, Math.min(100, Math.sqrt(n) * 11 + 26)))
+        if (Math.abs(tagB.r - tr) > .5 && tagB.targetR !== tr) { tagB.grow(tr); tagB.wall = { a: deg(-118), d: tr + 4 } }
+      }
       if (tick % 30 === 0) { $('callName').textContent = (call.bcast ? '📣 ' : '') + roomLabel(call.joinedId); $('callCount').textContent = call.peers.size + 1 }
       askB.el.classList.toggle('open', !$('leaveConfirm').hidden)
       callB.pinned = chatOn || !$('leaveConfirm').hidden || call.tab === 'settings' || call.tab === 'mail'

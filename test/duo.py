@@ -12,7 +12,7 @@ import cdp  # noqa
 CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
 ERRS = r"""(() => { const E = window.__E = []; addEventListener('error', e => E.push(String(e.message) + ' @' + e.lineno));
   addEventListener('unhandledrejection', e => E.push('rejection: ' + e.reason)); addEventListener('securitypolicyviolation', e => E.push('csp: ' + e.blockedURI)) })()"""
-ap = argparse.ArgumentParser(); ap.add_argument('out'); ap.add_argument('--steps', default='chat,settings,react'); ap.add_argument('--port', type=int, default=9361)
+ap = argparse.ArgumentParser(); ap.add_argument('out'); ap.add_argument('--steps', default='chat,settings,react'); ap.add_argument('--port', type=int, default=9361); ap.add_argument('--lobby', action='store_true', help='お試し版はリンクなしで開き、ロビーの泡から入る')
 a = ap.parse_args()
 prof = tempfile.mkdtemp(prefix='popduo-')
 ch = subprocess.Popen([CHROME, '--headless=new', '--remote-debugging-port=%d' % a.port, '--user-data-dir=' + prof, '--no-first-run', '--hide-scrollbars',
@@ -35,10 +35,18 @@ try:
     up.eval("(() => { const r = document.getElementById('room'); r.value = %s; r.dispatchEvent(new Event('input')); document.getElementById('join').click() })()" % json.dumps(room), await_promise=False)
     up.wait_for("location.hash.startsWith('#room=')", timeout=60)
     link = up.eval('location.hash')
-    pop = tab('http://localhost:8000/pop_demo/' + link, True)
-    pop.wait_for('!!window.__pop && !!window.__zg', timeout=20)
-    pop.wait_for("window.__pop.state().entry !== 'checking'", timeout=60)
-    pop.eval('window.__pop.join()', await_promise=False)
+    if a.lobby:
+        pop = tab('http://localhost:8000/pop_demo/', True)
+        pop.wait_for('!!window.__pop && !!window.__zg', timeout=20)
+        pop.wait_for("document.querySelectorAll('#lobbyList button.room').length > 0", timeout=60)
+        time.sleep(2); pop.eval("window.__zg.space.view(0, 0, 1300)"); time.sleep(2); snap(pop, '0lobby')
+        pop.eval("document.querySelector('#lobbyList button.room').click()"); time.sleep(2); snap(pop, '0ask')
+        pop.eval("document.getElementById('roomAskYes').click()")
+    else:
+        pop = tab('http://localhost:8000/pop_demo/' + link, True)
+        pop.wait_for('!!window.__pop && !!window.__zg', timeout=20)
+        pop.wait_for("window.__pop.state().entry !== 'checking'", timeout=60)
+        pop.eval('window.__pop.join()', await_promise=False)
     pop.wait_for('window.__pop.state().peers.length === 1', timeout=60)
     time.sleep(3)
     snap(pop, '1call')
@@ -52,6 +60,18 @@ try:
             time.sleep(1.5); snap(pop, '3chat'); pop.eval("document.getElementById('tabChat').click()"); time.sleep(1.5)
         if st == 'settings':
             pop.eval("document.getElementById('tabSettings').click()"); time.sleep(2.5); snap(pop, '4settings'); pop.eval("document.getElementById('tabSettings').click()"); time.sleep(1.5)
+        if st == 'ignore':
+            print('ig buttons:', pop.eval("[...document.querySelectorAll('#members button')].map(b => b.className + ':' + b.getAttribute('aria-label')).join(' | ')"))
+            pop.eval("document.querySelector('#members .m-ig:not([disabled])').click()"); time.sleep(1.5); snap(pop, '6ignore')
+            print('dialog open:', pop.eval("document.getElementById('ignoreDlg').open"))
+            pop.eval("document.getElementById('ignoreYes').click()"); time.sleep(1.5); snap(pop, '6ignored')
+        if st == 'qr':
+            pop.eval("document.getElementById('qr').click()"); time.sleep(2.5); snap(pop, '7qr'); pop.eval("document.getElementById('qr').click()"); time.sleep(1)
+        if st == 'tag':
+            pop.eval("document.getElementById('tagEdit').click()"); time.sleep(1.5)
+            pop.eval("(() => { const t = document.getElementById('tagInput'); t.value = 'お昼ご飯の献立'; document.getElementById('tagSend').click() })()"); time.sleep(1.5); snap(pop, '8tag')
+        if st == 'leave':
+            pop.eval("document.getElementById('leave').click()"); time.sleep(1); pop.eval("document.getElementById('leaveYes').click()"); time.sleep(3); snap(pop, '9left')
         if st == 'react':
             pop.eval("document.getElementById('reactBtn').click()"); time.sleep(1.5)
             up.eval("document.querySelectorAll('#reactions button')[6].click()")
