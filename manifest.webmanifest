@@ -1,0 +1,15 @@
+{
+  "name": "ぽっと通話 Zero-G（デモ）",
+  "short_name": "Zero-G",
+  "description": "ぽっと通話の見た目を変えたデモ。元のぽっと通話の人とも同じ部屋で話せます。",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#0b0a21",
+  "theme_color": "#0b0a21",
+  "icons": [
+    { "src": "images/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "images/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
+    { "src": "images/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}
