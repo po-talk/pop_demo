@@ -1,5 +1,5 @@
 // 泡のエンジンの試作ページ。通話はしない（見た目と手触りだけ）
-import { Space, hexGrid, hexOut, foam, calmWhileTyping, tips, fitCircle } from '../bubble.js?v=10020142'
+import { Space, hexGrid, hexOut, hexHug, foam, calmWhileTyping, tips, fitCircle } from '../bubble.js?v=10020210'
 
 const world = document.getElementById('world')
 const space = new Space(document.getElementById('viewport'), world)
@@ -191,11 +191,9 @@ const AVATARS = ['🦞','🐱','🐶','🦊','🐻','🐼','🐸','🐧','🦉',
 const pf = put(el('div', 'tone-violet', `<button class="ico no-drag" id="pfEmoji" aria-label="アバターを選ぶ" style="font-size:40cqmin;background:none;border:0;cursor:pointer;pointer-events:auto">🦊</button>
   <input id="pfName" value="あなた" maxlength="20" aria-label="あなたの名前">`))
 const pfB = space.add(pf, { kind: 'float', r: 100, x: -360, y: 330, home: 0.002 })
-// 4 個ずつ 4 行、奇数行を半個ずらす。プロフィールの泡のすぐ下に置く
-const AV_STEP = 62, AV_COLS = 4
-const avGrid = hexGrid(AVATARS.length, AV_COLS, AV_STEP)
-const avTop = 100 + 14 + 28 - Math.min(...avGrid.map(p => p.y))
-const avSlots = avGrid.map(p => ({ x: p.x, y: p.y + avTop }))
+// 半個ずらしの行のハニカムのまま、プロフィールの泡の右下の外壁に抱きつくように並べる（hexHug）
+const AV_STEP = 62, AV_DEG = 40
+const avSlots = hexHug(AVATARS.length, AV_STEP, AV_DEG, 100, 28, 6)
 const avs = AVATARS.map((a, i) => {
   const b = put(el('button', '', `<span class="ico">${a}</span>`, { 'aria-label': 'アバター ' + a }))
   b.hidden = true
@@ -206,7 +204,7 @@ const avs = AVATARS.map((a, i) => {
   })
   return space.add(b, { kind: 'slot', parent: pfB, r: 28, x: avSlots[i].x, y: avSlots[i].y })
 })
-const openAv = on => { avs.forEach(b => { b.el.hidden = !on }); pfB.pinned = on; if (on) space.view(pfB.x, pfB.y + 120, 520) }
+const openAv = on => { avs.forEach(b => { b.el.hidden = !on }); pfB.pinned = on; if (on) { const cx = avSlots.reduce((a, p) => a + p.x, 0) / avSlots.length, cy = avSlots.reduce((a, p) => a + p.y, 0) / avSlots.length; space.view(pfB.x + cx * 0.5, pfB.y + cy * 0.5, 560) } }
 pf.querySelector('#pfEmoji').addEventListener('click', () => openAv(avs[0].el.hidden))
 pf.querySelector('#pfName').addEventListener('input', e => { roomEl.querySelector('.member .m-name').textContent = e.target.value || 'あなた' })
 

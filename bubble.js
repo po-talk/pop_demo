@@ -64,6 +64,40 @@ export const hexOut = (n, cols, step, deg, dist) => {
   return hexGrid(n, cols, step).map(p => ({ x: cx + p.x, y: cy + p.y }))
 }
 
+// 親に寄り添う塊：ハニカム（hexGrid）を角度 deg の方向から親へ近づけ、いちばん近い泡が親の外壁に
+// ちょうど接する所で止める（gap だけ離す）。塊の形は保ったまま、親とひと続きの泡に見える。
+// r＝塊の泡の半径。親基準の座標で返す
+export const hexBeside = (n, cols, step, deg, parentR, r, gap = 4) => {
+  const g = hexGrid(n, cols, step), a = deg * Math.PI / 180, ux = Math.cos(a), uy = Math.sin(a)
+  const need = parentR + r + gap
+  let lo = 0, hi = parentR + step * (cols + n / cols) + need
+  for (let k = 0; k < 40; k++) {   // 二分探索：近いほど小さい距離 d で、全部の泡が need 以上離れる最小の d
+    const d = (lo + hi) / 2
+    const ok = g.every(p => Math.hypot(p.x + ux * d, p.y + uy * d) >= need)
+    if (ok) hi = d; else lo = d
+  }
+  return g.map(p => ({ x: p.x + ux * hi, y: p.y + uy * hi }))
+}
+
+// 親に抱きつく塊：同じハニカムの格子（半個ずらしの行）のうち、親の外壁の deg の方向に近い n マスを選ぶ。
+// 親に食い込むマスは飛ばすので、塊の縁が親の円に沿って欠け、泡がひと続きに連なって見える。
+// 並び順は上の行から左→右（読む順）。親基準の座標で返す
+export const hexHug = (n, step, deg, parentR, r, gap = 4) => {
+  const dy = step * SQ3 / 2, need = parentR + r + gap
+  const a = deg * Math.PI / 180, fx = Math.cos(a) * (need + step * 0.7), fy = Math.sin(a) * (need + step * 0.7)
+  const span = Math.ceil((need + step * 6) / step) + 2
+  // 格子の原点を「deg の方向で外壁にちょうど接するマス」に置く＝そのマスは隙間なく親にくっつく
+  const ox = Math.cos(a) * need, oy = Math.sin(a) * need
+  const cells = []
+  for (let k = -span; k <= span; k++) for (let j = -span; j <= span; j++) {
+    const x = ox + (j + (Math.abs(k) % 2) / 2) * step, y = oy + k * dy
+    if (Math.hypot(x, y) < need - 0.5) continue
+    cells.push({ x, y, d: Math.hypot(x - fx, y - fy) })
+  }
+  cells.sort((p, q) => p.d - q.d)
+  return cells.slice(0, n).sort((p, q) => p.y - q.y || p.x - q.x).map(({ x, y }) => ({ x, y }))
+}
+
 // 親の外壁に沿った弧。中心角 from（度）から gap ずつ。dist＝親の中心からの距離
 export const arc = (n, dist, from, gapDeg) =>
   Array.from({ length: n }, (_, i) => {
