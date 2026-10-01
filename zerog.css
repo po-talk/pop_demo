@@ -433,3 +433,7 @@ button.room.linked { display: none !important; }
 /* 無視のハートは 9〜10 時の位置（名前の頭に重ねない）。経路の印はその上、11 時へ */
 .member .m-ig { left: -12%; top: 23%; bottom: auto; }
 .member .m-conn { left: 14%; top: -4%; }
+/* 話題の泡：「いまの話題：」／話題／（◯◯が付けた）の 3 行で真ん中に揃える */
+.tag-bub .tag-text { text-align: center; }
+.tag-bub .tag-text b, .tag-bub .tag-text .tag-by { display: block; }
+.tag-bub .tag-text .tag-by:empty { display: none; }
