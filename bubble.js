@@ -140,7 +140,9 @@ class Body {
     this.draggable = o.drag ?? (this.kind === 'float' || this.kind === 'inner')
     this.pinned = false                           // true＝その場に留める（中の UI を開いている間など）
     this.phase = Math.random() * 100
-    this.visible = true
+    this.visible = el.isConnected && (el.checkVisibility ? el.checkVisibility() : !!el.offsetParent)
+    this.shown = this.visible                     // 一度でも見えたか（最初から隠れている泡は、隠れても弾けさせない）
+    this.burst = o.burst ?? true                  // 消えるときに弾けて小泡が散るか
     this.pop = 0                                  // 現れたときの膨らみ（0→1）
     this.dragging = false
     this.wasDragged = false
@@ -173,6 +175,7 @@ export class Space {
     this.viewport = viewport
     this.world = world
     this.bodies = []
+    this.drops = []      // 弾けたあとに散る小泡
     this.t = 0
     this.reduce = matchMedia('(prefers-reduced-motion: reduce)').matches
     this.calm = this.reduce
@@ -332,17 +335,64 @@ export class Space {
     if (++this._visTick % 6 === 0) this._checkVisible()
     this._camStep(dt)
     this._step(dt)
+    this._drops(dt)
     this._render()
     if (this.onFrame) this.onFrame(this)
     requestAnimationFrame(this._loop)
   }
 
   _checkVisible() {
+    const popping = []
     for (const b of this.bodies) {
       const v = b.el.isConnected && (b.el.checkVisibility ? b.el.checkVisibility() : !!b.el.offsetParent)
-      if (v && !b.visible) { b.pop = 0; b.place(); if (b.kind === 'float' && b.spawn) b.spawn(b) }
+      if (v && !b.visible) { b.pop = 0; b.place(); b.shown = true; if (b.kind === 'float' && b.spawn) b.spawn(b) }
+      if (!v && b.visible && b.shown && b.burst && !this.reduce) popping.push(b)
       b.visible = v
     }
+    // まとめて消えるとき（絵文字の並び 16 個など）は、1 つあたりの小泡を減らす＝散りすぎない
+    const each = popping.length > 3 ? Math.max(2, Math.round(28 / popping.length)) : null
+    popping.forEach(b => this.pop(b, each))
+  }
+
+  // ── 弾ける：リングが一瞬広がり、小さな泡が散って、やがて画面の外へ流れて消える ──────────
+  // 隠れた（hidden）泡は描けないので、最後にいた位置に別の要素で描く
+  pop(b, count = null) {
+    const x = b.wx, y = b.wy, r = b.r
+    const ring = document.createElement('div')
+    ring.className = 'pop-ring'
+    Object.assign(ring.style, { left: (x - r) + 'px', top: (y - r) + 'px', width: r * 2 + 'px', height: r * 2 + 'px' })
+    this.world.appendChild(ring)
+    setTimeout(() => ring.remove(), 420)
+    const n = count ?? clamp(Math.round(r / 5), 6, 24)
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + Math.random() * 0.5
+      const d = r * (0.55 + Math.random() * 0.4)
+      const sp = 1.2 + Math.random() * 2.2
+      const dr = 2 + Math.random() * Math.max(3, r * 0.09)
+      const el = document.createElement('div')
+      el.className = 'drop'
+      el.style.width = el.style.height = (dr * 2).toFixed(1) + 'px'
+      this.world.appendChild(el)
+      this.drops.push({ el, x: x + Math.cos(a) * d, y: y + Math.sin(a) * d, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp - 0.3, r: dr, t: 0, ph: Math.random() * 9 })
+    }
+  }
+  _drops(dt) {
+    if (!this.drops.length) return
+    const c = this.cam, W = innerWidth, H = innerHeight
+    this.drops = this.drops.filter(d => {
+      d.t += dt
+      // はじめは勢いよく散り、すぐにゆっくり漂う速さまで落ちる（止まりはしない＝そのうち画面の外へ）
+      const sp = Math.hypot(d.vx, d.vy), floor = 0.45
+      const damp = sp > floor ? Math.pow(0.95, dt) : 1
+      d.vx = d.vx * damp + Math.sin(this.t * 1.3 + d.ph) * 0.006 * dt
+      d.vy = d.vy * damp - 0.004 * dt                 // ほんの少し浮いていく
+      d.x += d.vx * dt; d.y += d.vy * dt
+      const sx = d.x * c.s + c.x, sy = d.y * c.s + c.y
+      const off = sx < -40 || sy < -40 || sx > W + 40 || sy > H + 40
+      if (off || d.t > 60 * 14) { d.el.remove(); return false }   // 画面の外に出たら（最長 14 秒で）消す
+      d.el.style.transform = `translate3d(${(d.x - d.r).toFixed(1)}px,${(d.y - d.r).toFixed(1)}px,0)`
+      return true
+    })
   }
 
   _camStep(dt) {
@@ -476,8 +526,10 @@ export class Space {
     const t = this.t, calm = this.calm
     for (const b of this.bodies) {
       if (!b.visible) continue
-      if (b.pop < 1) b.pop = Math.min(1, b.pop + 0.08)
-      const pop = b.pop < 1 ? 0.4 + 0.6 * easeOutBack(b.pop) : 1
+      // 現れるとき：ほぼ 0 から膨らみ、少し行き過ぎてから落ち着く（シャボン玉を吹いたときの「ぷくっ」）
+      if (b.pop < 1) b.pop = Math.min(1, b.pop + (this.reduce ? 1 : 0.055))
+      const pop = b.pop < 1 ? inflate(b.pop) : 1
+      b.el.style.opacity = b.pop < 1 ? Math.min(1, b.pop * 4).toFixed(2) : ''
       let sx = pop, sy = pop
       if (!calm && !b.dragging) {
         if (b.breath) { const br = 1 + Math.sin(t * 1.1 + b.phase) * b.breath; sx *= br; sy *= br }
@@ -494,7 +546,8 @@ export class Space {
   }
 }
 
-const easeOutBack = x => 1 + 2.2 * Math.pow(x - 1, 3) + 1.2 * Math.pow(x - 1, 2)
+// 0→1 で 0.05 → 1.14 → 0.97 → 1 と揺れて落ち着く
+const inflate = p => 1 - Math.cos(p * Math.PI * 1.5) * Math.exp(-p * 4.2) * 0.95
 
 // ── テキスト入力中は泡を静める ─────────────────────────────────────────
 // 入力欄にフォーカスがある間は calm。入力欄を含む泡をカメラの真ん中（キーボードを除いた見えている範囲）へ。

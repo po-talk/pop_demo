@@ -1,5 +1,5 @@
 // 泡のエンジンの試作ページ。通話はしない（見た目と手触りだけ）
-import { Space, hexGrid, hexOut, hexHug, foam, calmWhileTyping, tips, fitCircle } from '../bubble.js?v=10020210'
+import { Space, hexGrid, hexOut, hexHug, foam, calmWhileTyping, tips, fitCircle } from '../bubble.js?v=10020238'
 
 const world = document.getElementById('world')
 const space = new Space(document.getElementById('viewport'), world)
@@ -155,16 +155,20 @@ setInterval(() => {
 // 退出：確認は 2 つの泡（✓ と ✕）＋問いの泡
 const ask = put(el('div', 'tone-violet', '<span class="q">「ポッポの森」から退出しますか？</span>', { id: 'ask' }))
 ask.hidden = true
-// 部屋の右上の外にぽこんと出す 1 つの泡。問いの文と ✓ ✕ を中に収める（別々の泡にすると重なって読みにくい）
+// 部屋の右上の外にぽこんと出す問いの泡。✓ ✕ は問いの泡の右下の外壁から生える（中に入れるより押しやすく、文も読みやすい）
 const ASK_R = 84, ASK_DEG = -42, ASK_D = ROOM_R + ASK_R + 10
-ask.innerHTML = `<span class="q">「ポッポの森」から退出しますか？</span>
-  <span class="ask-btns"><button class="bub tone-red" aria-label="退出する"><span class="ico">✓</span></button><button class="bub" aria-label="やめる"><span class="ico">✕</span></button></span>`
-space.add(ask, { kind: 'slot', parent: room, r: ASK_R,
+const askB = space.add(ask, { kind: 'slot', parent: room, r: ASK_R,
   x: ASK_D * Math.cos(ASK_DEG * Math.PI / 180), y: ASK_D * Math.sin(ASK_DEG * Math.PI / 180) })
-const [yes, no] = ask.querySelectorAll('.ask-btns button')
+const yes = put(el('button', 'tone-red', '<span class="ico">✓</span>', { 'aria-label': '退出する' }))
+const no = put(el('button', '', '<span class="ico">✕</span>', { 'aria-label': 'やめる' }))
+yes.hidden = no.hidden = true
+const onAsk = (deg, r = 32) => { const d = ASK_R + r + 4, a = deg * Math.PI / 180; return { x: d * Math.cos(a), y: d * Math.sin(a) } }
+space.add(yes, { kind: 'slot', parent: askB, r: 32, ...onAsk(18) })
+space.add(no, { kind: 'slot', parent: askB, r: 32, ...onAsk(66) })
 let askTimer = 0
 const askAt = { x: ASK_D * Math.cos(ASK_DEG * Math.PI / 180), y: ASK_D * Math.sin(ASK_DEG * Math.PI / 180) }
 const showAsk = on => {
+  yes.hidden = no.hidden = !on
   // 問いの泡が画面の外に出ないよう、部屋と問いの泡の両方が収まるところへカメラを寄せる
   if (on) space.view(room.x + askAt.x * 0.45, room.y + askAt.y * 0.45, (ROOM_R + ASK_D + ASK_R) * 1.15)
   ask.hidden = !on; room.pinned = on; clearTimeout(askTimer); if (on) askTimer = setTimeout(() => showAsk(false), 8000) }

@@ -6,15 +6,13 @@
 <meta name="robots" content="noindex, nofollow">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; base-uri 'self'; form-action 'none'; object-src 'none'">
 <title>泡のエンジン（試作）</title>
-<link rel="stylesheet" href="../bubble.css?v=10020210">
+<link rel="stylesheet" href="../bubble.css?v=10020238">
 <style>
   .hint { position: fixed; left: 50%; top: auto; bottom: max(10px, env(safe-area-inset-bottom)); transform: translateX(-50%);
     width: 104px; height: 104px; z-index: 5; font-size: 11px; line-height: 1.35; padding: 12px; pointer-events: none; color: var(--ink-dim); }
   .m-name { font-size: max(9px, 14cqmin); }
   #ask { z-index: 30; background: radial-gradient(circle at 35% 30%, #3b2a6b 0%, #1e1640 75%, #2a1d55 100%); }
-  #ask .q { font-size: max(11px, 10.5cqmin); line-height: 1.4; padding: 0 16%; font-weight: 600; margin-top: -4%; }
-  #ask .ask-btns { display: flex; gap: 10cqmin; margin-top: 7cqmin; }
-  #ask .ask-btns .bub { position: relative; width: 30cqmin; height: 30cqmin; }
+  #ask .q { font-size: max(11px, 10.5cqmin); line-height: 1.4; padding: 0 16%; font-weight: 600; }
   .room-name { position: absolute; top: 6%; left: 50%; transform: translateX(-50%); font-size: 13px; font-weight: 700; white-space: nowrap;
     text-shadow: 0 1px 4px rgba(0,0,0,.9); pointer-events: none; }
   .room-name small { color: var(--blue); font-weight: 600; margin-left: 4px; }
@@ -49,6 +47,6 @@
 <div id="viewport"><div id="world"></div></div>
 <div id="tip" hidden></div>
 <div class="bub hint" id="hint">背景をドラッグで移動・ピンチで拡大。ボタンは長押しで名前</div>
-<script type="module" src="engine.js?v=10020210"></script>
+<script type="module" src="engine.js?v=10020238"></script>
 </body>
 </html>
