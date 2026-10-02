@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.4.6（元：ぽっと通話 v0.15.18）
+  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.4.7（元：ぽっと通話 v0.15.18）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -96,7 +96,7 @@
 <!-- End Cloudflare Web Analytics -->
 <!-- 泡の質感（bubble.css）とこの画面の見た目（zerog.css）。元の <style> は使わない（見た目を丸ごと差し替えたため） -->
 <link rel="stylesheet" href="bubble.css?v=14">
-<link rel="stylesheet" href="zerog.css?v=24">
+<link rel="stylesheet" href="zerog.css?v=25">
 <!-- 見た目（昼夜）のエンジン。**モジュールの外・<style> の直後**に置く＝最初の描画より前に
      昼の色を当てるため（モジュールは描画後に走るので、そこに置くと昼でも一瞬紺が見える）。
      アプリの状態には一切触らない（読むのは localStorage の設定と時計だけ）。設定の UI は
@@ -417,8 +417,10 @@
     <div id="lobbyStatus" class="hud-note lobby-status">🛰 ロビーに接続中…</div>
   </div>
   <button id="unlock" class="hud-unlock"><span class="ico">🔊</span><span class="cap">音声を有効化<br>（タップ）</span></button>
-  <!-- 左下：いつでも使う小さな操作（ハニカムに整列・動かない） -->
-  <div id="hub">
+  <!-- 左下：いつでも使う小さな操作（ハニカムに整列・動かない）。ひとつの泡に包み、しばらく触らないと小さく縮む。
+       縮んだ泡を押すと、また膨らんで中の操作が出る -->
+  <button id="hubWrap" type="button" class="hub-wrap open" aria-label="メニュー" aria-expanded="true"><span class="ico">🫧</span></button>
+  <div id="hub" class="open">
     <button id="help" class="hub-b" type="button" aria-haspopup="dialog" aria-label="これはなに？（ヘルプ）"><span class="ico">❔</span></button>
     <label class="hub-b theme-pick" aria-label="見た目（時刻で変わる・端末に合わせる・昼・夜）"><span class="ico">🌗</span><select id="theme" aria-label="見た目">
       <option value="time">時刻で変わる</option>
@@ -577,7 +579,7 @@ window.__potPcs = () => [...livePcs]   // 診断・テスト用
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.4.6'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.4.7'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.15.18'
 
@@ -5931,6 +5933,22 @@ function startZeroG(Z) {
       space.pop({ wx: x + d / 2, wy: y + d / 2 - rise, r: d / 2 }, 14)
       e.remove()
     }, space.reduce ? 1600 : LIFE)
+  }
+  // 左下のメニューの泡：触らずに 5 秒で縮む。縮んだ泡を押すと膨らむ。中を触っている間・選択中は縮まない
+  {
+    const wrap = $('hubWrap'), hub = $('hub')
+    let t = 0
+    const setOpen = on => {
+      wrap.classList.toggle('open', on); hub.classList.toggle('open', on)
+      wrap.setAttribute('aria-expanded', String(on)); wrap.setAttribute('aria-label', on ? 'メニューを縮める' : 'メニュー')
+      clearTimeout(t); if (on) t = setTimeout(maybeClose, 5000)
+    }
+    const maybeClose = () => { if (document.activeElement?.tagName === 'SELECT' && hub.contains(document.activeElement)) {   // 見た目の選択中だけは待つ（ボタンのフォーカスは数えない：ヘルプを閉じると ❔ に戻るため）
+      t = setTimeout(maybeClose, 3000); return } setOpen(false) }
+    wrap.addEventListener('click', () => setOpen(!wrap.classList.contains('open')))
+    hub.addEventListener('pointerdown', () => { clearTimeout(t); t = setTimeout(maybeClose, 5000) }, true)
+    hub.addEventListener('change', () => { clearTimeout(t); t = setTimeout(maybeClose, 3000) }, true)
+    setOpen(true)
   }
   window.__zg = { space, view, demoRooms, copied }
   // 泡の大きさと位置が 1 コマ描かれてから見せる（それまでは素の要素が巨大に描かれてしまう）

@@ -453,3 +453,20 @@ button.room.linked { display: none !important; }
 @keyframes copyfloat { 0% { transform: translateY(0) scale(.2); opacity: 0 } 14% { transform: translateY(-6px) scale(1.06); opacity: 1 }
   22% { transform: translateY(-9px) scale(1) } 80% { opacity: .9 } 100% { transform: translateY(-46px) scale(1.04); opacity: .55 } }
 @media (prefers-reduced-motion: reduce) { .copy-bub { animation: none; } }
+
+/* 左下のメニューを包む泡。開いている間は 6 つの泡を包む大きな泡、縮むと 🫧 の小さな泡 */
+.hub-wrap { position: fixed; z-index: 0; border-radius: 50%; padding: 0; cursor: pointer; font: inherit; color: var(--ink); box-sizing: border-box;
+  left: max(6px, env(safe-area-inset-left)); bottom: max(6px, env(safe-area-inset-bottom)); width: 52px; height: 52px;
+  display: grid; place-items: center; container-type: size;
+  border: 1.5px solid var(--rim);
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.26) 0%, rgba(255,255,255,.05) 62%, rgba(147,197,253,.22) 100%);
+  box-shadow: inset 0 0 14px rgba(255,255,255,.22), 0 6px 20px rgba(0,0,0,.4);
+  transition: width .45s cubic-bezier(.34,1.4,.64,1), height .45s cubic-bezier(.34,1.4,.64,1), left .45s, bottom .45s, background .3s; }
+.hub-wrap .ico { font-size: 22px; transition: opacity .2s; }
+.hub-wrap.open { width: 206px; height: 206px; left: calc(max(10px, env(safe-area-inset-left)) - 22px); bottom: calc(max(10px, env(safe-area-inset-bottom)) - 48px);
+  background: radial-gradient(circle at 40% 30%, rgba(255,255,255,.08) 0%, rgba(255,255,255,.02) 62%, rgba(147,197,253,.12) 100%); }
+.hub-wrap.open .ico { opacity: 0; }
+#hub { z-index: 1; transform-origin: 26px calc(100% - 26px); transition: transform .4s cubic-bezier(.34,1.3,.64,1), opacity .25s; }
+#hub:not(.open) { transform: scale(.15); opacity: 0; pointer-events: none !important; }
+#hub:not(.open) * { pointer-events: none !important; }
+html.typing .hub-wrap { opacity: 0; pointer-events: none; }
