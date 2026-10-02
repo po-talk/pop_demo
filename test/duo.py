@@ -87,6 +87,11 @@ try:
             pop.eval("document.querySelector('#members .m-ig:not([disabled])').click()"); time.sleep(1.5); snap(pop, '6ignore')
             print('dialog open:', pop.eval("document.getElementById('ignoreDlg').open"))
             pop.eval("document.getElementById('ignoreYes').click()"); time.sleep(1.5); snap(pop, '6ignored')
+        if st == 'fold':
+            r = pop.eval("new Promise(r => setTimeout(() => r(document.documentElement.classList.contains('zg-ctl-closed')), 7000))")
+            print('  controls folded after idle:', r); snap(pop, '9fold')
+            pop.eval("document.getElementById('ctlMore').click()"); time.sleep(1.2); snap(pop, '9unfold')
+            print('  unfolded:', not pop.eval("document.documentElement.classList.contains('zg-ctl-closed')"))
         if st == 'copy':
             pop.eval("document.getElementById('copy').click()", await_promise=False); time.sleep(1.0); snap(pop, '7copy'); time.sleep(2.0); snap(pop, '7copied')
         if st == 'qr':

@@ -470,3 +470,11 @@ button.room.linked { display: none !important; }
 #hub:not(.open) { transform: scale(.15); opacity: 0; pointer-events: none !important; }
 #hub:not(.open) * { pointer-events: none !important; }
 html.typing .hub-wrap { opacity: 0; pointer-events: none; }
+
+/* 操作の泡をしまう：ミュート・マイクを使う・通話希望と「⋯」だけ残す */
+html.zg-ctl-closed .actions > #leave, html.zg-ctl-closed #tabs > .ctl, html.zg-ctl-closed #reactBtn,
+html.zg-ctl-closed #pip, html.zg-ctl-closed #retry, html.zg-ctl-closed #shareWrap > .ctl { display: none !important; }
+#ctlMore .ico { font-size: 52cqmin; line-height: .6; letter-spacing: -1px; }
+#ctlMore[aria-expanded="true"] { border-color: var(--rim-soft); opacity: .85; }
+#ctlMore.unread::after { content: ''; position: absolute; right: 8%; top: 8%; left: auto; width: 22%; height: 22%; border-radius: 50%;
+  background: var(--danger); border: 1.5px solid #fff; transform: none; }
