@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.4.5（元：ぽっと通話 v0.15.18）
+  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.4.6（元：ぽっと通話 v0.15.18）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -96,7 +96,7 @@
 <!-- End Cloudflare Web Analytics -->
 <!-- 泡の質感（bubble.css）とこの画面の見た目（zerog.css）。元の <style> は使わない（見た目を丸ごと差し替えたため） -->
 <link rel="stylesheet" href="bubble.css?v=14">
-<link rel="stylesheet" href="zerog.css?v=23">
+<link rel="stylesheet" href="zerog.css?v=24">
 <!-- 見た目（昼夜）のエンジン。**モジュールの外・<style> の直後**に置く＝最初の描画より前に
      昼の色を当てるため（モジュールは描画後に走るので、そこに置くと昼でも一瞬紺が見える）。
      アプリの状態には一切触らない（読むのは localStorage の設定と時計だけ）。設定の UI は
@@ -577,7 +577,7 @@ window.__potPcs = () => [...livePcs]   // 診断・テスト用
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.4.5'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.4.6'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.15.18'
 
@@ -5574,6 +5574,8 @@ const ZG_V = '14'   // bubble.js / *.css のキャッシュ避け（変えたら
 // ★エンジンは動的 import。読めなくても通話そのものは動く（見た目が崩れるだけ）＝段階読み込みと同じ考え方。
 // ═══════════════════════════════════════════════════════════════════════════
 import('./bubble.js?v=' + ZG_V).then(Z => startZeroG(Z)).catch(e => console.warn('Zero-G engine', e))
+// エンジンが読めなかったときでも、いつまでも真っ暗にはしない（見た目は崩れるが操作はできる）
+setTimeout(() => document.documentElement.classList.add('zg-ready'), 6000)
 function startZeroG(Z) {
   const { Space, hexHug, hexOut, foam, toWall, calmWhileTyping, tips, fitCircle } = Z
   const deg = d => d * Math.PI / 180
@@ -5930,7 +5932,9 @@ function startZeroG(Z) {
       e.remove()
     }, space.reduce ? 1600 : LIFE)
   }
-  window.__zg = { space, view, demoRooms, copied }   // 試験・調整・撮影用
+  window.__zg = { space, view, demoRooms, copied }
+  // 泡の大きさと位置が 1 コマ描かれてから見せる（それまでは素の要素が巨大に描かれてしまう）
+  requestAnimationFrame(() => requestAnimationFrame(() => html.classList.add('zg-ready')))   // 試験・調整・撮影用
 }
 
 // MOD：外から状態を読む口（test/interop.py 用）。見た目を作り替えても同じ物差しで測れるよう、

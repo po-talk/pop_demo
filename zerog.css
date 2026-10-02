@@ -4,6 +4,8 @@
      昼の側だけ星雲を明るくする（html.zg-day） */
 
 :root { color-scheme: dark !important; }
+/* 読み込み直後：エンジンが泡の大きさを決めるまで、泡の平面は見せない（素の要素が巨大に描かれるのを防ぐ） */
+html:not(.zg-ready) #world { visibility: hidden; }
 .zc { display: contents; }
 .zc[hidden] { display: none; }
 .stub { display: none !important; }
