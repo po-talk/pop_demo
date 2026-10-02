@@ -22,7 +22,7 @@ def tab(url, mobile):
     t = cdp.new_tab(a.port); t.call('Page.enable'); t.call('Runtime.enable')
     if mobile:
         t.call('Emulation.setDeviceMetricsOverride', width=390, height=844, deviceScaleFactor=2, mobile=True)
-    t.call('Page.addScriptToEvaluateOnNewDocument', source=ERRS + ";try{localStorage.setItem('pop-call-hide-help','1');localStorage.setItem('pot-call-hide-help','1')}catch{}")
+    t.call('Page.addScriptToEvaluateOnNewDocument', source=ERRS + ";try{navigator.clipboard.writeText = async () => {}}catch{};try{localStorage.setItem('pop-call-hide-help','1');localStorage.setItem('pot-call-hide-help','1')}catch{}")
     t.call('Page.navigate', url=url); return t
 def snap(t, name):
     d = t.call('Page.captureScreenshot', format='png'); p = a.out + '-' + name + '.png'
@@ -87,6 +87,8 @@ try:
             pop.eval("document.querySelector('#members .m-ig:not([disabled])').click()"); time.sleep(1.5); snap(pop, '6ignore')
             print('dialog open:', pop.eval("document.getElementById('ignoreDlg').open"))
             pop.eval("document.getElementById('ignoreYes').click()"); time.sleep(1.5); snap(pop, '6ignored')
+        if st == 'copy':
+            pop.eval("document.getElementById('copy').click()", await_promise=False); time.sleep(1.0); snap(pop, '7copy'); time.sleep(2.0); snap(pop, '7copied')
         if st == 'qr':
             pop.eval("document.getElementById('qr').click()"); time.sleep(2.5); snap(pop, '7qr'); pop.eval("document.getElementById('qr').click()"); time.sleep(1)
         if st == 'tag':

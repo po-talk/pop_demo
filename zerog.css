@@ -438,3 +438,16 @@ button.room.linked { display: none !important; }
 .tag-bub .tag-text b, .tag-bub .tag-text .tag-by { display: block; }
 .tag-bub .tag-text .tag-by:empty { display: none; }
 .tag-bub .tag-text .tag-by { font-size: .82em; font-weight: 600; color: var(--ink-dim); margin-top: 2px; }
+/* コピーした中身の泡（ふわっと膨らみ、ゆっくり昇って、弾けて消える） */
+.copy-bub { position: absolute; z-index: 40; box-sizing: border-box; border-radius: 50%; padding: 22px 18px; pointer-events: none;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; text-align: center; color: var(--ink);
+  background: radial-gradient(circle at 35% 30%, rgba(70,58,140,.92) 0%, rgba(26,22,66,.9) 70%, rgba(60,80,150,.88) 100%);
+  border: 1.5px solid rgba(255,255,255,.7); box-shadow: inset 0 0 18px rgba(255,255,255,.22), 0 0 22px rgba(147,197,253,.45);
+  animation: copyfloat 2.6s cubic-bezier(.2,.7,.3,1) forwards; }
+.copy-bub .cb-head { font-size: 10px; font-weight: 700; color: #86efac; }
+.copy-bub .cb-line { font-size: 11.5px; font-weight: 700; line-height: 1.35; max-width: 100%; overflow-wrap: anywhere; }
+.copy-bub .cb-url { font-size: 9px; line-height: 1.3; color: var(--ink-dim); max-width: 100%; word-break: break-all;
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+@keyframes copyfloat { 0% { transform: translateY(0) scale(.2); opacity: 0 } 14% { transform: translateY(-6px) scale(1.06); opacity: 1 }
+  22% { transform: translateY(-9px) scale(1) } 80% { opacity: .9 } 100% { transform: translateY(-46px) scale(1.04); opacity: .55 } }
+@media (prefers-reduced-motion: reduce) { .copy-bub { animation: none; } }
