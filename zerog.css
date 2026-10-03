@@ -478,3 +478,6 @@ html.zg-ctl-closed #pip, html.zg-ctl-closed #retry, html.zg-ctl-closed #shareWra
 #ctlMore[aria-expanded="true"] { border-color: var(--rim-soft); opacity: .85; }
 #ctlMore.unread::after { content: ''; position: absolute; right: 8%; top: 8%; left: auto; width: 22%; height: 22%; border-radius: 50%;
   background: var(--danger); border: 1.5px solid #fff; transform: none; }
+/* ひとことを開いていても、参加者の泡の上の操作（🎙 許可・無視）は押せる（読み物の層より手前に） */
+#callBub .member { z-index: 2; }
+#callBub .chat-row { z-index: 3; }

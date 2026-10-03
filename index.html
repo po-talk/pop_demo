@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.5.1（元：ぽっと通話 v0.15.18）
+  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.5.2（元：ぽっと通話 v0.15.18）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -96,7 +96,7 @@
 <!-- End Cloudflare Web Analytics -->
 <!-- 泡の質感（bubble.css）とこの画面の見た目（zerog.css）。元の <style> は使わない（見た目を丸ごと差し替えたため） -->
 <link rel="stylesheet" href="bubble.css?v=14">
-<link rel="stylesheet" href="zerog.css?v=27">
+<link rel="stylesheet" href="zerog.css?v=28">
 <!-- 見た目（昼夜）のエンジン。**モジュールの外・<style> の直後**に置く＝最初の描画より前に
      昼の色を当てるため（モジュールは描画後に走るので、そこに置くと昼でも一瞬紺が見える）。
      アプリの状態には一切触らない（読むのは localStorage の設定と時計だけ）。設定の UI は
@@ -581,7 +581,7 @@ window.__potPcs = () => [...livePcs]   // 診断・テスト用
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.5.1'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.5.2'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.15.18'
 
@@ -679,6 +679,7 @@ const CALL_INIT = () => ({
   reqOpen: false,       // 配信者：マイクのリクエストを受け付けているか（設定のスイッチ・v0.15.9）
   requests: new Set(),  // 配信者：マイクを希望している聞き役の peerId（挙手）。許可したら消す
   reqOpenSeen: false,   // 聞き役：配信者がいま受け付けているか（🙋 ボタンの出し入れ）
+  reqOpenEarly: null,   // MOD：配信者が誰か分かる前に届いた「募集中」{peerId, on}（名簿の検証が済んだら当てる）
   myReq: false,         // 聞き役：自分が挙手しているか
   enterSent: false,     // 聞き役：入室通知をこのセッションで送ったか（1 回だけ・v0.15.11）
   ownerPeer: '',        // 名簿に書かれている配信者本人の peerId（📣 と 🎙 を描き分けるため）
@@ -3850,6 +3851,8 @@ const broadcastRoster = async (target = null) => {
   call.roster = roster
   sendTo(call.bcAction, roster, target)
   if (!target) setSpeakers(ids)
+  // MOD：名簿と一緒に「募集中」も配り直す（30 秒ごと）。名簿より先に着いて捨てる受け手（本番の画面）でも、遅くとも次の配り直しで 🙋 が出る
+  if (call.reqOpen) sendReqOpen(target)
 }
 // 新しく来た人へ、いま持っている名簿をそのまま渡す。**署名済みなので誰が転送してもよい**
 // ＝オーナーが去った後に入ってきた人も、残った人から受け取って検証できる。
@@ -3880,6 +3883,10 @@ const acceptRoster = async d => {
   call.rosterSeen = t; call.ownerPeer = own
   call.roster = { pk: pub, t, o: own, ids, sig }
   setSpeakers(ids)
+  if (call.reqOpenEarly) {   // MOD：先に届いていた「募集中」を、配信者本人からのものなら当てる
+    const e = call.reqOpenEarly; call.reqOpenEarly = null
+    if (e.peerId === own) { call.reqOpenSeen = e.on; if (!e.on) call.myReq = false; renderSpeak() }
+  }
   ttsSync()   // 読み上げの案内が名簿より先に届いていたら、ここで評価する（{ok} を返す・仮想行を出す）
   // ★「枠主が誰か」が分かった**その瞬間**に、いまの募集と公開中のお便りを取りに行く。
   // 枠主からの push（mailSync）は**名簿より先に着くことがある**（名簿の送信は署名の計算を挟むので
@@ -4399,7 +4406,10 @@ const wireRoom = () => {
     if (!call.bcast || !d || typeof d !== 'object') return
     // リスナー側：枠主から「通話希望者募集」の状態が届いた（v0.15.9）。オーナー本人からのものだけ信じる。
     if (d.k === 'reqopen') {
-      if (!call.ownerPeer || peerId !== call.ownerPeer) return
+      // MOD：入った直後は名簿の検証（非同期）が済んでおらず、配信者が誰かまだ分からない。そこで届いた
+      // 「募集中」を捨てると、後から入った人に 🙋 が出ない（元のアプリの競合）。取っておいて、名簿で確かめてから当てる
+      if (!call.ownerPeer) { call.reqOpenEarly = { peerId, on: !!d.on }; return }
+      if (peerId !== call.ownerPeer) return
       call.reqOpenSeen = !!d.on
       if (!call.reqOpenSeen) call.myReq = false   // 締め切られたら自分の希望も畳む
       renderSpeak()

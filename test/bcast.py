@@ -58,6 +58,9 @@ try:
         up.eval("document.getElementById('raise').click()")
         ok('配信者の画面に 🙋 の泡が出る', pop.wait_for("[...document.querySelectorAll('#members .member')].length === 2", timeout=20))
         time.sleep(1.5); snap(pop, '3raised')
+        pop.eval("document.getElementById('tabChat').click()"); time.sleep(2)
+        hit = pop.eval("(() => { const b = document.querySelector('#members .m-mic:not([disabled])'), r = b.getBoundingClientRect(); return document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2) === b || b.contains(document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2)) })()")
+        ok('ひとことを開いたままでも 🎙 許可が押せる', hit)
         pop.eval("document.querySelector('#members .m-mic:not([disabled])').click()")
         ok('許可すると聞き役に「マイクを使う」', up.wait_for("getComputedStyle(document.getElementById('speak')).display !== 'none'", timeout=20))
         # おたより：募集 → 投稿 → 公開
@@ -84,9 +87,7 @@ try:
         pop.eval('window.__pop.join()', await_promise=False)
         ok('お試し版が聞き役で入る', pop.wait_for('window.__pop.state().peers.length === 1', timeout=60))
         time.sleep(4); snap(pop, '1listener')
-        # ★元のアプリの競合（v0.15.18）：入室の瞬間に配信者が送る「募集中」は、聞き役がまだ配信者を知らない
-        #   （名簿の検証前）と捨てられる。本番の画面どうしでも同じ。ここでは入ったあとに募集を入れ直す
-        up.eval("(() => { const r = document.getElementById('reqOpen'); r.checked = false; r.dispatchEvent(new Event('change')); r.checked = true; r.dispatchEvent(new Event('change')) })()")
+        # 入室の瞬間に配信者が送る「募集中」は、名簿の検証前に届く。お試し版は取っておいて当てる（pop 0.5.2）＝入れ直さずに出るはず
         ok('お試し版に「通話希望」の泡', pop.wait_for("getComputedStyle(document.getElementById('raise')).display !== 'none' && !document.getElementById('raise').hidden", timeout=20))
         pop.eval("document.getElementById('raise').click()"); time.sleep(2); snap(pop, '2raised')
         up.eval("document.getElementById('tabMail').click()"); time.sleep(1)
