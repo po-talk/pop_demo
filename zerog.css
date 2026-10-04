@@ -481,3 +481,17 @@ html.zg-ctl-closed #pip, html.zg-ctl-closed #retry, html.zg-ctl-closed #shareWra
 /* ひとことを開いていても、参加者の泡の上の操作（🎙 許可・無視）は押せる（読み物の層より手前に） */
 #callBub .member { z-index: 2; }
 #callBub .chat-row { z-index: 3; }
+
+/* ヘルプ：✕ は円の縁に重ねて見せる（窓自体は切り抜かない。読み物の円だけが中で切れる） */
+dialog.help-dialog { overflow: visible; }
+.help-x { right: 9%; top: 7%; }
+/* 「実験中です」の下の矢印：この先にもまだ読み物がある合図。ボタン類はその下へ少し追い出す */
+.help-more { display: flex; justify-content: center; margin: 6px 0 46px; }
+.help-more span { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; font-size: 16px; color: var(--ink-dim);
+  border: 1.5px solid var(--rim-soft); background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.22) 0%, rgba(255,255,255,.05) 70%);
+  animation: helpbob 1.8s ease-in-out infinite; }
+@keyframes helpbob { 0%, 100% { transform: translateY(0) } 50% { transform: translateY(5px) } }
+@media (prefers-reduced-motion: reduce) { .help-more span { animation: none; } }
+/* 「泡になってはじめる」：字が増えたぶん泡を大きく */
+.help-close { width: 92px; height: 92px; margin-left: -46px; bottom: 2.5%; font-size: 12px; line-height: 1.35;
+  background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.36) 0%, rgba(192,132,252,.18) 62%, rgba(147,197,253,.3) 100%); border-color: rgba(192,132,252,.7); }
