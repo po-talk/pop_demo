@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.7.1（元：ぽっと通話 v0.15.18）
+  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.7.2（元：ぽっと通話 v0.15.18）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -591,7 +591,7 @@ window.__potPcs = () => [...livePcs]   // 診断・テスト用
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.7.1'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.7.2'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.15.18'
 
@@ -5649,7 +5649,7 @@ function startZeroG(Z) {
   // 自分の設定をしている間（絵文字を選んでいる・名前を入力している）は、まわりをすりガラスでぼかす
   // 「泡になってはじめる」の直後も、自分の泡に目が行くよう、まわりをぼかしたままにする（zg-intro）。
   // ぼけた所か 🏠 を押すと晴れて、通話中の部屋が見える
-  const syncFrost = () => html.classList.toggle('zg-frost', !call.joinedId && (html.classList.contains('zg-intro') || html.classList.contains('zg-av') || document.activeElement === $('name')))
+  const syncFrost = () => html.classList.toggle('zg-frost', !call.joinedId && (html.classList.contains('zg-intro') || html.classList.contains('zg-solo-edit') || html.classList.contains('zg-av') || document.activeElement === $('name')))
   new MutationObserver(syncFrost).observe(html, { attributes: true, attributeFilter: ['class'] })
   $('name').addEventListener('focus', syncFrost); $('name').addEventListener('blur', () => setTimeout(syncFrost, 0))
   const clearIntro = () => html.classList.remove('zg-intro')
@@ -5670,12 +5670,18 @@ function startZeroG(Z) {
     pfB.drift = on ? 1.6 : 0.5; pfB.home = on ? 0.0008 : 0.003
     $('pfBub').setAttribute('aria-label', on ? 'あなた（押すと名前とアイコンを変えられます）' : 'あなたのプロフィール')
   }
-  $('pfBub').addEventListener('click', e => { if (html.classList.contains('zg-solo') && !e.target.closest('#pfEmoji')) { setSolo(false); space.view(pfB.x + 40, pfB.y + 40, 520) } })
-  $('pfEmoji').addEventListener('click', e => { if (html.classList.contains('zg-solo')) { e.stopImmediatePropagation(); setSolo(false); space.view(pfB.x + 40, pfB.y + 40, 520) } }, true)
+  // 漂っている自分の泡（か 🏠）を押す＝名前・アイコン・部屋づくりを触る間だけプロフィールの泡に戻し、まわりをぼかす（zg-solo-edit）。
+  // ぼけた所を押してやめると、また小さな泡に戻って漂う。部屋に入ったらそのまま部屋へ
+  const soloEdit = () => { setSolo(false); html.classList.add('zg-solo-edit'); space.view(pfB.x + 40, pfB.y + 40, 520) }
+  const soloBack = () => { html.classList.remove('zg-solo-edit'); $('createBox').open = false; setAv(false); $('name').blur(); setSolo(true); space.view(pfB.x, pfB.y, Math.min(1200, Math.max(innerWidth, innerHeight) * 1.1)) }
+  $('pfBub').addEventListener('click', e => { if (html.classList.contains('zg-solo') && !e.target.closest('#pfEmoji')) soloEdit() })
+  $('pfEmoji').addEventListener('click', e => { if (html.classList.contains('zg-solo')) { e.stopImmediatePropagation(); soloEdit() } }, true)
+  $('createBtn').addEventListener('click', () => { if (html.classList.contains('zg-solo')) soloEdit() }, true)
   const introAskB = space.add($('introAsk'), { kind: 'slot', parent: pfB, r: 82, wall: { a: deg(-40), d: 90 } })
   const askIntro = on => { $('introAsk').hidden = !on; pfB.pinned = on }
   $('frost').addEventListener('click', () => {
     setAv(false); $('name').blur()
+    if (html.classList.contains('zg-solo-edit')) { soloBack(); return }      // 泡から触りに来ていた＝やめて泡に戻る
     if (html.classList.contains('zg-intro')) askIntro($('introAsk').hidden)   // 晴らす前に、泡になるかを聞く
   })
   $('introYes').addEventListener('click', () => {
@@ -5907,7 +5913,7 @@ function startZeroG(Z) {
       $('pfBub').hidden = j; $('createBtn').hidden = j
       $('reactBtn').hidden = !j
       $('ctlMore').hidden = !j
-      if (j) { setCtl(true); clearIntro(); askIntro(false); if (html.classList.contains('zg-solo')) setSolo(false) }
+      if (j) { setCtl(true); clearIntro(); askIntro(false); html.classList.remove('zg-solo-edit'); if (html.classList.contains('zg-solo')) setSolo(false) }
       // 入った瞬間：プロフィールの泡がいた所に部屋の泡が膨らむ（あなたが部屋になる）
       if (j) { callB.x = callB.ox = pfB.x; callB.y = callB.oy = pfB.y; callB.size(140); callB.pop = 0 }
       else { pfB.x = pfB.ox = callB.x; pfB.y = pfB.oy = callB.y; if (wasJoined) { $('createBox').open = false; if (!joining) freshRoom() } }   // 退出後は畳み、次は新しい部屋（前の部屋名を残さない）。部屋の移動中（joining）は触らない
@@ -6064,7 +6070,7 @@ function startZeroG(Z) {
   const SOLO_EVERY = 5000, SOLO_STALE = 30000, SOLO_MAX = 30
   let soloAct = null, soloLobby = null, soloSentAt = 0, soloWasOn = false
   const soloPeers = new Map()   // peerId → { e, n, ts, b }
-  const soloOn = () => html.classList.contains('zg-solo') && !call.joinedId
+  const soloOn = () => (html.classList.contains('zg-solo') || html.classList.contains('zg-solo-edit')) && !call.joinedId   // 触っている間も消さない
   const soloSend = on => sendTo(soloAct, { on, ...(on ? { e: profile.emoji || '🙂' } : {}) })
   const soloBind = () => {
     if (lobbyRoom === soloLobby) return
