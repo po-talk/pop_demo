@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.5.3（元：ぽっと通話 v0.15.18）
+  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.5.4（元：ぽっと通話 v0.15.18）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -96,7 +96,7 @@
 <!-- End Cloudflare Web Analytics -->
 <!-- 泡の質感（bubble.css）とこの画面の見た目（zerog.css）。元の <style> は使わない（見た目を丸ごと差し替えたため） -->
 <link rel="stylesheet" href="bubble.css?v=14">
-<link rel="stylesheet" href="zerog.css?v=29">
+<link rel="stylesheet" href="zerog.css?v=30">
 <!-- 見た目（昼夜）のエンジン。**モジュールの外・<style> の直後**に置く＝最初の描画より前に
      昼の色を当てるため（モジュールは描画後に走るので、そこに置くと昼でも一瞬紺が見える）。
      アプリの状態には一切触らない（読むのは localStorage の設定と時計だけ）。設定の UI は
@@ -232,6 +232,8 @@
 <div class="nebula" aria-hidden="true"></div>
 <div id="viewport"><div id="world">
 
+  <!-- 自分の設定（名前・絵文字）をしている間だけ出す、すりガラスの層。プロフィールの泡と絵文字はこの上に出る -->
+  <div id="frost" aria-hidden="true"></div>
   <!-- ── 参加前：プロフィールの泡（あなた） ── -->
   <div id="setupFields" class="zc">
     <details id="profileBox" class="stub"><summary></summary></details>
@@ -582,7 +584,7 @@ window.__potPcs = () => [...livePcs]   // 診断・テスト用
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.5.3'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.5.4'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.15.18'
 
@@ -5637,6 +5639,11 @@ function startZeroG(Z) {
     if (on) { const cx = avSlots.reduce((a, p) => a + p.x, 0) / avSlots.length, cy = avSlots.reduce((a, p) => a + p.y, 0) / avSlots.length; space.view(pfB.x + cx * .5, pfB.y + cy * .5, 600) }
   }
   $('pfEmoji').addEventListener('click', () => { if (!call.joinedId) setAv(!html.classList.contains('zg-av')) })
+  // 自分の設定をしている間（絵文字を選んでいる・名前を入力している）は、まわりをすりガラスでぼかす
+  const syncFrost = () => html.classList.toggle('zg-frost', !call.joinedId && (html.classList.contains('zg-av') || document.activeElement === $('name')))
+  new MutationObserver(syncFrost).observe(html, { attributes: true, attributeFilter: ['class'] })
+  $('name').addEventListener('focus', syncFrost); $('name').addEventListener('blur', () => setTimeout(syncFrost, 0))
+  $('frost').addEventListener('click', () => { setAv(false); $('name').blur() })   // ぼけた所を押せば設定を閉じる
   // リンクの部屋をやめて「新しく作る」に切り替える（URL の部屋を捨て、新しい ID を発行。名前は name か「◯◯の部屋」）
   const freshRoom = name => {
     entryCancel()
