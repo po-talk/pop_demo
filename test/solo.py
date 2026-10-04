@@ -30,13 +30,14 @@ try:
     time.sleep(6)
     for t in (A, B):
         t.eval("(() => { document.getElementById('helpClose').click(); setTimeout(() => { document.getElementById('frost').click(); setTimeout(() => document.getElementById('introYes').click(), 400) }, 600) })()")
-    ok('A に B の泡が出る', A.wait_for("[...window.__zg.soloPeers.values()].some(r => r.n === 'ゆに')", timeout=60))
-    ok('B に A の泡が出る', B.wait_for("[...window.__zg.soloPeers.values()].some(r => r.n === 'たこ')", timeout=60))
+    ok('A に B の泡が出る', A.wait_for("[...window.__zg.soloPeers.values()].some(r => r.e === '🦄')", timeout=60))
+    ok('B に A の泡が出る', B.wait_for("[...window.__zg.soloPeers.values()].some(r => r.e === '🐙')", timeout=60))
     time.sleep(2)
     d = A.call('Page.captureScreenshot', format='png'); open(out + '-solo.png', 'wb').write(base64.b64decode(d['data']))
     # B が泡をやめる（元のプロフィールの泡に戻る）→ A から消える
     B.eval("document.getElementById('pfBub').click()")
-    ok('B が泡をやめると A から消える', A.wait_for("![...window.__zg.soloPeers.values()].some(r => r.n === 'ゆに')", timeout=20))
+    ok('名前は送られていない（絵文字だけ）', A.eval("[...window.__zg.soloPeers.values()].every(r => r.n === undefined)"))
+    ok('B が泡をやめると A から消える', A.wait_for("![...window.__zg.soloPeers.values()].some(r => r.e === '🦄')", timeout=20))
     errs = (A.eval('window.__E') or []) + (B.eval('window.__E') or []) + (U.eval('window.__E') or [])
     ok('本番の画面を含めエラーなし', not errs) or print('   ', errs)
 finally:

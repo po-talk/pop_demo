@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.7.0（元：ぽっと通話 v0.15.18）
+  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.7.1（元：ぽっと通話 v0.15.18）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -96,7 +96,7 @@
 <!-- End Cloudflare Web Analytics -->
 <!-- 泡の質感（bubble.css）とこの画面の見た目（zerog.css）。元の <style> は使わない（見た目を丸ごと差し替えたため） -->
 <link rel="stylesheet" href="bubble.css?v=14">
-<link rel="stylesheet" href="zerog.css?v=35">
+<link rel="stylesheet" href="zerog.css?v=36">
 <!-- 見た目（昼夜）のエンジン。**モジュールの外・<style> の直後**に置く＝最初の描画より前に
      昼の色を当てるため（モジュールは描画後に走るので、そこに置くと昼でも一瞬紺が見える）。
      アプリの状態には一切触らない（読むのは localStorage の設定と時計だけ）。設定の UI は
@@ -591,7 +591,7 @@ window.__potPcs = () => [...livePcs]   // 診断・テスト用
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.7.0'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.7.1'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.15.18'
 
@@ -6059,12 +6059,13 @@ function startZeroG(Z) {
   // ── 泡になった人どうしが見える（10-04・「誰かと話したい」の入口）────────────────
   // ロビー（__lobby__）に新しい action 'solo' を足す。presence には混ぜない＝本番の画面・常設クライアント・CLI は
   // この action の口を持たないので Trystero が黙って捨てる（何も壊さない）。送るのは ✓ を選んで泡になった人だけ。
-  // 中身：{ on: true, e: 絵文字, n: 名前 }（5 秒ごと）／{ on: false }（泡をやめた・部屋に入った）。受け手は 30 秒で消す
+  // 中身：{ on: true, e: 絵文字 }（5 秒ごと）／{ on: false }（泡をやめた・部屋に入った）。受け手は 30 秒で消す。
+  // ★名前は送らない（10-04・利用者）＝ほかの人から見えるのは絵文字だけ
   const SOLO_EVERY = 5000, SOLO_STALE = 30000, SOLO_MAX = 30
   let soloAct = null, soloLobby = null, soloSentAt = 0, soloWasOn = false
   const soloPeers = new Map()   // peerId → { e, n, ts, b }
   const soloOn = () => html.classList.contains('zg-solo') && !call.joinedId
-  const soloSend = on => sendTo(soloAct, { on, ...(on ? { e: profile.emoji || '🙂', n: profile.name || '' } : {}) })
+  const soloSend = on => sendTo(soloAct, { on, ...(on ? { e: profile.emoji || '🙂' } : {}) })
   const soloBind = () => {
     if (lobbyRoom === soloLobby) return
     soloLobby = lobbyRoom; soloAct = null
@@ -6075,22 +6076,21 @@ function startZeroG(Z) {
       if (!d.on) { soloDrop(peerId); return }
       const cur = soloPeers.get(peerId)
       if (!cur && soloPeers.size >= SOLO_MAX) return
-      const e = capText(d.e, 8, '🙂') || '🙂', n = capText(d.n, 20)
-      if (cur) { cur.ts = Date.now(); if (cur.e !== e || cur.n !== n) { cur.e = e; cur.n = n; soloPaint(cur) } return }
+      const e = capText(d.e, 8, '🙂') || '🙂'   // 名前などほかのフィールドが来ても使わない
+      if (cur) { cur.ts = Date.now(); if (cur.e !== e) { cur.e = e; soloPaint(cur) } return }
       const el = document.createElement('button'); el.type = 'button'; el.className = 'solo-other'
-      el.innerHTML = '<span class="so-e"></span><span class="so-n"></span>'
+      el.innerHTML = '<span class="so-e"></span>'
       world.appendChild(el)
       const a = Math.random() * Math.PI * 2, dd = 260 + Math.random() * 260
-      const b = space.add(el, { kind: 'float', r: 40, x: Math.cos(a) * dd, y: Math.sin(a) * dd, home: 0.0008, drift: 1.6 })
-      const rec = { e, n, ts: Date.now(), b, el }
-      el.addEventListener('click', () => hint(b, (n || 'だれか') + ' さん\n（話しかける機能は\n準備中です）', 3000))
+      const b = space.add(el, { kind: 'float', r: 34, x: Math.cos(a) * dd, y: Math.sin(a) * dd, home: 0.0008, drift: 1.6 })
+      const rec = { e, ts: Date.now(), b, el }
+      el.addEventListener('click', () => hint(b, '話しかける機能は\n準備中です', 3000))
       soloPeers.set(peerId, rec); soloPaint(rec)
     }
   }
   const soloPaint = r => {
     r.el.querySelector('.so-e').textContent = r.e
-    r.el.querySelector('.so-n').textContent = r.n || ''
-    r.el.setAttribute('aria-label', (r.n || 'だれか') + '（泡になって漂っている人）')
+    r.el.setAttribute('aria-label', '泡になって漂っている人 ' + r.e)
   }
   const soloDrop = id => { const r = soloPeers.get(id); if (!r) return; space.pop(r.b); space.remove(r.b); r.el.remove(); soloPeers.delete(id) }
   setInterval(() => {
