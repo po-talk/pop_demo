@@ -526,3 +526,12 @@ html.zg-solo #pfBub { cursor: pointer; }
 html.zg-solo #pfBub .pf-you { display: block; font-size: max(10px, 17cqmin); font-weight: 700; color: var(--ink); line-height: 1; margin-top: 2cqmin;
   text-shadow: 0 1px 3px rgba(0,0,0,.8); white-space: nowrap; pointer-events: none; }
 html.zg-solo #pfBub .pf-emoji { font-size: 46cqmin; }
+
+/* 問いの補足（ほかの人からも見えます） */
+.intro-ask .q small { display: block; margin-top: 4px; font-size: max(9px, 8.5cqmin); font-weight: 600; color: var(--ink-dim); line-height: 1.35; }
+/* ほかの「泡になった人」：絵文字と名前の小さな泡 */
+.solo-other { position: absolute; left: 0; top: 0; padding: 0; cursor: pointer; font: inherit; color: var(--ink); gap: 1px;
+  border-color: rgba(192,132,252,.6); background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.3) 0%, rgba(255,255,255,.06) 62%, rgba(192,132,252,.26) 100%); }
+.solo-other .so-e { font-size: 42cqmin; line-height: 1; pointer-events: none; }
+.solo-other .so-n { font-size: max(9px, 13cqmin); font-weight: 700; max-width: 84%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  text-shadow: 0 1px 3px rgba(0,0,0,.8); pointer-events: none; }
