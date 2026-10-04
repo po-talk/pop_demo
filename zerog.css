@@ -499,8 +499,13 @@ dialog.help-dialog { overflow: visible; }
 /* 自分の設定の間のすりガラス：#world の中に大きな層を置き、プロフィールの泡と絵文字だけをその上に出す。
    画面に固定した表示（状態・お知らせ・左下のメニュー）は filter でぼかす */
 #frost { position: absolute; left: -6000px; top: -6000px; width: 12000px; height: 12000px; z-index: 18; pointer-events: none; opacity: 0;
-  background: rgba(14,12,40,.28); backdrop-filter: blur(8px) saturate(1.1); -webkit-backdrop-filter: blur(8px) saturate(1.1); transition: opacity .3s; }
+  background: rgba(14,12,40,.22); transition: opacity .3s; }
+/* ★泡が漂う平面（transform している #world）の中では backdrop-filter が効かない（Chrome・Safari とも）。
+   なので層は色を薄く乗せるだけにして、ぼかすのは泡そのもの（自分の泡・🏠・絵文字の並び以外）にする */
+html.zg-frost #world .bub:not(#pfBub):not(#createBtn):not(#avatars > button), html.zg-frost #world .mote {
+  filter: blur(6px); opacity: .55; transition: filter .3s, opacity .3s; }
+html.zg-frost #world .bub .bub { filter: none; }   /* 部屋の中の小泡は、親ごとぼけているので二重にかけない */
 html.zg-frost #frost { opacity: 1; pointer-events: auto; }
-html.zg-frost #pfBub, html.zg-frost #avatars > button { z-index: 19; }
+html.zg-frost #pfBub, html.zg-frost #avatars > button, html.zg-frost #createBtn { z-index: 19; }
 html.zg-frost #hud > :not(#tip) { filter: blur(5px); opacity: .55; pointer-events: none; transition: filter .3s, opacity .3s; }
 @media (prefers-reduced-motion: reduce) { #frost { transition: none; } }
