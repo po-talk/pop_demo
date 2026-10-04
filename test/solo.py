@@ -34,10 +34,10 @@ try:
     ok('B に A の泡が出る', B.wait_for("[...window.__zg.soloPeers.values()].some(r => r.e === '🐙')", timeout=60))
     time.sleep(2)
     d = A.call('Page.captureScreenshot', format='png'); open(out + '-solo.png', 'wb').write(base64.b64decode(d['data']))
-    # B が泡をやめる（元のプロフィールの泡に戻る）→ A から消える
-    B.eval("document.getElementById('pfBub').click()")
+    # B が部屋に入る（自分の部屋を作る）→ A から消える。※自分の泡を押して触っている間は消えない（0.7.2）
+    B.eval("(() => { document.getElementById('createBtn').click(); setTimeout(() => document.getElementById('join').click(), 400) })()")
     ok('名前は送られていない（絵文字だけ）', A.eval("[...window.__zg.soloPeers.values()].every(r => r.n === undefined)"))
-    ok('B が泡をやめると A から消える', A.wait_for("![...window.__zg.soloPeers.values()].some(r => r.e === '🦄')", timeout=20))
+    ok('B が部屋に入ると A から消える', A.wait_for("![...window.__zg.soloPeers.values()].some(r => r.e === '🦄')", timeout=20))
     errs = (A.eval('window.__E') or []) + (B.eval('window.__E') or []) + (U.eval('window.__E') or [])
     ok('本番の画面を含めエラーなし', not errs) or print('   ', errs)
 finally:

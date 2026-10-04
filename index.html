@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.7.2（元：ぽっと通話 v0.15.18）
+  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.7.3（元：ぽっと通話 v0.15.18）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -591,7 +591,7 @@ window.__potPcs = () => [...livePcs]   // 診断・テスト用
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.7.2'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.7.3'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.15.18'
 
@@ -5685,6 +5685,7 @@ function startZeroG(Z) {
     if (html.classList.contains('zg-intro')) askIntro($('introAsk').hidden)   // 晴らす前に、泡になるかを聞く
   })
   $('introYes').addEventListener('click', () => {
+    soloConsent = true
     askIntro(false); clearIntro(); $('createBox').open = false
     setSolo(true)
     space.view(pfB.x, pfB.y, Math.min(1200, Math.max(innerWidth, innerHeight) * 1.1))   // スマホでは引きすぎない
@@ -5916,7 +5917,11 @@ function startZeroG(Z) {
       if (j) { setCtl(true); clearIntro(); askIntro(false); html.classList.remove('zg-solo-edit'); if (html.classList.contains('zg-solo')) setSolo(false) }
       // 入った瞬間：プロフィールの泡がいた所に部屋の泡が膨らむ（あなたが部屋になる）
       if (j) { callB.x = callB.ox = pfB.x; callB.y = callB.oy = pfB.y; callB.size(140); callB.pop = 0 }
-      else { pfB.x = pfB.ox = callB.x; pfB.y = pfB.oy = callB.y; if (wasJoined) { $('createBox').open = false; if (!joining) freshRoom() } }   // 退出後は畳み、次は新しい部屋（前の部屋名を残さない）。部屋の移動中（joining）は触らない
+      else {
+        pfB.x = pfB.ox = callB.x; pfB.y = pfB.oy = callB.y
+        // 退出したら、プロフィールの泡ではなく一気に小さな個人の泡になって漂う（部屋の移動中＝joining は除く）
+        if (wasJoined) { $('createBox').open = false; if (!joining) { freshRoom(); setTimeout(() => setSolo(true), 0) } }
+      }   // 退出後は畳み、次は新しい部屋（前の部屋名を残さない）。部屋の移動中（joining）は触らない
       // 招待の泡：参加前は「部屋を作る」の泡の下に、通話中は操作として部屋の外壁に
       if (j) { copyB.kind = qrB.kind = 'dock'; copyB.parent = qrB.parent = callB; ctrlSig = '' }
       else {
@@ -6070,7 +6075,10 @@ function startZeroG(Z) {
   const SOLO_EVERY = 5000, SOLO_STALE = 30000, SOLO_MAX = 30
   let soloAct = null, soloLobby = null, soloSentAt = 0, soloWasOn = false
   const soloPeers = new Map()   // peerId → { e, n, ts, b }
-  const soloOn = () => (html.classList.contains('zg-solo') || html.classList.contains('zg-solo-edit')) && !call.joinedId   // 触っている間も消さない
+  // ほかの人の画面に出すのは、このページで一度「泡になって漂ってみますか？」に ✓ をした人だけ（見られることへの同意）。
+  // 退出のあとに小さな泡になるのは見た目だけで、同意していなければ送らない
+  let soloConsent = false
+  const soloOn = () => soloConsent && (html.classList.contains('zg-solo') || html.classList.contains('zg-solo-edit')) && !call.joinedId   // 触っている間も消さない
   const soloSend = on => sendTo(soloAct, { on, ...(on ? { e: profile.emoji || '🙂' } : {}) })
   const soloBind = () => {
     if (lobbyRoom === soloLobby) return
