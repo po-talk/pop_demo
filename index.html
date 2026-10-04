@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.5.5（元：ぽっと通話 v0.15.18）
+  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.6.0（元：ぽっと通話 v0.15.18）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -96,7 +96,7 @@
 <!-- End Cloudflare Web Analytics -->
 <!-- 泡の質感（bubble.css）とこの画面の見た目（zerog.css）。元の <style> は使わない（見た目を丸ごと差し替えたため） -->
 <link rel="stylesheet" href="bubble.css?v=14">
-<link rel="stylesheet" href="zerog.css?v=32">
+<link rel="stylesheet" href="zerog.css?v=34">
 <!-- 見た目（昼夜）のエンジン。**モジュールの外・<style> の直後**に置く＝最初の描画より前に
      昼の色を当てるため（モジュールは描画後に走るので、そこに置くと昼でも一瞬紺が見える）。
      アプリの状態には一切触らない（読むのは localStorage の設定と時計だけ）。設定の UI は
@@ -234,6 +234,12 @@
 
   <!-- 自分の設定（名前・絵文字）をしている間だけ出す、すりガラスの層。プロフィールの泡と絵文字はこの上に出る -->
   <div id="frost" aria-hidden="true"></div>
+  <!-- ぼけた所を押したときの問い：泡になって他の泡を見てみるか -->
+  <div id="introAsk" class="ask-bub intro-ask" hidden>
+    <span class="q">泡になって<br>他の泡を見て<br>みますか？</span>
+    <button id="introYes" type="button" class="sprout tone-ok" aria-label="泡になって他の泡を見る"><span class="ico">✓</span></button>
+    <button id="introNo" type="button" class="sprout" aria-label="このまま（アイコンや名前を変える・部屋を作る）"><span class="ico">✕</span></button>
+  </div>
   <!-- ── 参加前：プロフィールの泡（あなた） ── -->
   <div id="setupFields" class="zc">
     <details id="profileBox" class="stub"><summary></summary></details>
@@ -241,6 +247,7 @@
       <button id="pfEmoji" type="button" class="pf-emoji" aria-label="アバター（絵文字）を選ぶ" aria-haspopup="true">🫧</button>
       <input id="name" placeholder="ゲスト" autocomplete="off" maxlength="20" aria-label="あなたの名前">
       <span id="growNote" class="pf-grow" aria-label="成長"></span>
+      <span class="pf-you" aria-hidden="true">（あなた）</span>
       <span id="pfName" hidden></span><span id="pfEdit" hidden></span>
     </div>
     <div id="avatars" class="zc"></div>
@@ -584,7 +591,7 @@ window.__potPcs = () => [...livePcs]   // 診断・テスト用
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.5.5'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.6.0'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.15.18'
 
@@ -5646,8 +5653,41 @@ function startZeroG(Z) {
   new MutationObserver(syncFrost).observe(html, { attributes: true, attributeFilter: ['class'] })
   $('name').addEventListener('focus', syncFrost); $('name').addEventListener('blur', () => setTimeout(syncFrost, 0))
   const clearIntro = () => html.classList.remove('zg-intro')
-  $('frost').addEventListener('click', () => { clearIntro(); setAv(false); $('name').blur() })   // ぼけた所を押せば設定を閉じる
-  $('createBtn').addEventListener('click', clearIntro)
+  // 一言の小泡（ふわっと出て、少し昇って、弾けて消える）。copied と同じ作り
+  const hint = (host, text, life = 3600) => {
+    const e = document.createElement('div'); e.className = 'copy-bub hint-bub'; e.textContent = text
+    const d = Math.round(Math.max(120, Math.min(190, Math.sqrt([...text].length) * 22 + 40)))
+    const x = host.wx + host.r * .55, y = host.wy - host.r - d * .75
+    Object.assign(e.style, { width: d + 'px', height: d + 'px', left: x + 'px', top: y + 'px', animationDuration: life + 'ms' })
+    world.appendChild(e)
+    setTimeout(() => { space.pop({ wx: x + d / 2, wy: y + d / 2 - 46, r: d / 2 }, 12); e.remove() }, life)
+  }
+  // 「泡になる」＝自分の泡が絵文字だけの小さな泡になって漂う。押すと元のプロフィールの泡に戻る
+  const PF_SOLO_R = 52
+  const setSolo = on => {
+    html.classList.toggle('zg-solo', on)
+    pfB.grow(on ? PF_SOLO_R : PF_R)
+    pfB.drift = on ? 1.6 : 0.5; pfB.home = on ? 0.0008 : 0.003
+    $('pfBub').setAttribute('aria-label', on ? 'あなた（押すと名前とアイコンを変えられます）' : 'あなたのプロフィール')
+  }
+  $('pfBub').addEventListener('click', e => { if (html.classList.contains('zg-solo') && !e.target.closest('#pfEmoji')) { setSolo(false); space.view(pfB.x + 40, pfB.y + 40, 520) } })
+  $('pfEmoji').addEventListener('click', e => { if (html.classList.contains('zg-solo')) { e.stopImmediatePropagation(); setSolo(false); space.view(pfB.x + 40, pfB.y + 40, 520) } }, true)
+  const introAskB = space.add($('introAsk'), { kind: 'slot', parent: pfB, r: 82, wall: { a: deg(-40), d: 90 } })
+  const askIntro = on => { $('introAsk').hidden = !on; pfB.pinned = on }
+  $('frost').addEventListener('click', () => {
+    setAv(false); $('name').blur()
+    if (html.classList.contains('zg-intro')) askIntro($('introAsk').hidden)   // 晴らす前に、泡になるかを聞く
+  })
+  $('introYes').addEventListener('click', () => {
+    askIntro(false); clearIntro(); $('createBox').open = false
+    setSolo(true)
+    space.view(pfB.x, pfB.y, Math.min(1200, Math.max(innerWidth, innerHeight) * 1.1))   // スマホでは引きすぎない
+    setTimeout(() => hint(pfB, '気になる泡を\nタップして\n参加しよう'), 450)
+  })
+  $('introNo').addEventListener('click', () => {
+    askIntro(false)
+    hint(pfB, 'アイコンや名前を変更・自分の部屋を作ろう', 4200)
+  })
   // リンクの部屋をやめて「新しく作る」に切り替える（URL の部屋を捨て、新しい ID を発行。名前は name か「◯◯の部屋」）
   const freshRoom = name => {
     entryCancel()
@@ -5867,7 +5907,7 @@ function startZeroG(Z) {
       $('pfBub').hidden = j; $('createBtn').hidden = j
       $('reactBtn').hidden = !j
       $('ctlMore').hidden = !j
-      if (j) setCtl(true)
+      if (j) { setCtl(true); clearIntro(); askIntro(false); if (html.classList.contains('zg-solo')) setSolo(false) }
       // 入った瞬間：プロフィールの泡がいた所に部屋の泡が膨らむ（あなたが部屋になる）
       if (j) { callB.x = callB.ox = pfB.x; callB.y = callB.oy = pfB.y; callB.size(140); callB.pop = 0 }
       else { pfB.x = pfB.ox = callB.x; pfB.y = pfB.oy = callB.y; if (wasJoined) { $('createBox').open = false; if (!joining) freshRoom() } }   // 退出後は畳み、次は新しい部屋（前の部屋名を残さない）。部屋の移動中（joining）は触らない
