@@ -1,4 +1,6 @@
-# ぽっと通話 Zero-G（お試し版）
+# ぽっと通話 POP DEMO（お試し版）
+
+（旧称：Bubble Zero-G）
 
 [ぽっと通話](https://potalk.app/) の**見た目だけを変えたお試し版**です。
 公開場所：https://potalk.app/pop_demo/

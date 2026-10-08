@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 Bubble Zero-G MOD〈デモ〉 pop 0.7.5（元：ぽっと通話 v0.15.18）
+  ぽっと通話 POP DEMO（旧称 Bubble Zero-G）pop 0.7.7（元：ぽっと通話 v0.15.23）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -62,15 +62,15 @@
   base-uri 'self';
   form-action 'none';
   object-src 'none'">
-<title>ぽっと通話 Zero-G（デモ）</title>
+<title>ぽっと通話 POP DEMO</title>
 <meta name="robots" content="noindex, nofollow">
 <!-- OGP（SNSでリンクを貼ったときのカード）。画像は絶対URL必須・部屋名はハッシュなので全部屋共通 -->
 <meta property="og:type" content="website">
-<meta property="og:title" content="ぽっと通話 Zero-G（デモ）">
+<meta property="og:title" content="ぽっと通話 POP DEMO">
 <meta property="og:description" content="ぽっと通話の見た目を大きく変えたデモンストレーション。シャボン玉の部屋で、いつものぽっと通話の人とも話せます。">
 <meta property="og:url" content="https://potalk.app/pop_demo/">
 <!-- お試し版のカード画像（本番の ogp.png とは別）。画像は絶対 URL 必須 -->
-<meta property="og:image" content="https://potalk.app/pop_demo/images/ogp-v2.jpg">
+<meta property="og:image" content="https://potalk.app/pop_demo/images/ogp-v3.jpg">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:image:alt" content="無重力に浮かぶシャボン玉の中で、動物のアバターが通話している画面">
@@ -85,7 +85,7 @@
 <link rel="apple-touch-icon" href="images/apple-touch-icon.png">
 <link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0d1526">
-<meta name="apple-mobile-web-app-title" content="Zero-G">
+<meta name="apple-mobile-web-app-title" content="POP DEMO">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -224,7 +224,7 @@
 </script>
 </head>
 <body>
-<!-- ═══ Zero-G の画面 ═══
+<!-- ═══ POP DEMO の画面 ═══
      ★元の index.html の要素は **ID をそのまま**残し、泡に作り替えて並べ直している（ロジックは元のまま触る）。
      ★入れ物（元のカードやパネル）は display:contents＝箱を作らない。中身の 1 つ 1 つが泡になり、
        #world（カメラで動く平面）の上で bubble.js の物理に置かれる。入れ物に hidden が付けば中身ごと弾けて消える。
@@ -592,7 +592,7 @@ window.__potPending = () => { try { return pendingPeers().map(p => p.name || p.i
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.7.6'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.7.7'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.15.23'
 
@@ -749,7 +749,7 @@ $('ver').textContent = APP_VERSION
 // MOD：本番と同じドメインに置くので hostname では見分けられない＝常に「お試し版」として振る舞う。
 // 版の横に「お試し版」、導線は本番（いつもの画面）の同じ部屋へ。元の版は title にだけ残す（報告用）
 if (DEMO_BUILD) {
-  $('chan').textContent = ' Zero-G お試し版'
+  $('chan').textContent = ' POP DEMO'
   $('chan').title = `ぽっと通話 ${UPSTREAM_VERSION} の見た目を変えたお試し版`
   $('brandMark').textContent = '🫧'   // 旧URLの顔（tools/banner.html にも同じ 🦞 が残っている）
   // 安定版への導線。**旧URLは「新機能を先に試す場」なので、初めて来た人には本番の場所を示す**
@@ -5678,7 +5678,7 @@ syncShare()
 const ZG_V = '14'   // bubble.js / *.css のキャッシュ避け（変えたら上げる）
 
 // ═══════════════════════════════════════════════════════════════════════════
-// MOD：Zero-G の泡の配置と動き（ここから下は見た目だけ。通話のロジックには触らない）
+// MOD：POP DEMO の泡の配置と動き（ここから下は見た目だけ。通話のロジックには触らない）
 // ★元の画面の要素（ID はそのまま）を bubble.js の泡として #world に置く。状態（参加中か・どのタブか・
 //   どれが見えているか）は毎コマ call と DOM から読むだけ＝元の関数を書き換えずに追従する。
 // ★エンジンは動的 import。読めなくても通話そのものは動く（見た目が崩れるだけ）＝段階読み込みと同じ考え方。

@@ -1,4 +1,4 @@
-/* bubble.css — Zero-G の泡の質感（index.html と lab/ で共有）
+/* bubble.css — POP DEMO の泡の質感（index.html と lab/ で共有）
    ★形は円だけ。角丸の四角は作らない（利用者の指定）。文字の多いもの（ひとことの流れ・お便り・ヘルプ）も
      大きな円の中に読む場所を作る。
    ★動く泡に backdrop-filter は使わない（毎コマ背景をぼかし直すことになり、スマホで重くなる）。 */

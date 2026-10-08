@@ -1,6 +1,6 @@
 {
-  "name": "ぽっと通話 Zero-G（デモ）",
-  "short_name": "Zero-G",
+  "name": "ぽっと通話 POP DEMO",
+  "short_name": "POP DEMO",
   "description": "ぽっと通話の見た目を変えたデモ。元のぽっと通話の人とも同じ部屋で話せます。",
   "start_url": "./",
   "scope": "./",
