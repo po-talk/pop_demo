@@ -12,7 +12,7 @@ html:not(.zg-ready) #world { visibility: hidden; }
 
 /* 泡になる要素の共通（bubble.js が .bub を付ける前でも崩れないように） */
 #pfBub, #createBtn, #roomBub, .kind-opt, #join, #entryNote, #callBub, .member, .ctl, #reactions > button,
-#avatars > button, #tagRow, #tagForm, #leaveConfirm, .panel-bub, #qrBox, button.room, #roomAsk, .m-more { position: absolute; left: 0; top: 0; }
+#avatars > button, #tagRow, #tagForm, #leaveConfirm, .panel-bub, #qrBox, button.room, #roomAsk, .m-more, .m-pending { position: absolute; left: 0; top: 0; }
 
 /* SVG のアイコン（元のボタンの絵）を泡の大きさに合わせる */
 .bub > svg { width: 44cqmin; height: 44cqmin; pointer-events: none; filter: drop-shadow(0 2px 3px rgba(0,0,0,.35)); }
@@ -432,6 +432,13 @@ button.room.linked { display: none !important; }
 .m-more { gap: 1px; color: var(--ink-dim); border-style: dashed; }
 .m-more .mm-ico { font-size: 40cqmin; line-height: 1; }
 .m-more .mm-n { font-size: max(9px, 13cqmin); font-weight: 700; white-space: nowrap; }
+/* 「🔄 つながり中…」の泡（v0.15.22）：まだ届いていない人。点線で薄く、ゆっくり明滅。人数には数えない */
+.m-pending { border-style: dashed; animation: pendfade 2.4s ease-in-out infinite; }
+.m-pending .mp-ico { font-size: 46cqmin; line-height: 1; filter: grayscale(.6); }
+.m-pending .mp-spin { position: absolute; right: -6%; top: -6%; font-size: max(11px, 26cqmin); line-height: 1; animation: pendspin 2.4s linear infinite; }
+@keyframes pendfade { 0%, 100% { opacity: .45 } 50% { opacity: .75 } }
+@keyframes pendspin { to { transform: rotate(360deg) } }
+@media (prefers-reduced-motion: reduce) { .m-pending, .m-pending .mp-spin { animation: none; opacity: .6; } }
 /* 無視のハートは 9〜10 時の位置（名前の頭に重ねない）。経路の印はその上、11 時へ */
 .member .m-ig { left: -12%; top: 23%; bottom: auto; }
 .member .m-conn { left: 14%; top: -4%; }

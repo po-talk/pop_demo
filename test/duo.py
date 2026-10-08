@@ -103,6 +103,12 @@ try:
             pop.eval("document.getElementById('leave').click()"); time.sleep(1); pop.eval("document.getElementById('leaveYes').click()"); time.sleep(3); snap(pop, '9left')
             print('  after leave: solo =', pop.eval("document.documentElement.classList.contains('zg-solo')"), ' frost =', pop.eval("document.documentElement.classList.contains('zg-frost')"))
             print('  after leave: room =', pop.eval("document.getElementById('room').value"), ' hash =', pop.eval('location.hash'), ' create open =', pop.eval("document.getElementById('createBox').open"))
+        if st == 'pending':   # 「🔄 つながり中…」の泡（本体の renderMembers と同じ形の行を差し込んで見た目だけ確かめる）
+            pop.eval("(() => { const r = document.createElement('div'); r.className = 'm-pending'; r.dataset.uid = 'pend:test';"
+                     " r.innerHTML = '<span class=\"m-emoji\">🦊</span><span class=\"mp-name\">きつね</span><span class=\"mp-state\">🔄 つながり中…</span>';"
+                     " document.getElementById('members').appendChild(r) })()")
+            time.sleep(1.5); snap(pop, '10pending')
+            print('  pending bubble:', pop.eval("(() => { const e = document.querySelector('#members .m-pending'); return e ? e.className + ' / ' + e.getAttribute('aria-label') + ' / members=' + document.querySelectorAll('#members .member').length : 'none' })()"))
         if st == 'react':
             pop.eval("document.getElementById('reactBtn').click()"); time.sleep(1.5)
             up.eval("document.querySelectorAll('#reactions button')[6].click()")
