@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 POP DEMO（旧称 Bubble Zero-G）pop 0.7.7（元：ぽっと通話 v0.15.23）
+  ぽっと通話 POP DEMO（旧称 Bubble Zero-G）pop 0.7.8（元：ぽっと通話 v0.15.23）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -96,7 +96,7 @@
 <!-- End Cloudflare Web Analytics -->
 <!-- 泡の質感（bubble.css）とこの画面の見た目（zerog.css）。元の <style> は使わない（見た目を丸ごと差し替えたため） -->
 <link rel="stylesheet" href="bubble.css?v=14">
-<link rel="stylesheet" href="zerog.css?v=36">
+<link rel="stylesheet" href="zerog.css?v=39">
 <!-- 見た目（昼夜）のエンジン。**モジュールの外・<style> の直後**に置く＝最初の描画より前に
      昼の色を当てるため（モジュールは描画後に走るので、そこに置くと昼でも一瞬紺が見える）。
      アプリの状態には一切触らない（読むのは localStorage の設定と時計だけ）。設定の UI は
@@ -237,8 +237,8 @@
   <!-- ぼけた所を押したときの問い：泡になって他の泡を見てみるか -->
   <div id="introAsk" class="ask-bub intro-ask" hidden>
     <span class="q">泡になって<br>漂ってみますか？<small>ほかの人からも<br>あなたの泡が見えます</small></span>
-    <button id="introYes" type="button" class="sprout tone-ok" aria-label="泡になって漂う（ほかの人からも見えます）"><span class="ico">✓</span></button>
-    <button id="introNo" type="button" class="sprout" aria-label="このまま（アイコンや名前を変える・部屋を作る）"><span class="ico">✕</span></button>
+    <button id="introYes" type="button" class="sprout tone-ok" aria-label="泡になって漂う（ほかの人からも見えます）"><span class="ico" data-i="check"></span></button>
+    <button id="introNo" type="button" class="sprout" aria-label="このまま（アイコンや名前を変える・部屋を作る）"><span class="ico" data-i="x"></span></button>
   </div>
   <!-- ── 参加前：プロフィールの泡（あなた） ── -->
   <div id="setupFields" class="zc">
@@ -254,17 +254,17 @@
 
     <!-- ── 共有リンクで来た部屋：部屋の泡として出す（✓ で入る／終わっていたら ☎️ と 🏠） ── -->
     <div id="linkBub" class="tone-room link-bub" hidden role="group" aria-label="リンクの部屋">
-      <span class="lb-kind" aria-hidden="true">🏠</span>
+      <span class="lb-kind" aria-hidden="true" data-i="house"></span>
       <span class="lb-name"></span>
       <span class="lb-state"></span>
-      <button id="linkJoin" type="button" class="sprout tone-ok" aria-label="参加する"><span class="ico">✓</span></button>
-      <button id="linkLobby" type="button" class="sprout" aria-label="通話中の部屋から選ぶ" hidden><span class="ico">☎️</span></button>
-      <button id="linkNew" type="button" class="sprout" aria-label="この名前で新しく部屋を作る" hidden><span class="ico">🏠</span></button>
+      <button id="linkJoin" type="button" class="sprout tone-ok" aria-label="参加する"><span class="ico" data-i="check"></span></button>
+      <button id="linkLobby" type="button" class="sprout" aria-label="通話中の部屋から選ぶ" hidden><span class="ico" data-i="lobby"></span></button>
+      <button id="linkNew" type="button" class="sprout" aria-label="この名前で新しく部屋を作る" hidden><span class="ico" data-i="houseplus"></span></button>
     </div>
 
     <!-- ── 新しい部屋を作る（🏠 を押すと泡が並ぶ） ── -->
     <details id="createBox" class="stub"><summary></summary></details>
-    <button id="createBtn" type="button" aria-label="新しい部屋を作る" aria-expanded="false"><span class="ico">🏠</span></button>
+    <button id="createBtn" type="button" aria-label="新しい部屋を作る" aria-expanded="false"><span class="ico" data-i="houseplus"></span></button>
     <div id="createWrap" class="zc">
       <div id="roomField" class="zc">
         <div id="roomBub" class="tone-glass" role="group" aria-label="部屋名">
@@ -273,16 +273,16 @@
           <span id="roomCount" class="char-count"></span>
         </div>
         <div id="kindRow" class="zc" role="radiogroup" aria-label="部屋の種類">
-          <label class="kind-opt" id="kindBcL" aria-label="配信部屋にする（あなたの声だけ流れます）"><input type="radio" name="kind" id="kindBc"><span class="ico">📣</span></label>
-          <label class="kind-opt" id="kindChatL" aria-label="雑談部屋にする（全員で話せます）"><input type="radio" name="kind" id="kindChat" checked><span class="ico">🏠</span></label>
+          <label class="kind-opt" id="kindBcL" aria-label="配信部屋にする（あなたの声だけ流れます）"><input type="radio" name="kind" id="kindBc"><span class="ico" data-i="megaphone"></span></label>
+          <label class="kind-opt" id="kindChatL" aria-label="雑談部屋にする（全員で話せます）"><input type="radio" name="kind" id="kindChat" checked><span class="ico" data-i="house"></span></label>
         </div>
       </div>
       <button id="join" class="tone-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg><span id="joinLbl" class="cap">部屋を作る</span></button>
       <div id="entryNote" class="note-bub" hidden>
         <p id="entryText"></p>
         <div id="entryActions" class="sprouts" hidden>
-          <button id="entryLobby" type="button" aria-label="通話中の部屋から選んで参加"><span class="ico">☎️</span></button>
-          <button id="entryOpen" type="button" aria-label="部屋の名前をつけて参加"><span class="ico">✏️</span></button>
+          <button id="entryLobby" type="button" aria-label="通話中の部屋から選んで参加"><span class="ico" data-i="lobby"></span></button>
+          <button id="entryOpen" type="button" aria-label="部屋の名前をつけて参加"><span class="ico" data-i="pencil"></span></button>
         </div>
       </div>
     </div>
@@ -301,46 +301,46 @@
         <div id="chatRow" class="chat-row" hidden>
           <input id="chatText" name="message" type="text" placeholder="ひとこと…" maxlength="60" aria-label="ひとことを書く"
                  inputmode="text" enterkeyhint="send" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false">
-          <button id="chatSend" type="button" class="bub-mini" aria-label="送信"><span class="ico">➤</span></button>
+          <button id="chatSend" type="button" class="bub-mini" aria-label="送信"><span class="ico" data-i="send"></span></button>
         </div>
       </div>
     </div>
     <!-- 話題タグ（部屋の泡の上にくっつく） -->
     <div id="tagRow" class="note-bub tag-bub" hidden>
-      <span class="tag-ic" aria-hidden="true">🏷</span><span id="tagText" class="tag-text"></span>
-      <button id="tagEdit" type="button" class="sprout" aria-label="話題をつける・変える"><span class="ico">✏️</span></button>
+      <span class="tag-ic" aria-hidden="true" data-i="tag"></span><span id="tagText" class="tag-text"></span>
+      <button id="tagEdit" type="button" class="sprout" aria-label="話題をつける・変える"><span class="ico" data-i="pencil"></span></button>
     </div>
     <div id="tagForm" class="note-bub tag-form" hidden>
       <input id="tagInput" name="topic" type="text" maxlength="30" placeholder="いまの話題" aria-label="いまの話題"
              inputmode="text" enterkeyhint="done" autocomplete="off" autocorrect="off" autocapitalize="sentences" spellcheck="false">
-      <button id="tagSend" type="button" class="sprout tone-ok" aria-label="話題を確定"><span class="ico">✓</span></button>
+      <button id="tagSend" type="button" class="sprout tone-ok" aria-label="話題を確定"><span class="ico" data-i="check"></span></button>
     </div>
 
     <!-- 操作の泡（部屋の外壁に吸着。見えているものだけでハニカムを組み直す） -->
     <div id="tabs" class="zc" role="tablist" aria-label="通話中の表示" hidden>
       <button id="tabMembers" class="tab stub" type="button" role="tab" aria-selected="true" aria-controls="panMembers"><span class="t-label">メンバー</span></button>
-      <button id="tabChat" class="tab ctl" type="button" role="tab" aria-selected="false" aria-controls="panChat" aria-label="ひとこと"><span class="ico">💬</span></button>
-      <button id="tabMail" class="tab ctl" type="button" role="tab" aria-selected="false" aria-controls="panMail" aria-label="おたより" hidden><span class="ico">📮</span></button>
-      <button id="tabSettings" class="tab ctl" type="button" role="tab" aria-selected="false" aria-controls="panSettings" aria-label="設定"><span class="ico">⚙️</span></button>
+      <button id="tabChat" class="tab ctl" type="button" role="tab" aria-selected="false" aria-controls="panChat" aria-label="ひとこと"><span class="ico" data-i="chat"></span></button>
+      <button id="tabMail" class="tab ctl" type="button" role="tab" aria-selected="false" aria-controls="panMail" aria-label="おたより" hidden><span class="ico" data-i="mail"></span></button>
+      <button id="tabSettings" class="tab ctl" type="button" role="tab" aria-selected="false" aria-controls="panSettings" aria-label="設定"><span class="ico" data-i="gear"></span></button>
     </div>
     <div class="zc actions">
-      <button id="raise" class="ctl" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 11V5a2 2 0 0 1 4 0v6"/><path d="M13 7a2 2 0 0 1 4 0v6a6 6 0 0 1-6 6H9a5 5 0 0 1-5-5c0-1 .5-2 1.5-2.5"/></svg><span class="sr">通話希望</span></button>
+      <button id="raise" class="ctl" hidden><span class="sr">通話希望</span><span class="ico" data-i="raise"></span></button>
       <button id="speak" class="ctl tone-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8.5" y1="21" x2="15.5" y2="21"/></svg><span class="sr">マイクを使う</span></button>
       <button id="mute" class="ctl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8.5" y1="21" x2="15.5" y2="21"/><line class="mic-slash" x1="4" y1="3" x2="20" y2="21"/></svg><span class="lbl sr">ミュート</span></button>
       <button id="leave" class="ctl tone-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h8"/><path d="M14 3v18"/><path d="M18 12h4"/><path d="m19 9 3 3-3 3"/></svg><span class="sr">退出</span></button>
     </div>
-    <button id="reactBtn" class="ctl" type="button" aria-label="リアクション" aria-expanded="false"><span class="ico">👏</span></button>
+    <button id="reactBtn" class="ctl" type="button" aria-label="リアクション" aria-expanded="false"><span class="ico" data-i="reactplus"></span></button>
     <!-- 操作の泡をまとめる泡：しばらく触らないと、ミュート以外の操作はこの「⋯」に包まれて閉じる -->
     <button id="ctlMore" class="ctl" type="button" aria-label="操作をひらく" aria-expanded="true" hidden><span class="ico">⋯</span></button>
     <div id="reactions" class="zc" hidden></div>
     <button id="pip" class="ctl" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><rect x="12" y="12" width="8" height="6" rx="1" fill="currentColor" stroke="none"/></svg><span class="pip-lbl sr">小窓</span></button>
-    <button id="retry" class="ctl" type="button" hidden aria-label="つなぎ直す"><span class="ico">🔄</span><span class="sr">🔄 つなぎ直す</span></button>
+    <button id="retry" class="ctl" type="button" hidden aria-label="つなぎ直す"><span class="ico" data-i="refresh"></span><span class="sr">🔄 つなぎ直す</span></button>
 
     <!-- 招待（参加前は「部屋を作る」の泡に、通話中は操作の泡に並ぶ） -->
     <div id="shareWrap" class="zc" hidden>
       <span id="shareLabel" class="sr">共有リンク：</span><a class="share sr" id="share" href="#"></a>
-      <button id="copy" class="ctl" aria-label="招待リンクをコピー"><span class="ico">🔗</span><span class="sr">🔗 招待リンクをコピー</span></button>
-      <button id="qr" class="ctl" aria-expanded="false" aria-label="QRコード"><span class="ico">📱</span><span class="sr">📱 QRコード</span></button>
+      <button id="copy" class="ctl" aria-label="招待リンクをコピー"><span class="ico" data-i="link"></span><span class="sr">🔗 招待リンクをコピー</span></button>
+      <button id="qr" class="ctl" aria-expanded="false" aria-label="QRコード"><span class="ico" data-i="qr"></span><span class="sr">📱 QRコード</span></button>
       <div id="qrBox" class="qr-bub" hidden>
         <div id="qrImg" class="qr-img">生成中…</div>
         <div id="qrRoom" class="qr-room"></div>
@@ -350,8 +350,8 @@
     <!-- 退出の確認：部屋の右上の外にぽこんと出る。✓ ✕ は右下から生える -->
     <div id="leaveConfirm" class="ask-bub" hidden>
       <span id="leaveConfirmText" class="q"></span>
-      <button id="leaveYes" type="button" class="sprout tone-red" aria-label="退出する"><span class="ico">✓</span></button>
-      <button id="leaveNo" type="button" class="sprout sprout2" aria-label="やめる"><span class="ico">✕</span></button>
+      <button id="leaveYes" type="button" class="sprout tone-red" aria-label="退出する"><span class="ico" data-i="check"></span></button>
+      <button id="leaveNo" type="button" class="sprout sprout2" aria-label="やめる"><span class="ico" data-i="x"></span></button>
     </div>
 
     <!-- 設定・おたより：部屋の泡の左に寄り添う大きな泡 -->
@@ -367,28 +367,28 @@
     </div>
     <div id="panSettings" class="panel-bub" role="tabpanel" aria-labelledby="tabSettings" hidden>
       <div class="panel-in scroll-in">
-        <label class="vol-opt" id="volRow"><span class="vol-ic" id="volIc">🔊</span><span class="sr">音量</span>
+        <label class="vol-opt" id="volRow"><span class="vol-ic" id="volIc" data-i="vol3"></span><span class="sr">音量</span>
           <input id="vol" type="range" min="0" max="100" step="5" value="100" aria-label="音量">
           <span class="vol-val" id="volVal">100%</span>
         </label>
         <p class="vol-note">この通話の音だけが変わります</p>
         <div id="bgmRow" class="opt-row" role="radiogroup" aria-label="BGM">
-          <label class="opt" aria-label="BGMなし"><input type="radio" name="bgm" id="bgmOff" checked><span class="ico">🔇</span></label>
+          <label class="opt" aria-label="BGMなし"><input type="radio" name="bgm" id="bgmOff" checked><span class="ico" data-i="musicoff"></span></label>
           <label class="opt" aria-label="軽快な音楽"><input type="radio" name="bgm" id="bgmTune"><span class="ico">🎵</span></label>
           <label class="opt" aria-label="アンビエント空間"><input type="radio" name="bgm" id="bgmAmb"><span class="ico">🌫</span></label>
           <label class="opt" aria-label="焚き火"><input type="radio" name="bgm" id="bgmFire"><span class="ico">🔥</span></label>
         </div>
-        <label class="vol-opt" id="bgmVolRow" hidden><span class="vol-ic">🎚</span><span class="sr">BGM</span>
+        <label class="vol-opt" id="bgmVolRow" hidden><span class="vol-ic" data-i="slider"></span><span class="sr">BGM</span>
           <input id="bgmVol" type="range" min="0" max="100" step="5" value="30" aria-label="BGMの音量">
           <span class="vol-val" id="bgmVolVal">30%</span>
         </label>
         <p class="vol-note" id="bgmNote" hidden>BGM は自分にだけ鳴ります。スピーカーだとマイクが拾うのでイヤホンがおすすめ</p>
         <div class="opt-row">
-          <label class="opt" id="sndPeerRow" style="display:none" aria-label="入室・退出を音で知らせる"><input type="checkbox" id="sndPeer"><span class="ico">🔔</span></label>
-          <label class="opt" id="sndReactRow" style="display:none" aria-label="リアクションを音で鳴らす"><input type="checkbox" id="sndReact"><span class="ico">🎵</span></label>
-          <label class="opt" id="sndTtsRow" hidden aria-label="ひとことを つくよみちゃんが読み上げる"><input type="checkbox" id="sndTts"><span class="ico">🗣</span></label>
-          <label class="opt" id="sndTtsNameRow" hidden aria-label="投稿した人の名前は読まない"><input type="checkbox" id="sndTtsNoName"><span class="ico">🙊</span></label>
-          <label class="opt" id="reqOpenRow" hidden aria-label="通話希望者募集（聞き役が「通話希望」を出せます）"><input type="checkbox" id="reqOpen"><span class="ico">🙋</span></label>
+          <label class="opt" id="sndPeerRow" style="display:none" aria-label="入室・退出を音で知らせる"><input type="checkbox" id="sndPeer"><span class="ico" data-i="bell"></span></label>
+          <label class="opt" id="sndReactRow" style="display:none" aria-label="リアクションを音で鳴らす"><input type="checkbox" id="sndReact"><span class="ico" data-i="sparkle"></span></label>
+          <label class="opt" id="sndTtsRow" hidden aria-label="ひとことを つくよみちゃんが読み上げる"><input type="checkbox" id="sndTts"><span class="ico" data-i="speak"></span></label>
+          <label class="opt" id="sndTtsNameRow" hidden aria-label="投稿した人の名前は読まない"><input type="checkbox" id="sndTtsNoName"><span class="ico" data-i="nameoff"></span></label>
+          <label class="opt" id="reqOpenRow" hidden aria-label="通話希望者募集（聞き役が「通話希望」を出せます）"><input type="checkbox" id="reqOpen"><span class="ico" data-i="raise"></span></label>
         </div>
         <p class="vol-note" id="sndTtsNote" hidden>読み上げは部屋の全員に聞こえます。初回は約 40 MB を読み込みます（Wi-Fi 推奨）。ページを開くたびにオフから始まります</p>
         <p class="vol-note" id="sndTtsProg" hidden></p>
@@ -420,29 +420,29 @@
   </div>
   <div id="notices">
     <div id="crowdNote" class="hud-note" hidden></div>
-    <div id="bcNote" class="hud-note" hidden><span id="bcNoteText"></span><button id="bcNoteClose" class="sprout" type="button" aria-label="この案内を閉じる"><span class="ico">✕</span></button></div>
+    <div id="bcNote" class="hud-note" hidden><span id="bcNoteText"></span><button id="bcNoteClose" class="sprout" type="button" aria-label="この案内を閉じる"><span class="ico" data-i="x"></span></button></div>
     <div id="mailNow" class="hud-note mail-now" hidden></div>
     <div id="audioWarn" class="hud-note" hidden></div>
     <div id="peerNotice" class="hud-note" hidden></div>
     <div id="diag" class="hud-note diag" hidden></div>
     <div id="lobbyStatus" class="hud-note lobby-status">🛰 ロビーに接続中…</div>
   </div>
-  <button id="unlock" class="hud-unlock"><span class="ico">🔊</span><span class="cap">音声を有効化<br>（タップ）</span></button>
+  <button id="unlock" class="hud-unlock"><span class="ico" data-i="vol3"></span><span class="cap">音声を有効化<br>（タップ）</span></button>
   <!-- 左下：いつでも使う小さな操作（ハニカムに整列・動かない）。ひとつの泡に包み、しばらく触らないと小さく縮む。
        縮んだ泡を押すと、また膨らんで中の操作が出る -->
-  <button id="hubWrap" type="button" class="hub-wrap open" aria-label="メニュー" aria-expanded="true"><span class="ico">🫧</span></button>
+  <button id="hubWrap" type="button" class="hub-wrap open" aria-label="メニュー" aria-expanded="true"><span class="ico" data-i="logo"></span></button>
   <div id="hub" class="open">
-    <button id="help" class="hub-b" type="button" aria-haspopup="dialog" aria-label="これはなに？（ヘルプ）"><span class="ico">❔</span></button>
-    <label class="hub-b theme-pick" aria-label="見た目（時刻で変わる・端末に合わせる・昼・夜）"><span class="ico">🌗</span><select id="theme" aria-label="見た目">
+    <button id="help" class="hub-b" type="button" aria-haspopup="dialog" aria-label="これはなに？（ヘルプ）"><span class="ico" data-i="help"></span></button>
+    <label class="hub-b theme-pick" aria-label="見た目（時刻で変わる・端末に合わせる・昼・夜）"><span class="ico" data-i="theme"></span><select id="theme" aria-label="見た目">
       <option value="time">時刻で変わる</option>
       <option value="auto">端末に合わせる</option>
       <option value="day">ずっと昼</option>
       <option value="night">ずっと夜</option>
     </select></label>
-    <button id="lobbyRefresh" class="hub-b" type="button" aria-label="通話中の部屋を更新"><span class="ico">🔄</span><span class="sr">🔄 更新</span></button>
-    <label class="hub-b" aria-label="新しい部屋ができたら音で知らせる"><input type="checkbox" id="sndRoom"><span class="ico">🔔</span></label>
-    <button id="homeBtn" class="hub-b" type="button" aria-label="真ん中に戻る"><span class="ico">🎯</span></button>
-    <div class="hub-b ver-b"><span class="brand" id="brandMark" aria-hidden="true">🫧</span><span id="ver"></span><span id="chan"></span></div>
+    <button id="lobbyRefresh" class="hub-b" type="button" aria-label="通話中の部屋を更新"><span class="ico" data-i="refresh"></span><span class="sr">🔄 更新</span></button>
+    <label class="hub-b" aria-label="新しい部屋ができたら音で知らせる"><input type="checkbox" id="sndRoom"><span class="ico" data-i="bell"></span></label>
+    <button id="homeBtn" class="hub-b" type="button" aria-label="真ん中に戻る"><span class="ico" data-i="center"></span></button>
+    <div class="hub-b ver-b"><span class="brand" id="brandMark" aria-hidden="true" data-i="logo"></span><span id="ver"></span><span id="chan"></span></div>
   </div>
   <div id="lobbyViewers" class="hud-viewers"></div>
   <div id="tip" hidden></div>
@@ -453,14 +453,14 @@
     <div class="mp-head">
       <span class="mp-em" id="mailPopEmoji"></span>
       <span class="mp-who" id="mailPopWho"></span>
-      <button id="mailPopClose" class="mp-x" type="button" aria-label="閉じる">✕</button>
+      <button id="mailPopClose" class="mp-x" type="button" aria-label="閉じる" data-i="x"></button>
     </div>
     <div class="mp-topic" id="mailPopTopic"></div>
     <div class="mp-body" id="mailPopText"></div>
   </div>
 </div>
 <dialog id="helpDialog" class="help-dialog">
-  <button id="helpX" class="help-x" type="button" aria-label="閉じる">✕</button>
+  <button id="helpX" class="help-x" type="button" aria-label="閉じる" data-i="x"></button>
   <div class="help-scroll scroll-in">
   <h2>🫖 これはなに？</h2>
   <p class="help-demo">ぽっと通話の見た目を大きく変えた<b>デモンストレーションサイト</b>です。<a id="helpStable" href="../">通常版はこちら</a></p>
@@ -530,6 +530,7 @@
     <button id="ignoreNo" type="button">やめる</button>
   </div>
 </dialog>
+<script src="icons.js?v=1"></script>
 <script type="module">
 // ───────────────────────────────────────────────────────────────────────────
 // 目次（1ファイルに全部入っているので、探すときの手がかり）
@@ -592,7 +593,7 @@ window.__potPending = () => { try { return pendingPeers().map(p => p.name || p.i
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.7.7'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.7.8'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.15.23'
 
@@ -868,7 +869,7 @@ const copyLink = async (btn, text = shareUrl()) => {
   const label = btn.getAttribute('aria-label')
   try {
     await navigator.clipboard.writeText(text)
-    btn.innerHTML = '<span class="ico">✓</span><span class="sr">コピーしました</span>'; btn.classList.add('tone-ok')
+    btn.innerHTML = '<span class="ico">' + window.POP_ICON.svg('check') + '</span><span class="sr">コピーしました</span>'; btn.classList.add('tone-ok')
     try { window.__zg?.copied(btn, text) } catch {}   // MOD：コピーした中身を泡で見せて、儚く消す
     $('share').classList.add('full')   // 何をコピーしたか確かめられるよう、この間だけ全文を見せる
     clearTimeout(btn._revert); btn._revert = setTimeout(() => {
@@ -5693,6 +5694,75 @@ function startZeroG(Z) {
   const world = $('world')
   const space = new Space($('viewport'), world, { minScale: 0.28, maxScale: 1.7 })
   calmWhileTyping(space)
+
+  // ── 文の頭の絵文字（🎙 📣 🔌 ⚠️ …）を見せない。**文字は消さない**（.lead で隠すだけ）＝textContent は元のまま
+  //   （ttsStage の「🗣 で始まるなら自分の通知」のように、元のロジックが頭の絵文字を見ている所があるため）
+  const leadHide = t => {
+    if (!t || t.querySelector('.lead')) return null
+    const txt = t.textContent, m = txt.match(window.POP_ICON.LEAD)
+    if (!m) return null
+    const l = document.createElement('span'); l.className = 'lead'; l.textContent = m[0]
+    t.textContent = ''; t.append(l, txt.slice(m[0].length))
+    return m[1]
+  }
+  // お知らせの泡：色を 4 つ（青＝お知らせ・緑＝うまくいった・黄＝気をつけて・赤＝切れた／できなかった）にして、
+  // 左上の小さな衛星の泡に線の絵を 1 つ。元のロジックが textContent を書き換えるたびに付け直す
+  // ★自分で起こした書き換えは observer の takeRecords() で読み捨てる（＝元のロジックが書き換えたときだけ動く）。
+  //   「前と同じ文なら済み」とは判断しない：元のロジックが同じ文を書き直すと、隠した絵文字や衛星が消えるため
+  const watch = (el, run) => { const o = new MutationObserver(() => { run(); o.takeRecords() }); o.observe(el, { childList: true, characterData: true, subtree: true }); run(); o.takeRecords() }
+  // 文の途中の 📣 🎙 🙋 📮 は、文字の大きさの線の絵に置き換える（絵文字は隠して残すので textContent は変わらない）
+  const INLINE = { '📣': 'megaphone', '🎙': 'mic', '🙋': 'raise', '📮': 'mail' }
+  const INLINE_RE = /(📣|🎙|🙋|📮)\uFE0F?/u
+  const inlineIcons = root => {
+    const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, { acceptNode: n => n.parentElement?.closest('.lead, .inl, .sat') ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT })
+    const hits = []
+    for (let n = w.nextNode(); n; n = w.nextNode()) if (INLINE_RE.test(n.nodeValue)) hits.push(n)
+    for (const n of hits) {
+      const parts = n.nodeValue.split(INLINE_RE), frag = document.createDocumentFragment()
+      for (const part of parts) {
+        if (!part || part === '\uFE0F') continue
+        if (INLINE[part]) { const sp = document.createElement('span'); sp.className = 'inl'; sp.dataset.i = INLINE[part]; sp.innerHTML = window.POP_ICON.svg(INLINE[part]); const t = document.createElement('span'); t.className = 'lead'; t.textContent = part; sp.append(t); frag.append(sp) }   // 絵文字は .lead で隠して残す＝textContent は元のまま（閉じた案内の照合などが文面を見ている）
+        else frag.append(part)
+      }
+      n.replaceWith(frag)
+    }
+  }
+  const noteDeco = (box, txt = box, withSat = true) => watch(txt === box ? box : txt, () => {
+    const now = txt.textContent
+    const lead = leadHide(txt) || txt.querySelector('.lead')?.textContent.trim()
+    const tone = (lead && window.POP_ICON.TONE[lead]) || 'info'
+    box.dataset.tone = tone
+    let sat = box.querySelector(':scope > .sat')
+    if (withSat && now.trim()) {
+      if (!sat) { sat = document.createElement('span'); sat.className = 'sat'; sat.setAttribute('aria-hidden', 'true'); box.prepend(sat) }
+      const k = window.POP_ICON.SAT[tone]
+      if (sat.dataset.i !== k) { sat.dataset.i = k; sat.innerHTML = window.POP_ICON.svg(k) }
+    } else if (sat) sat.remove()
+    inlineIcons(txt)
+  })
+  noteDeco($('peerNotice')); noteDeco($('audioWarn')); noteDeco($('lobbyStatus')); noteDeco($('bcNote'), $('bcNoteText'))
+  noteDeco($('state'), $('state'), false)   // 状態の泡は左の点（●）があるので、頭の絵文字を隠すだけ
+  if ($('mailPopTopic')) noteDeco($('mailPopTopic'), $('mailPopTopic'), false)
+  // 部屋の名前（📣 配信部屋）と、おたよりの見出し（📮 …）
+  for (const id of ['callName', 'panMail', 'mailPop']) { const el = $(id); if (el) watch(el, () => inlineIcons(el)) }
+  // 音量の絵：元のロジックは 🔊 🔉 🔇 を書き込むので、線の絵に置き換える
+  { const v = $('volIc'); watch(v, () => { const k = { '🔊': 'vol3', '🔉': 'vol2', '🔇': 'vol0' }[v.textContent]; if (k) { v.dataset.i = k; v.innerHTML = window.POP_ICON.svg(k) } }) }
+  // 見ている人数：👥 の代わりに、泡の中を漂う小さな泡の数で（文は小さく残す）。泡の置き場所は番号で決める（描き直しても動かない）
+  { const v = $('lobbyViewers'); watch(v, () => {
+      const t = v.textContent
+      leadHide(v)
+      const n = /あなただけ/.test(t) ? 1 : /数人/.test(t) ? 3 : +(t.match(/(\d+)人/) || [0, 0])[1]
+      v.querySelector('.vdots')?.remove()
+      if (!n) return
+      const box = document.createElement('span'); box.className = 'vdots'; box.setAttribute('aria-hidden', 'true')
+      for (let i = 0; i < Math.min(n, 16); i++) {
+        const r1 = (Math.sin(i * 12.9898) * 43758.5453) % 1, r2 = (Math.sin(i * 78.233) * 12543.123) % 1, rr = Math.abs(r1), r3 = Math.abs(r2)
+        const d = document.createElement('i'), sz = 5 + rr * 6
+        d.style.cssText = 'width:' + sz.toFixed(1) + 'px;height:' + sz.toFixed(1) + 'px;left:' + (12 + r3 * 70).toFixed(0) + '%;top:' + (8 + rr * 40).toFixed(0) + '%;animation-delay:' + (-(i % 6)) + 's'
+        box.append(d)
+      }
+      v.prepend(box)
+    }) }
   tips($('tip'))
   html.classList.add('zg')
 
@@ -5860,14 +5930,20 @@ function startZeroG(Z) {
       if (uid === 'more' && !el.querySelector('.mm-n')) {
         const t = el.textContent, n = (t.match(/\d+/) || [''])[0]
         el.setAttribute('aria-label', t.replace(/^🙂\s*/, ''))
-        el.innerHTML = '<span class="mm-ico">🙂</span><span class="mm-n"></span>'
+        el.innerHTML = '<span class="mm-ico">' + window.POP_ICON.svg('headphones') + '</span><span class="mm-n"></span>'   // 🙂 はアバターと紛れるのでヘッドホン
         el.querySelector('.mm-n').textContent = 'ほか' + n + '人'
+      }
+      // 1 時の役割の印（配信者 📣／話す人 🎙／通話希望 🙋）を線の絵に。元の絵文字は data-mark に残す
+      const mk = el.querySelector('.m-bc')
+      if (mk && !mk.firstElementChild && mk.textContent) {
+        const k = { '📣': 'megaphone', '🎙': 'mic', '🙋': 'raise' }[mk.textContent]
+        if (k) { mk.dataset.mark = mk.textContent; mk.className = 'm-bc mk-' + k; mk.innerHTML = window.POP_ICON.svg(k) }
       }
       // 「🔄 つながり中…」の人（v0.15.22）：絵文字だけの薄い泡に、右上の 🔄。名前と状態は読み上げ用の名札に残す
       if (el.classList.contains('m-pending') && !el.querySelector('.mp-ico')) {
         const e = el.querySelector('.m-emoji')?.textContent || '🙂', nm = el.querySelector('.mp-name')?.textContent || ''
         el.setAttribute('aria-label', nm + '：つながり中…'); el.title = nm + '：つながり中…（回線が混み合っていると 1 分ほどかかることがあります）'
-        el.innerHTML = '<span class="mp-ico"></span><span class="mp-spin" aria-hidden="true">🔄</span>'
+        el.innerHTML = '<span class="mp-ico"></span><span class="mp-spin" aria-hidden="true">' + window.POP_ICON.svg('refresh') + '</span>'
         el.querySelector('.mp-ico').textContent = e
       }
       const b = memB.get(uid)
@@ -5907,6 +5983,27 @@ function startZeroG(Z) {
   // ── ロビー：通話中の部屋が親の泡として漂う ───────────────────────────────
   const lobB = new Map()
   let lobN = 0
+  // ロビーの部屋の泡を飾る（作り直されるたびに 1 回）。文字は消さずに頭の絵文字だけを .lead で隠す＝aria-label や
+  // 元のロジックが読む textContent はそのまま
+  const ARC_FULL_MIN = 360   // 弧が 1 周する長さ（6 時間）
+  const decorateRoom = el => {
+    if (el._deco) return
+    el._deco = true
+    const nm = el.querySelector('.room-name'), raw = nm?.textContent || ''
+    const tagged = raw.startsWith('🏷'), bc = isBcRoom(el.dataset.room)
+    for (const t of [nm, el.querySelector('.room-sub-name'), el.querySelector('.room-dur > span')]) leadHide(t)
+    const sat = (cls, k) => { const s = document.createElement('span'); s.className = 'room-sat ' + cls; s.setAttribute('aria-hidden', 'true'); s.innerHTML = window.POP_ICON.svg(k); el.append(s) }
+    sat('rs-kind', bc ? 'megaphone' : 'house')
+    if (tagged) sat('rs-tag', 'tag')
+    const d = el.querySelector('.room-dur > span')?.textContent || ''
+    const h = +(d.match(/(\d+)時間/) || [0, 0])[1], m = +(d.match(/(\d+)分/) || [0, 0])[1]
+    const f = Math.min(1, (h * 60 + m) / ARC_FULL_MIN)
+    if (f > 0) {
+      const a = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); a.setAttribute('class', 'room-arc'); a.setAttribute('viewBox', '0 0 100 100'); a.setAttribute('aria-hidden', 'true')
+      a.innerHTML = '<circle cx="50" cy="50" r="48" pathLength="100" stroke-dasharray="' + (f * 100).toFixed(1) + ' 100" transform="rotate(-90 50 50)"/>'
+      el.append(a)
+    }
+  }
   const syncLobby = () => {
     const seen = new Set()
     for (const el of $('lobbyList').children) {
@@ -5918,6 +6015,7 @@ function startZeroG(Z) {
       seen.add(key)
       const n = +el.dataset.n || 1, r = Math.min(150, 58 + Math.sqrt(n) * 24)
       el.setAttribute('aria-label', (el.querySelector('.room-name')?.textContent || '部屋') + '（' + n + '人）')
+      decorateRoom(el)
       let b = lobB.get(key)
       if (b) { space.rebind(b, el); if (Math.abs(b.r - r) > .5) b.grow(r) }
       else {
@@ -6079,10 +6177,14 @@ function startZeroG(Z) {
     $('linkBub').hidden = !h
     if (!h) return
     const bc = !!roomPk(h), st = entry.state
-    $('linkBub').querySelector('.lb-kind').textContent = bc ? '📣' : '🏠'
+    // 部屋の種類は線の絵（📣 🏠 の絵文字は使わない）。状態は文の頭の絵文字（🔍 🟢 😴）ではなく泡の質感で見せる
+    const kindEl = $('linkBub').querySelector('.lb-kind'), kind = bc ? 'megaphone' : 'house'
+    if (kindEl.dataset.i !== kind) { kindEl.dataset.i = kind; kindEl.innerHTML = window.POP_ICON.svg(kind) }
     $('linkBub').querySelector('.lb-name').textContent = roomInput.value.trim() || hashName() || '名前のない部屋'
-    $('linkBub').querySelector('.lb-state').textContent = st === 'checking' ? '🔍 さがしています…' : $('entryText').textContent || (bc ? '配信部屋' : '')
+    $('linkBub').querySelector('.lb-state').textContent = (st === 'checking' ? 'さがしています…' : $('entryText').textContent || (bc ? '配信部屋' : '')).replace(window.POP_ICON.LEAD, '')
     $('linkBub').classList.toggle('asleep', st === 'asleep')
+    $('linkBub').classList.toggle('live', st === 'live')
+    $('linkBub').classList.toggle('searching', st === 'checking')
     $('linkJoin').hidden = st === 'asleep'
     $('linkJoin').disabled = st === 'checking'
     $('linkJoin').setAttribute('aria-label', $('joinLbl').textContent)

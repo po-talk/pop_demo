@@ -224,11 +224,12 @@ button.room .room-share.copied { color: var(--ok); border-color: var(--ok); }
 #roomAsk { padding: 0; z-index: 30; background: radial-gradient(circle at 35% 30%, #3b2a6b 0%, #1e1640 75%, #2a1d55 100%); border: 1.5px solid rgba(192,132,252,.7); }
 #roomAsk #roomAskText { font-size: max(10px, 9.5cqmin); line-height: 1.4; padding: 0 14%; font-weight: 600; }
 #roomAsk > button { position: absolute; font-size: 0; }
-#roomAsk > button::before { content: '✓'; font-size: 16px; position: static; border: 0; transform: none; inset: auto; }
-#roomAsk > #roomAskNo::before { content: '✕'; }
+/* ✓ ✕ は線の絵（icons.js と同じ形）。文字の書き換えに負けないよう、CSS のマスクで出す */
+#roomAsk > button::before { content: ''; width: 46%; height: 46%; background: currentColor; position: static; border: 0; transform: none; inset: auto; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%2220 6 9 17 4 12%22/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpolyline points=%2220 6 9 17 4 12%22/%3E%3C/svg%3E") center / contain no-repeat; }
+#roomAsk > #roomAskNo::before { -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cline x1=%226%22 y1=%226%22 x2=%2218%22 y2=%2218%22/%3E%3Cline x1=%2218%22 y1=%226%22 x2=%226%22 y2=%2218%22/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222.5%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cline x1=%226%22 y1=%226%22 x2=%2218%22 y2=%2218%22/%3E%3Cline x1=%2218%22 y1=%226%22 x2=%226%22 y2=%2218%22/%3E%3C/svg%3E") center / contain no-repeat; }
 #roomAsk .room-quiet { position: absolute; left: 28%; top: 92%; width: 34%; height: 34%; border-radius: 50%; display: grid; place-items: center; cursor: pointer;
   font-size: 0; border: 1.5px solid var(--rim); background: rgba(15,23,42,.9); }
-#roomAsk .room-quiet::after { content: '🤫'; font-size: 18px; position: static; width: auto; height: auto; background: none; transform: none; }
+#roomAsk .room-quiet::after { content: ''; width: 58%; height: 58%; background: currentColor; position: static; transform: none; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath fill=%22black%22 stroke=%22none%22 fill-rule=%22evenodd%22 d=%22M12 3.5a8.8 8.8 0 1 0 .01 0z M6.7 9.6h10.6a2 2 0 0 1 0 4H6.7a2 2 0 0 1 0-4z%22/%3E%3Cpath d=%22M8.6 11.2l2.2.8M15.4 11.2l-2.2.8%22/%3E%3Cpath d=%22M19.2 6.4l2.6-2.4M20.2 8.2l3-.8%22/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath fill=%22black%22 stroke=%22none%22 fill-rule=%22evenodd%22 d=%22M12 3.5a8.8 8.8 0 1 0 .01 0z M6.7 9.6h10.6a2 2 0 0 1 0 4H6.7a2 2 0 0 1 0-4z%22/%3E%3Cpath d=%22M8.6 11.2l2.2.8M15.4 11.2l-2.2.8%22/%3E%3Cpath d=%22M19.2 6.4l2.6-2.4M20.2 8.2l3-.8%22/%3E%3C/svg%3E") center / contain no-repeat; }   /* 静かに入る＝忍者の頭巾（N2） */
 #roomAsk .room-quiet:has(input:checked) { border-color: var(--blue); box-shadow: 0 0 0 1.5px var(--blue), 0 0 14px rgba(56,189,248,.6); }
 #roomAsk .room-quiet input { position: absolute; opacity: 0; }
 
@@ -375,7 +376,7 @@ html.zg-av #avatars > button, html.zg-rx #reactions > button { display: flex; }
 #leaveYes .ico, #leaveNo .ico { font-size: 44cqmin; }
 /* 話題の「つける／変える」：文字は JS が書き換えるので、見た目は ✏️ に固定（名前は長押しで） */
 #tagEdit { font-size: 0; }
-#tagEdit::before { content: '✏️'; font-size: 18px; position: static; inset: auto; border: 0; transform: none; }
+#tagEdit::before { content: ''; width: 46%; height: 46%; background: currentColor; position: static; inset: auto; border: 0; transform: none; -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M4 20h4L19 9l-4-4L4 16z%22/%3E%3Cpath d=%22M13.5 6.5l4 4%22/%3E%3C/svg%3E") center / contain no-repeat; mask: url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22black%22 stroke-width=%222%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22%3E%3Cpath d=%22M4 20h4L19 9l-4-4L4 16z%22/%3E%3Cpath d=%22M13.5 6.5l4 4%22/%3E%3C/svg%3E") center / contain no-repeat; }
 /* 小窓に映す canvas（元の CSS と同じ置き方：本来の大きさで描かせ、1px の枠で切り抜いて見せない） */
 .pip-clip { position: fixed; right: 0; bottom: 0; width: 1px; height: 1px; overflow: hidden; opacity: .01; pointer-events: none; }
 .pip-src { display: block; width: 480px; height: 270px; }
@@ -542,3 +543,68 @@ html.zg-solo #pfBub .pf-emoji { font-size: 46cqmin; }
 .solo-other .so-e { font-size: 56cqmin; line-height: 1; pointer-events: none; }
 .solo-other .so-n { font-size: max(9px, 13cqmin); font-weight: 700; max-width: 84%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   text-shadow: 0 1px 3px rgba(0,0,0,.8); pointer-events: none; }
+
+/* ── 線のアイコン（icons.js・2026-10-09）──────────────────────────────
+   原則：絵文字は「いのち」、線は「道具」、状態は「泡そのもの」（docs/ICONS.md） */
+[data-i] > svg { width: 1em; height: 1em; display: inline-block; vertical-align: -.14em; }
+.bub .ico[data-i] > svg { display: block; }
+#tagEdit > .ico { display: none; }   /* 鉛筆は ::before のマスクで出す（中身は JS が文字に書き換える） */
+.mp-x[data-i], .help-x[data-i] { display: grid; place-items: center; }
+.mp-x[data-i] > svg, .help-x[data-i] > svg { width: 55%; height: 55%; }
+.lead { display: none; }   /* 文の頭の絵文字は隠す（文字としては残っている） */
+
+/* 人の泡の 1 時：役割の印（配信者＝メガホン・話す人＝マイク・通話希望＝挙手） */
+.member .m-bc { width: 30%; height: 30%; right: -4%; top: -4%; border-radius: 50%; display: grid; place-items: center; font-size: 0;
+  background: rgba(15,23,42,.82); border: 1.5px solid var(--rim-soft); box-shadow: 0 3px 8px var(--shadow); }
+.member .m-bc:empty { display: none; }
+.member .m-bc > svg { width: 62%; height: 62%; }
+.member .m-bc.mk-megaphone { color: #fde047; }
+.member .m-bc.mk-mic { color: #86efac; }
+.member .m-bc.mk-raise { color: #fbbf24; }
+.m-more .mm-ico > svg { width: 1em; height: 1em; display: block; }
+.m-more .mm-ico { font-size: 34cqmin; }
+.m-pending .mp-spin > svg { width: 1em; height: 1em; display: block; }
+
+/* お知らせの泡：4 色と、左上の衛星の泡 */
+.hud-note > .sat { position: absolute; left: 2%; top: 2%; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+  background: rgba(15,23,42,.9); border: 1.5px solid currentColor; box-shadow: 0 3px 8px var(--shadow); }
+.hud-note > .sat > svg { width: 18px; height: 18px; }
+.hud-note[data-tone="info"] { border-color: rgba(125,211,252,.85); }
+.hud-note[data-tone="info"] > .sat { color: var(--blue-hi); }
+.hud-note[data-tone="ok"]   { border-color: rgba(134,239,172,.85); }
+.hud-note[data-tone="ok"] > .sat { color: #86efac; }
+.hud-note[data-tone="warn"] { border-color: rgba(253,224,71,.85); }
+.hud-note[data-tone="warn"] > .sat { color: #fde047; }
+.hud-note[data-tone="err"]  { border-color: rgba(253,164,175,.9); }
+.hud-note[data-tone="err"] > .sat { color: #fda4af; }
+.hud-note.lobby-status > .sat { display: none; }   /* ロビーの接続の小さな泡は、色だけ */
+
+/* ロビーの部屋：種類と話題タグは衛星の泡、開いてからの時間は縁の弧（1 周＝6 時間） */
+button.room .room-sat { position: absolute; width: 24%; height: 24%; border-radius: 50%; display: grid; place-items: center; pointer-events: none;
+  background: rgba(15,23,42,.85); border: 1.5px solid var(--rim-soft); box-shadow: 0 3px 8px var(--shadow); }
+button.room .room-sat > svg { width: 58%; height: 58%; }
+button.room .rs-kind { left: -2%; top: 4%; }
+button.room .rs-tag { left: 10%; top: -12%; color: #fde68a; }
+button.room .room-dur { display: none; }   /* 時間は弧で（正確な時間は名札で読める） */
+button.room .room-arc { position: absolute; inset: -5%; width: 110%; height: 110%; pointer-events: none; overflow: visible; }
+button.room .room-arc circle { fill: none; stroke: var(--blue-hi); stroke-width: 1.6; stroke-linecap: round; opacity: .85; }
+
+/* 見ている人数＝漂う小さな泡 */
+.hud-viewers .vdots { position: absolute; inset: 0; pointer-events: none; }
+.hud-viewers .vdots i { position: absolute; border-radius: 50%; border: 1px solid rgba(255,255,255,.6); background: rgba(255,255,255,.1); animation: vdrift 6s ease-in-out infinite; }
+@keyframes vdrift { 0%, 100% { transform: translate(0, 0) } 50% { transform: translate(3px, -6px) } }
+
+/* リンクの部屋の泡：開いている＝縁が光って泡が立ちのぼる／さがしている＝周りを回る泡（眠っている＝ .asleep は上） */
+.link-bub .lb-kind > svg { width: 1em; height: 1em; display: block; }
+.link-bub.live { border-color: rgba(125,211,252,.9); box-shadow: 0 0 26px rgba(56,189,248,.55), inset 0 0 22px rgba(255,255,255,.3), 0 8px 28px var(--shadow); }
+.link-bub.live::after { content: ''; position: absolute; left: 46%; bottom: 14%; top: auto; width: 6%; height: 6%; border-radius: 50%; border: 1px solid rgba(255,255,255,.85);
+  background: none; transform: none; animation: lbrise 2.6s ease-in infinite; }
+@keyframes lbrise { 0% { transform: translateY(0) scale(.5); opacity: 0 } 15% { opacity: .9 } 100% { transform: translateY(-60px) scale(1.1); opacity: 0 } }
+.link-bub.searching::after { content: ''; position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px; border-radius: 50%;
+  background: rgba(255,255,255,.8); box-shadow: 0 0 6px rgba(147,197,253,.9); animation: lborbit 2.4s linear infinite; }
+@keyframes lborbit { from { transform: rotate(0) translateX(calc(50cqmin + 10px)) } to { transform: rotate(360deg) translateX(calc(50cqmin + 10px)) } }
+@media (prefers-reduced-motion: reduce) { .hud-viewers .vdots i, .link-bub.live::after, .link-bub.searching::after { animation: none; } }
+/* 文の途中の線の絵（📣 🎙 🙋 📮 の代わり） */
+.inl { display: inline-block; width: 1.05em; height: 1.05em; vertical-align: -.17em; margin: 0 .08em; }
+.inl > svg { width: 100%; height: 100%; display: block; }
+.inl[data-i="megaphone"] { color: #fde047; }

@@ -1,0 +1,343 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>POP DEMO アイコン案</title>
+<link rel="stylesheet" href="../bubble.css">
+<style>
+  /* bubble.css は「画面に固定した宇宙に泡を浮かべる」前提なので、このページだけ縦に読める形に戻す */
+  html, body { height: auto; }
+  body { overflow: auto; padding: 0 16px 80px; }
+  .nebula { z-index: -1; }
+  main { max-width: 760px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 28px 0 4px; }
+  h2 { font-size: 17px; margin: 40px 0 6px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.12); }
+  p, li { color: var(--ink-dim); font-size: 14px; line-height: 1.7; }
+  .note { font-size: 12.5px; color: var(--ink-faint); }
+  .bub { position: relative; flex: none; }
+  .bub .ico svg { stroke-width: 2; }
+  .row { display: flex; flex-wrap: wrap; gap: 18px 14px; margin: 14px 0; }
+  /* 今 → 案 の 1 組 */
+  .pair { width: 168px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .pair .two { display: flex; align-items: center; gap: 8px; }
+  .pair .arr { color: var(--ink-faint); font-size: 13px; }
+  .pair .lbl { font-size: 12.5px; color: var(--ink); text-align: center; line-height: 1.4; min-height: 2.8em; }
+  .pair .lbl small { display: block; color: var(--ink-faint); font-size: 11px; }
+  .b64 { width: 64px; height: 64px; }
+  .b88 { width: 88px; height: 88px; }
+  .old { opacity: .9; }
+  .old .ico { font-size: 42cqmin; }
+  .tag { display: inline-block; font-size: 10.5px; padding: 1px 7px; border-radius: 99px; border: 1px solid var(--rim-soft); color: var(--ink-faint); }
+  .tag.keep { border-color: rgba(251,191,36,.6); color: #fde68a; }
+  .tag.new { border-color: rgba(125,211,252,.6); color: var(--blue-hi); }
+
+  /* 原則の 3 つ */
+  .trio { display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; margin: 18px 0 8px; }
+  .trio figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 8px; width: 150px; }
+  .trio figcaption { font-size: 13px; text-align: center; line-height: 1.5; }
+  .trio figcaption b { display: block; font-size: 14px; color: var(--ink); }
+
+  /* 長押しの名札 */
+  .nametag { position: absolute; left: 50%; bottom: calc(100% + 8px); transform: translateX(-50%) scale(.3); opacity: 0;
+    white-space: nowrap; font-size: 12px; font-weight: 700; padding: 0; width: 76px; height: 76px; border-radius: 50%;
+    display: grid; place-items: center; text-align: center; line-height: 1.35;
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.28), rgba(30,27,75,.85) 70%); border: 1.5px solid var(--rim);
+    box-shadow: 0 6px 18px var(--shadow); pointer-events: none; transition: transform .22s cubic-bezier(.3,1.6,.5,1), opacity .18s; z-index: 5; }
+  .has-tag:hover .nametag, .has-tag.show .nametag { transform: translateX(-50%) scale(1); opacity: 1; }
+
+  /* 人の泡と時計の文字盤 */
+  .person-wrap { display: flex; gap: 30px; flex-wrap: wrap; justify-content: center; align-items: center; margin: 18px 0; }
+  .person { width: 150px; height: 150px; }
+  .person .face { font-size: 46cqmin; line-height: 1; }
+  .person .nm { font-size: 13px; font-weight: 600; margin-top: 4px; }
+  .badge { position: absolute; width: 30%; height: 30%; border-radius: 50%; display: grid; place-items: center;
+    background: rgba(15,23,42,.78); border: 1.5px solid var(--rim-soft); box-shadow: 0 3px 8px var(--shadow); }
+  .badge svg { width: 62%; height: 62%; }
+  .badge.emo { font-size: 15px; background: none; border: 0; box-shadow: none; }
+  .at1 { right: -2%; top: -2%; } .at3 { right: -10%; top: 35%; } .at45 { right: -2%; bottom: 0; }
+  .at910 { left: -6%; bottom: 8%; } .at11 { left: 4%; top: -4%; }
+  .dial { position: relative; width: 150px; height: 150px; border-radius: 50%; border: 1px dashed rgba(255,255,255,.25); }
+  .dial span { position: absolute; font-size: 11px; color: var(--ink-dim); transform: translate(-50%, -50%); white-space: nowrap; }
+
+  /* お知らせの泡 */
+  .notices { display: flex; flex-wrap: wrap; gap: 26px 18px; margin: 18px 0; }
+  .notice { width: 150px; height: 150px; padding: 18px; font-size: 12px; line-height: 1.45; font-weight: 600; }
+  .notice .sat { position: absolute; left: 4%; top: 2%; width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
+    border: 1.5px solid currentColor; background: rgba(15,23,42,.8); }
+  .notice .sat svg { width: 20px; height: 20px; }
+  .n-info { border-color: rgba(125,211,252,.85); color: var(--blue-hi); }
+  .n-ok   { border-color: rgba(134,239,172,.85); color: #86efac; }
+  .n-warn { border-color: rgba(253,224,71,.85); color: #fde047; }
+  .n-err  { border-color: rgba(253,164,175,.9); color: #fda4af; }
+  .notice .txt { color: var(--ink); }
+  .notice-old { font-size: 13px; color: var(--ink-dim); padding: 6px 12px; border-left: 2px solid var(--rim-soft); margin: 4px 0; }
+
+  /* 状態を質感で */
+  .states { display: flex; flex-wrap: wrap; gap: 26px 22px; justify-content: center; margin: 18px 0; }
+  .states figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 150px; }
+  .states figcaption { font-size: 12.5px; text-align: center; line-height: 1.5; }
+  .room { width: 128px; height: 128px; overflow: visible; }
+  .room .rn { font-size: 13px; font-weight: 700; padding: 0 12px; }
+  .live { border-color: rgba(125,211,252,.9); box-shadow: 0 0 22px rgba(56,189,248,.55), inset 0 0 22px rgba(255,255,255,.3), 0 8px 28px var(--shadow); }
+  .live .rise { position: absolute; bottom: 12%; width: 7px; height: 7px; border-radius: 50%; border: 1px solid rgba(255,255,255,.85);
+    animation: rise 2.6s ease-in infinite; opacity: 0; }
+  @keyframes rise { 0% { transform: translateY(0) scale(.5); opacity: 0 } 15% { opacity: .9 } 100% { transform: translateY(-80px) scale(1.1); opacity: 0 } }
+  .asleep { filter: saturate(.35) blur(.4px); opacity: .62; border-style: dashed; animation: sink 5s ease-in-out infinite; }
+  @keyframes sink { 0%,100% { transform: translateY(0) } 50% { transform: translateY(9px) } }
+  .search .orb { position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; margin: -4.5px; border-radius: 50%;
+    background: rgba(255,255,255,.75); box-shadow: 0 0 6px rgba(147,197,253,.9); animation: orbit 2.4s linear infinite; }
+  @keyframes orbit { from { transform: rotate(0) translateX(76px) } to { transform: rotate(360deg) translateX(76px) } }
+  .pend { border-style: dashed; animation: pf 2.4s ease-in-out infinite; }
+  @keyframes pf { 0%,100% { opacity: .45 } 50% { opacity: .8 } }
+  .arc { position: absolute; inset: -9px; pointer-events: none; }
+  .viewers { position: relative; width: 150px; height: 128px; }
+  .viewers i { position: absolute; border-radius: 50%; border: 1px solid rgba(255,255,255,.55); background: rgba(255,255,255,.08); animation: drift 6s ease-in-out infinite; }
+  @keyframes drift { 0%,100% { transform: translate(0,0) } 50% { transform: translate(6px,-10px) } }
+
+  /* ロビーの部屋の衛星 */
+  .lobby-room { width: 140px; height: 140px; }
+  .lobby-room .sat2 { position: absolute; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center;
+    background: rgba(15,23,42,.8); border: 1.5px solid var(--rim-soft); }
+  .lobby-room .sat2 svg { width: 20px; height: 20px; }
+  .lobby-old { font-size: 14px; padding: 10px 14px; border: 1px solid var(--rim-soft); border-radius: 12px; color: var(--ink); max-width: 260px; }
+
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; } }
+</style>
+</head>
+<body>
+<div class="nebula"></div>
+<main>
+  <h1>🫧 POP DEMO アイコン案</h1>
+  <p>泡の画面のボタンと情報の見せ方の案です（2026-10-08）。左が今、右が案。<b>泡にマウスを乗せる（スマホは長押し）と、名札の泡が出ます。</b></p>
+
+  <h2>原則：絵文字は「いのち」、線は「道具」、状態は「泡そのもの」</h2>
+  <div class="trio">
+    <figure><div class="bub b88"><span class="ico">🐱</span></div><figcaption><b>いのち・気持ち</b>人・リアクション・育つもの。絵文字のまま</figcaption></figure>
+    <figure><div class="bub b88"><span class="ico" data-i="mail"></span></div><figcaption><b>道具</b>押すと何かが起きるもの。白い線の SVG</figcaption></figure>
+    <figure><div class="bub b88 pend"><span class="ico">🦊</span></div><figcaption><b>状態</b>アイコンを足さず、点線・光・くすみで見せる</figcaption></figure>
+  </div>
+  <p class="note">今は人の泡もボタンの泡も「丸の中の絵文字」なので、同じ種類のものに見えます。描き方を分けると「顔があるのは人、白い線は押せるもの」とひと目で読めます。</p>
+
+  <h2>1. ボタン（道具）　<span class="tag new">SVG</span></h2>
+  <p>線は 1 種類（24×24・白・線幅 2・端は丸め）。今ある 参加・マイク・退出 と同じ線です。役目は<b>泡の縁の色</b>で伝えます（決める＝緑、やめる＝赤）。</p>
+  <div class="row" id="buttons"></div>
+
+  <h2>2. 設定の選択肢</h2>
+  <p>音量や読み上げは道具なので SVG に。<b>BGM の気分（🎵🌫🔥）は「気分を選ぶ」ので絵文字のまま</b>にして、「BGM なし」だけ SVG にします。</p>
+  <div class="row" id="settings"></div>
+
+  <h2>2b. 静かに入る：忍者の候補</h2>
+  <p>忍者らしさは「<b>頭全体を覆う頭巾から、目のところだけが細く開いている</b>」こと（🥷 の絵文字もこの形）と、「<b>頭巾の結び目から流れる 2 本の布</b>」で出ます。前の案は顔に帯を描いただけで、進入禁止のマークに見えていました。上が大きい泡、下が実際のボタンの大きさです。</p>
+  <div class="row" id="ninjas"></div>
+
+  <h2>3. 人の泡の印：時計の位置で役目を決める</h2>
+  <p>今の配置をそのまま決まりにします。印の場所が決まっていれば、どの人の泡でも同じところを見れば分かります。</p>
+  <p class="note"><b>1 時</b>＝役割（配信者・話す人・通話希望）／<b>3 時</b>＝話す許可を出す（配信者の画面だけ）／<b>4〜5 時</b>＝ミュート中／<b>9〜10 時</b>＝無視する（ハート）／<b>11 時</b>＝中継経由・直結</p>
+  <div class="person-wrap">
+    <div class="bub person old">
+      <span class="face">🐱</span><span class="nm">みどり 🌿</span>
+      <span class="badge emo at1">📣</span>
+      <span class="badge at11" style="color:#f6a04d" data-i="cloud"></span>
+      <span class="badge at45" data-i="micoff"></span>
+      <span class="badge at910" style="color:var(--pink)" data-i="heart"></span>
+    </div>
+    <div class="bub person">
+      <span class="face">🐱</span><span class="nm">みどり 🌿</span>
+      <span class="badge at1" style="color:#fde047" data-i="megaphone"></span>
+      <span class="badge at11" style="color:#f6a04d" data-i="cloud"></span>
+      <span class="badge at45" data-i="micoff"></span>
+      <span class="badge at910" style="color:var(--pink)" data-i="heart"></span>
+    </div>
+  </div>
+  <p class="note">左：今（1 時の 📣 だけ絵文字）。右：案（1 時も線の印に。育ち具合 🌿 は名前の横に絵文字のまま）。</p>
+  <div class="row" style="justify-content:center">
+    <div class="pair"><div class="two"><div class="bub b64"><span class="badge at1" style="width:100%;height:100%;position:static;background:none;border:0;box-shadow:none;color:#fde047" data-i="megaphone"></span></div></div><div class="lbl">配信者<small>メガホン（新しく描く）</small></div></div>
+    <div class="pair"><div class="two"><div class="bub b64"><span class="ico" style="color:#86efac" data-i="mic"></span></div></div><div class="lbl">話す人<small>今あるマイクを流用</small></div></div>
+    <div class="pair"><div class="two"><div class="bub b64"><span class="ico" style="color:#fbbf24" data-i="raise"></span></div></div><div class="lbl">通話希望<small>挙手（指 4 本に描き直し）</small></div></div>
+    <div class="pair"><div class="two"><div class="bub b64 old" style="border-style:dashed"><span class="ico" style="font-size:30cqmin">🙂</span><span style="font-size:10px;font-weight:700">ほか3人</span></div><span class="arr">→</span><div class="bub b64" style="border-style:dashed"><span class="ico" style="font-size:34cqmin" data-i="headphones"></span><span style="font-size:10px;font-weight:700">ほか3人</span></div></div><div class="lbl">ほか N 人が聞いている<small>🙂 はアバターと紛れるのでヘッドホンに</small></div></div>
+  </div>
+
+  <h2>4. お知らせ：文頭の絵文字をやめて、4 色の泡に</h2>
+  <p>今は文の頭に 14 種類の絵文字（🎙 📣 🔌 ⚠️ 🛰 …）が付いています。<b>色を 4 つに絞り</b>、左上の小さな衛星の泡にだけ線のアイコンを入れます。下から浮かんで、しばらくすると消えます。</p>
+  <div class="notice-old">今：🎙 配信者から「話してよい」と許可されました。「マイクを使う」を押すと声が届きます</div>
+  <div class="notice-old">今：🔌 そらさん との接続が切れました（退出ではありません）</div>
+  <div class="notices">
+    <div class="bub notice n-info"><span class="sat" data-i="info"></span><span class="txt">配信者から「話してよい」と許可されました</span></div>
+    <div class="bub notice n-ok"><span class="sat" data-i="check"></span><span class="txt">リンクをコピーしました</span></div>
+    <div class="bub notice n-warn"><span class="sat" data-i="warn"></span><span class="txt">そらさん の音がまだ届いていません</span></div>
+    <div class="bub notice n-err"><span class="sat" data-i="unplug"></span><span class="txt">そらさん との接続が切れました（退出ではありません）</span></div>
+  </div>
+  <p class="note">青＝お知らせ（🎙📣🗣📮👥🛰）／緑＝うまくいった（📋✓）／黄＝気をつけて（🔈🔊・軽い⚠️）／赤＝切れた・できなかった（🔌❌・重い⚠️）</p>
+
+  <h2>5. 状態は泡の質感で（アイコンを足さない）</h2>
+  <div class="states">
+    <figure><div class="bub room live"><span class="rn">夜のラジオ</span><i class="rise" style="left:30%"></i><i class="rise" style="left:55%;animation-delay:.9s"></i><i class="rise" style="left:44%;animation-delay:1.7s"></i></div><figcaption>開いている<br><span class="note">今：🟢 いま開いています</span><br>縁が光り、泡が立ちのぼる</figcaption></figure>
+    <figure><div class="bub room asleep"><span class="rn">夜のラジオ</span></div><figcaption>眠っている<br><span class="note">今：😴 いま誰もいないみたい</span><br>すりガラスで、ゆっくり沈む</figcaption></figure>
+    <figure><div class="bub room search"><span class="rn">夜のラジオ</span><i class="orb"></i><i class="orb" style="animation-delay:-.8s;opacity:.6"></i><i class="orb" style="animation-delay:-1.6s;opacity:.35"></i></div><figcaption>さがしている・接続中<br><span class="note">今：🔍 さがしています／🛰 接続中</span><br>小さな泡が周りを回る</figcaption></figure>
+    <figure><div class="bub room pend"><span class="ico" style="font-size:40cqmin">🦊</span></div><figcaption>つながり中<br><span class="note">今：🔄 つながり中…</span><br>点線と明滅（v0.15.22 で入れた形）</figcaption></figure>
+  </div>
+  <div class="states">
+    <figure><div class="bub room"><span class="rn">耐久部屋</span>
+      <svg class="arc" viewBox="0 0 146 146"><circle cx="73" cy="73" r="70" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="3"/>
+      <circle cx="73" cy="73" r="70" fill="none" stroke="#7dd3fc" stroke-width="3" stroke-linecap="round" stroke-dasharray="290 440" transform="rotate(-90 73 73)"/></svg></div>
+      <figcaption>開いてからの時間<br><span class="note">今：⏱ 3時間52分</span><br>縁に沿った弧が伸びる（1 周＝6 時間など）。正確な時間は名札で</figcaption></figure>
+    <figure><div class="viewers" id="viewers"></div><figcaption>見ている人数<br><span class="note">今：👥 いまだいたい10人が見ています</span><br>背景に漂う小さな泡の数で</figcaption></figure>
+  </div>
+
+  <h2>6. ロビーの部屋：名前の頭の絵文字をやめて、衛星の泡に</h2>
+  <div class="person-wrap">
+    <div class="lobby-old">🏷 明日のボランティアスケジュールは？<br><span style="font-size:12px;color:var(--ink-dim)">🏠 昨日の石井竜也、柳澤、オケは最高でした</span><br><span style="font-size:12px;color:var(--ink-faint)">⏱ 3時間26分</span></div>
+    <span class="arr" style="color:var(--ink-faint)">→</span>
+    <div class="bub lobby-room live"><span class="rn" style="font-size:12px;padding:0 14px">昨日の石井竜也、柳澤、オケは最高でした</span>
+      <span class="sat2" style="left:-6%;top:2%" data-i="house"></span>
+      <span class="sat2" style="right:-10%;top:12%;color:#fde68a" data-i="tag"></span>
+    </div>
+  </div>
+  <p class="note">左上の衛星＝部屋の種類（家＝雑談・メガホン＝配信）。右上の衛星＝話題タグがある印（タップで話題の泡がひらく）。</p>
+
+  <h2>7. 絵文字のまま残すもの　<span class="tag keep">絵文字</span></h2>
+  <div class="row" style="font-size:26px;gap:10px 18px">
+    <span title="アバター">🐱🦊🐼🦉</span><span title="リアクション">👏😂✨👍🤔😮🎉🍵</span><span title="育ち具合">🌱🌿🌷🌻🌲🌳</span><span title="BGM の気分">🎵🌫🔥</span>
+  </div>
+  <p>アバター（人の顔）／リアクション 8 個（気持ち。本家の画面とも同じ絵で見える）／育ち具合／BGM の気分。ヘルプやクレジットの文中の絵文字、共有の文、部屋の名前の中の絵文字もそのまま。</p>
+</main>
+
+<script>
+// 線のアイコン（24×24・stroke=currentColor・線幅 2・端は丸め）。fill を使うものだけ個別に指定
+const P = {
+  check: '<polyline points="20 6 9 17 4 12"/>',
+  x: '<line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/>',
+  houseplus: '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M12 12.5v5M9.5 15h5"/>',
+  house: '<path d="M3 11 12 4l9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-5h4v5"/>',
+  megaphone: '<path d="M3 10.5v3a1 1 0 0 0 1 1h3l11 5V4.5l-11 5H4a1 1 0 0 0-1 1z"/><path d="M7 14.5l1.5 5h2.5l-1.3-5"/><path d="M21 9.5v5"/>',
+  lobby: '<circle cx="8.5" cy="14.5" r="5"/><circle cx="16.5" cy="8" r="3.5"/><circle cx="17.5" cy="17" r="2.5"/>',
+  pencil: '<path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/>',
+  send: '<path d="M3.5 4.5 21 12 3.5 19.5 6 12z"/><path d="M6 12h15"/>',
+  chat: '<path d="M12 4c4.7 0 8.5 3.1 8.5 7s-3.8 7-8.5 7c-1 0-2-.1-2.9-.4L5 20l1.2-3.5C4.5 15.2 3.5 13.2 3.5 11c0-3.9 3.8-7 8.5-7z"/>',
+  mail: '<rect x="3" y="5" width="18" height="14" rx="1.5"/><rect x="14.5" y="7.5" width="4" height="4.5" rx=".5"/><path d="M6 9.5h5.5M6 12.5h5.5M6 15.5h9"/>',
+  gear: '<path d="M9.90 5.32 L10.43 5.18 L10.66 2.49 L13.34 2.49 L13.57 5.18 L14.10 5.32 L15.23 5.79 L15.71 6.06 L17.78 4.33 L19.67 6.22 L17.94 8.29 L18.21 8.77 L18.68 9.90 L18.82 10.43 L21.51 10.66 L21.51 13.34 L18.82 13.57 L18.68 14.10 L18.21 15.23 L17.94 15.71 L19.67 17.78 L17.78 19.67 L15.71 17.94 L15.23 18.21 L14.10 18.68 L13.57 18.82 L13.34 21.51 L10.66 21.51 L10.43 18.82 L9.90 18.68 L8.77 18.21 L8.29 17.94 L6.22 19.67 L4.33 17.78 L6.06 15.71 L5.79 15.23 L5.32 14.10 L5.18 13.57 L2.49 13.34 L2.49 10.66 L5.18 10.43 L5.32 9.90 L5.79 8.77 L6.06 8.29 L4.33 6.22 L6.22 4.33 L8.29 6.06 L8.77 5.79Z"/><circle cx="12" cy="12" r="3"/>',
+  reactplus: '<circle cx="10.5" cy="13" r="7.5"/><path d="M7.5 15a4 4 0 0 0 6 0"/><path d="M8 10.5h.01M13 10.5h.01"/><path d="M19.5 2.5v5M17 5h5"/>',
+  refresh: '<path d="M20 11a8 8 0 0 0-14.6-4.6L4 8"/><path d="M4 3v5h5"/><path d="M4 13a8 8 0 0 0 14.6 4.6L20 16"/><path d="M20 21v-5h-5"/>',
+  link: '<path d="M10 13.5a4.5 4.5 0 0 0 6.8.5l2.7-2.7a4.5 4.5 0 0 0-6.4-6.4l-1.5 1.5"/><path d="M14 10.5a4.5 4.5 0 0 0-6.8-.5l-2.7 2.7a4.5 4.5 0 0 0 6.4 6.4l1.5-1.5"/>',
+  qr: '<rect x="3.5" y="3.5" width="6.5" height="6.5" rx="1"/><rect x="14" y="3.5" width="6.5" height="6.5" rx="1"/><rect x="3.5" y="14" width="6.5" height="6.5" rx="1"/><path d="M14 14h2.5v2.5H14zM18 18h2.5v2.5H18zM18 14h2.5M14 20.5h2"/>',
+  vol3: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18.5 7a7 7 0 0 1 0 10"/>',
+  vol2: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="M16 9.5a3.5 3.5 0 0 1 0 5"/>',
+  vol0: '<path d="M4 9v6h4l5 4V5L8 9z"/><path d="m16 9.5 5 5M21 9.5l-5 5"/>',
+  logo: '<circle cx="9" cy="14" r="6.5"/><circle cx="17.5" cy="6.5" r="3.5"/><circle cx="19" cy="15.5" r="2"/><path d="M6 11.5a3.5 3.5 0 0 1 2.5-2"/>',
+  help: '<circle cx="12" cy="12" r="9"/><path d="M9.6 9.4a2.5 2.5 0 1 1 3.4 2.4c-.6.3-1 .9-1 1.6v.6"/><path d="M12 17h.01"/>',
+  theme: '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/>',
+  bell: '<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
+  center: '<path d="M3 11 21 3l-8 18-2-8z"/>',
+  headphones: '<path d="M4 16v-4a8 8 0 0 1 16 0v4"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.5"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.5"/>',
+  musicoff: '<path d="M9 18V6.5l10-2.5v11"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="15" r="2.5"/><path d="M3 3l18 18"/>',
+  slider: '<path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/>',
+  sparkle: '<path d="M9 3.5l1.6 4.4L15 9.5l-4.4 1.6L9 15.5l-1.6-4.4L3 9.5l4.4-1.6z"/><path d="M17 13.5a3 3 0 0 1 0 5"/><path d="M19.5 11a6.5 6.5 0 0 1 0 10"/>',
+  speak: '<path d="M12 4c4.7 0 8.5 3.1 8.5 7s-3.8 7-8.5 7c-1 0-2-.1-2.9-.4L5 20l1.2-3.5C4.5 15.2 3.5 13.2 3.5 11c0-3.9 3.8-7 8.5-7z"/><path d="M8.5 9.5v3M12 8v6M15.5 9.5v3"/>',
+  nameoff: '<rect x="3" y="7" width="18" height="10" rx="2.5"/><path d="M7 12h5"/><path d="M3 21 21 3"/>',
+  tag: '<path d="M3 12V5a2 2 0 0 1 2-2h7l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.2"/>',
+  info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5.5M12 7.6h.01"/>',
+  warn: '<path d="M12 3.5 2.5 20h19z"/><path d="M12 10v4.5M12 17.3h.01"/>',
+  unplug: '<path d="M8 3v4M14 3v4"/><path d="M5.5 7h11v3a5.5 5.5 0 0 1-11 0z"/><path d="M11 15.5V21"/><path d="M19 15l3 3M22 15l-3 3"/>',
+  mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8.5" y1="21" x2="15.5" y2="21"/>',
+  micoff: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8.5" y1="21" x2="15.5" y2="21"/><line x1="4" y1="3" x2="20" y2="21"/>',
+  raise: '<path d="M8 13V6.5a1.5 1.5 0 0 1 3 0V12"/><path d="M11 12V4.5a1.5 1.5 0 0 1 3 0V12"/><path d="M14 12V5.5a1.5 1.5 0 0 1 3 0V13"/><path d="M17 13V8.5a1.5 1.5 0 0 1 3 0V15a7 7 0 0 1-7 7h-1.5a6 6 0 0 1-4.6-2.2L3.3 15.4a1.6 1.6 0 0 1 2.4-2.1L8 15.5"/>',
+  cloud: '<path d="M17.5 19a4.5 4.5 0 0 0 .5-8.97A6 6 0 0 0 6.2 9.4 4 4 0 0 0 6.5 19z"/>',
+  heart: '<path fill="currentColor" stroke="none" d="M12 21C6.5 16.5 3 13.2 3 9.4 3 6.5 5.2 4.4 7.9 4.4c1.8 0 3.3 1.1 4.1 2.6.8-1.5 2.3-2.6 4.1-2.6C18.8 4.4 21 6.5 21 9.4c0 3.8-3.5 7.1-9 11.6z"/>',
+  sendbubble: '<path d="M12 4c4.7 0 8.5 3.1 8.5 7s-3.8 7-8.5 7c-1 0-2-.1-2.9-.4L5 20l1.2-3.5C4.5 15.2 3.5 13.2 3.5 11c0-3.9 3.8-7 8.5-7z"/><path d="M9 11h6"/><path d="m12.5 8.5 2.5 2.5-2.5 2.5"/>',
+  shh: '<circle cx="12" cy="12" r="9"/><path d="M7.8 9.6q1.2 1 2.4 0M13.8 9.6q1.2 1 2.4 0"/><path d="M9.3 15.6h1.4M13.3 15.6h1.4"/><path d="M12 22v-8.2a1.2 1.2 0 0 1 2.4 0V18"/>',
+  ninja: '<circle cx="12" cy="12" r="9"/><path d="M3.3 9.2h17.4v4.6H3.3z"/><path d="M7.5 11.6l2.2-.6M16.5 11.6l-2.2-.6"/><path d="M20.7 10.5l2.3-2.2M20.7 12.2l2.6 1.2"/>',
+  postbox: '<path d="M6.5 19V9a5.5 5.5 0 0 1 11 0v10z"/><path d="M5 9h14"/><path d="M9.5 11.5h5"/><path d="M10 14.2h4M10 16h4M12 16v2"/><path d="M8.5 19v2.5M15.5 19v2.5"/>',
+  handset: '<path d="M5 3.5h3.5l2 5L8 10a11 11 0 0 0 6 6l1.5-2.5 5 2V19a2 2 0 0 1-2 2A16.5 16.5 0 0 1 3 5.5a2 2 0 0 1 2-2z"/>',
+  ninja1: '<circle cx="12" cy="12.5" r="8.5"/><rect x="5.5" y="9.6" width="13" height="4" rx="2"/><path d="M8.3 11.1l2.4.9M15.7 11.1l-2.4.9"/><path d="M18.8 6.2l2.7-2.2M19.8 8l3-.6"/>',
+  ninja2: '<path fill="currentColor" stroke="none" fill-rule="evenodd" d="M12 3.5a8.8 8.8 0 1 0 .01 0z M6.7 9.6h10.6a2 2 0 0 1 0 4H6.7a2 2 0 0 1 0-4z"/><path d="M8.6 11.2l2.2.8M15.4 11.2l-2.2.8"/><path d="M19.2 6.4l2.6-2.4M20.2 8.2l3-.8"/>',
+  ninja3: '<path fill="currentColor" stroke="none" fill-rule="evenodd" d="M10.5 4a8.3 8.3 0 1 0 .01 0z M5.4 9.9h10.2a1.9 1.9 0 0 1 0 3.8H5.4a1.9 1.9 0 0 1 0-3.8z"/><path d="M7.2 11.4l2 .7M13.8 11.4l-2 .7"/><path d="M17.6 6.6c2.4-1.6 4.6-1.4 5.9.2"/><path d="M18.4 8.4c2.4-.2 4 .9 4.8 2.9"/>',
+  ninja4: '<circle cx="12" cy="11.5" r="8.5"/><rect x="5.5" y="8.6" width="13" height="4" rx="2"/><path d="M8.3 10.1l2.4.9M15.7 10.1l-2.4.9"/><path d="M18.8 5.2l2.7-2.2M19.8 7l3-.6"/><path d="M11 23v-7.4a1.4 1.4 0 0 1 2.8 0V20"/>',
+  shuriken: '<path fill="currentColor" stroke="none" fill-rule="evenodd" d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z M12 9.8a2.2 2.2 0 1 0 .01 0z"/>',
+  mailx: '',
+}
+const svg = k => '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + P[k] + '</svg>'
+document.querySelectorAll('[data-i]').forEach(e => { e.innerHTML = svg(e.dataset.i) })
+
+// [今の絵文字, 案のアイコン, 名前, 補足, 縁の色]
+const BUTTONS = [
+  ['✓', 'check', 'はい・決定', '参加・話題を確定・退出する ほか', 'ok'],
+  ['✕', 'x', 'いいえ・閉じる', 'やめる・案内を閉じる ほか'],
+  ['🏠', 'houseplus', '部屋を作る', '家に＋（雑談部屋の家と区別）'],
+  ['📣', 'megaphone', '配信部屋にする', '1 時の配信者の印と同じ絵'],
+  ['☎️', 'lobby', '通話中の部屋から選ぶ', '泡の寄り集まり＝ロビー'],
+  ['✏️', 'pencil', '名前・話題をつける', ''],
+  ['➤', 'send', 'ひとことを送る（案1）', '横向きの紙飛行機'],
+  ['➤', 'sendbubble', 'ひとことを送る（案2）', '吹き出しに矢印'],
+  ['💬', 'chat', 'ひとこと（タブ）', ''],
+  ['📮', 'mail', 'おたより（案1）', 'ハガキ'],
+  ['📮', 'postbox', 'おたより（案2）', '郵便ポスト'],
+  ['⚙️', 'gear', '設定（タブ）', '歯車'],
+  ['👏', 'reactplus', 'リアクションを開く', '中の 👏 と区別して「笑顔に＋」'],
+  ['🔄', 'refresh', 'つなぎ直す・更新', ''],
+  ['🔗', 'link', '招待リンクをコピー', ''],
+  ['📱', 'qr', 'QR コード', 'スマホの絵だと「スマホで開く」と読める'],
+  ['🔊', 'vol3', '音声を有効化', '音量と同じスピーカー'],
+  ['🫧', 'logo', 'メニュー・ロゴ', '泡 3 粒のロゴを 1 つ作って共用'],
+  ['❔', 'help', 'ヘルプ', ''],
+  ['🌗', 'theme', '見た目（テーマ）', ''],
+  ['🔔', 'bell', '音で知らせる', '新しい部屋・入退室'],
+  ['🎯', 'center', '真ん中に戻る', 'ナビの現在地の矢印'],
+  ['🤫', 'shh', '静かに入る（案1）', 'シー（口に指）'],
+  ['🤫', 'ninja2', '静かに入る（案2）', '忍者（下の候補から選ぶ）'],
+  ['', 'leave', '（参考）退出', '今もう SVG。線の基準', 'red'],
+]
+const SETTINGS = [
+  ['🔊', 'vol3', '音量：大', ''], ['🔉', 'vol2', '音量：小', ''], ['🔇', 'vol0', '音量：ゼロ', ''],
+  ['🔇', 'musicoff', 'BGM なし', '音量ゼロと別の絵に'],
+  ['🎵', null, 'BGM：軽快', '絵文字のまま（気分）'], ['🌫', null, 'BGM：アンビエント', '絵文字のまま（気分）'], ['🔥', null, 'BGM：焚き火', '絵文字のまま（気分）'],
+  ['🎚', 'slider', 'BGM の音量', ''],
+  ['🎵', 'sparkle', 'リアクションを音で', 'BGM の 🎵 と分ける'],
+  ['🗣', 'speak', 'ひとことを読み上げる', ''],
+  ['🙊', 'nameoff', '名前は読まない', ''],
+  ['🙋', 'raise', '通話希望者を募集（案1）', '挙手（指 4 本に描き直し）'],
+  ['🙋', 'handset', '通話希望者を募集（案2）', '電話の受話器'],
+]
+P.leave = '<path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h8"/><path d="M14 3v18"/><path d="M18 12h4"/><path d="m19 9 3 3-3 3"/>'
+const tone = t => t === 'ok' ? ' tone-ok' : t === 'red' ? ' tone-red' : ''
+const card = ([e, k, name, note, t]) => {
+  const d = document.createElement('div'); d.className = 'pair'
+  const oldB = e ? '<div class="bub b64 old' + tone(t) + '"><span class="ico">' + e + '</span></div><span class="arr">→</span>' : ''
+  const newB = k ? '<div class="bub b64 has-tag' + tone(t) + '" tabindex="0"><span class="ico">' + svg(k) + '</span><span class="nametag">' + name + '</span></div>'
+                 : '<div class="bub b64 has-tag" tabindex="0"><span class="ico">' + e + '</span><span class="nametag">' + name + '</span></div>'
+  d.innerHTML = '<div class="two">' + (k ? oldB : '') + newB + '</div><div class="lbl">' + name + (note ? '<small>' + note + '</small>' : '') + '</div>'
+  return d
+}
+BUTTONS.forEach(b => document.getElementById('buttons').append(card(b)))
+const NINJAS = [
+  ['ninja1', 'N1 頭巾の正面（線）', '丸い頭巾に目の窓、つり目、右上に結び目の布'],
+  ['ninja2', 'N2 頭巾の正面（塗り）', '頭巾を塗りつぶし、目の窓だけくり抜く。🥷 にいちばん近い'],
+  ['ninja3', 'N3 布をなびかせる', 'N2 の頭巾を少し左に寄せ、結び目の布を長く流す（動き＝そっと入る）'],
+  ['shuriken', 'N4 手裏剣', '塗りの十字の刃に、真ん中の穴。人ではなく道具で「忍」を示す'],
+]
+NINJAS.forEach(([k, name, note]) => {
+  const d = document.createElement('div'); d.className = 'pair'
+  d.innerHTML = '<div class="two" style="flex-direction:column;gap:10px"><div class="bub b88"><span class="ico">' + svg(k) + '</span></div><div class="bub b64"><span class="ico">' + svg(k) + '</span></div></div><div class="lbl">' + name + '<small>' + note + '</small></div>'
+  document.getElementById('ninjas').append(d)
+})
+SETTINGS.forEach(b => document.getElementById('settings').append(card(b)))
+
+// 長押しで名札（スマホ）。0.45 秒押したら出し、離して 1.2 秒で消す
+document.addEventListener('pointerdown', ev => {
+  const b = ev.target.closest('.has-tag'); if (!b) return
+  const t = setTimeout(() => b.classList.add('show'), 450)
+  const up = () => { clearTimeout(t); setTimeout(() => b.classList.remove('show'), 1200); removeEventListener('pointerup', up); removeEventListener('pointercancel', up) }
+  addEventListener('pointerup', up); addEventListener('pointercancel', up)
+})
+document.addEventListener('contextmenu', ev => { if (ev.target.closest('.has-tag')) ev.preventDefault() })
+
+// 見ている人数＝漂う小さな泡（10 人なら 10 粒）
+const vw = document.getElementById('viewers')
+for (let i = 0; i < 10; i++) {
+  const s = 8 + Math.random() * 14, b = document.createElement('i')
+  b.style.cssText = 'width:' + s + 'px;height:' + s + 'px;left:' + (Math.random() * 130) + 'px;top:' + (Math.random() * 105) + 'px;animation-delay:' + (-Math.random() * 6) + 's'
+  vw.append(b)
+}
+</script>
+</body>
+</html>
