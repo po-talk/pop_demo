@@ -29,6 +29,8 @@
     theme: '<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 0 17z" fill="currentColor"/>',
     bell: '<path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>',
     center: '<path d="M3 11 21 3l-8 18-2-8z"/>',
+    // 扉（「このまま入ってみる」・v0.15.26）：開いた扉と、向こうへの一歩
+    door: '<path d="M4 21h16"/><path d="M6 21V4a1 1 0 0 1 1-1h8a1 1 0 0 1 1 1v17"/><path d="M6 3l7 2.2V21"/><path d="M10.5 12.5h.01"/>',
     ninja: '<path fill="currentColor" stroke="none" fill-rule="evenodd" d="M12 3.5a8.8 8.8 0 1 0 .01 0z M6.7 9.6h10.6a2 2 0 0 1 0 4H6.7a2 2 0 0 1 0-4z"/><path d="M8.6 11.2l2.2.8M15.4 11.2l-2.2.8"/><path d="M19.2 6.4l2.6-2.4M20.2 8.2l3-.8"/>',
     headphones: '<path d="M4 16v-4a8 8 0 0 1 16 0v4"/><rect x="3" y="14" width="4.5" height="6.5" rx="1.5"/><rect x="16.5" y="14" width="4.5" height="6.5" rx="1.5"/>',
     musicoff: '<path d="M9 18V6.5l10-2.5v11"/><circle cx="6.5" cy="18" r="2.5"/><circle cx="16.5" cy="15" r="2.5"/><path d="M3 3l18 18"/>',

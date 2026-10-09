@@ -423,6 +423,9 @@ html.zg-av #avatars > button, html.zg-rx #reactions > button { display: flex; }
 .link-bub.asleep { opacity: .82; filter: saturate(.6); border-style: dashed; }
 #linkJoin, #linkLobby { left: 84%; top: 70%; width: 38%; height: 38%; }
 #linkNew { left: 52%; top: 94%; width: 38%; height: 38%; }
+/* 「このまま入ってみる」の扉の泡（v0.15.26）：✓ と同じ右下に。そのときは ☎ を少し上へ */
+#linkTry { left: 84%; top: 70%; width: 38%; height: 38%; }
+#linkBub.can-try #linkLobby { left: 100%; top: 34%; }
 #linkJoin:disabled { opacity: .45; }
 .sprout[hidden] { display: none !important; }
 button.room.linked { display: none !important; }

@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 POP DEMO（旧称 Bubble Zero-G）pop 0.7.10（元：ぽっと通話 v0.15.25）
+  ぽっと通話 POP DEMO（旧称 Bubble Zero-G）pop 0.7.11（元：ぽっと通話 v0.15.26）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -96,7 +96,7 @@
 <!-- End Cloudflare Web Analytics -->
 <!-- 泡の質感（bubble.css）とこの画面の見た目（zerog.css）。元の <style> は使わない（見た目を丸ごと差し替えたため） -->
 <link rel="stylesheet" href="bubble.css?v=14">
-<link rel="stylesheet" href="zerog.css?v=39">
+<link rel="stylesheet" href="zerog.css?v=40">
 <!-- 見た目（昼夜）のエンジン。**モジュールの外・<style> の直後**に置く＝最初の描画より前に
      昼の色を当てるため（モジュールは描画後に走るので、そこに置くと昼でも一瞬紺が見える）。
      アプリの状態には一切触らない（読むのは localStorage の設定と時計だけ）。設定の UI は
@@ -258,6 +258,7 @@
       <span class="lb-name"></span>
       <span class="lb-state"></span>
       <button id="linkJoin" type="button" class="sprout tone-ok" aria-label="参加する"><span class="ico" data-i="check"></span></button>
+      <button id="linkTry" type="button" class="sprout tone-ok" aria-label="このまま入ってみる（見つけるのに時間がかかっているだけのこともあります）" hidden><span class="ico" data-i="door"></span></button>
       <button id="linkLobby" type="button" class="sprout" aria-label="通話中の部屋から選ぶ" hidden><span class="ico" data-i="lobby"></span></button>
       <button id="linkNew" type="button" class="sprout" aria-label="この名前で新しく部屋を作る" hidden><span class="ico" data-i="houseplus"></span></button>
     </div>
@@ -281,6 +282,7 @@
       <div id="entryNote" class="note-bub" hidden>
         <p id="entryText"></p>
         <div id="entryActions" class="sprouts" hidden>
+          <button id="entryTry" type="button" aria-label="このまま入ってみる" hidden><span class="ico" data-i="door"></span></button>
           <button id="entryLobby" type="button" aria-label="通話中の部屋から選んで参加"><span class="ico" data-i="lobby"></span></button>
           <button id="entryOpen" type="button" aria-label="部屋の名前をつけて参加"><span class="ico" data-i="pencil"></span></button>
         </div>
@@ -530,7 +532,7 @@
     <button id="ignoreNo" type="button">やめる</button>
   </div>
 </dialog>
-<script src="icons.js?v=1"></script>
+<script src="icons.js?v=2"></script>
 <script type="module">
 // ───────────────────────────────────────────────────────────────────────────
 // 目次（1ファイルに全部入っているので、探すときの手がかり）
@@ -593,9 +595,9 @@ window.__potPending = () => { try { return pendingPeers().map(p => p.name || p.i
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.7.10'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.7.11'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
-const UPSTREAM_VERSION = 'v0.15.25'
+const UPSTREAM_VERSION = 'v0.15.26'
 
 const $ = id => document.getElementById(id)
 // localStorage は**必ずここを通す**。Safari のプライベートモードやストレージ拒否の環境では
@@ -5336,6 +5338,7 @@ const entryRender = () => {
   note.hidden = entry.state !== 'asleep' && entry.state !== 'live' && entry.state !== 'choose'
   acts.hidden = entry.state !== 'asleep' && entry.state !== 'choose'
   if (entry.state === 'live') $('entryText').textContent = '🟢 いま開いています（' + entryLiveCount() + '人）'
+  $('entryTry').hidden = !(entry.state === 'asleep' && entry.id)   // 入る先（ID）が決まっているリンクだけ
   if (entry.state === 'choose') {
     $('entryText').textContent = '🔀 同じ名前の部屋が ' + entryRoomCount() + ' つ開いています。下の「通話中の部屋」から選んでください。'
     $('entryOpen').hidden = !!entry.pk   // 聞き役は配信部屋を開けない（鍵が無い）
@@ -5343,10 +5346,11 @@ const entryRender = () => {
   if (entry.state === 'asleep') {
     const bc = !!(entry.pk || roomPk(entry.id))
     const noName = !!entry.id && !roomInput.value.trim()   // ハッシュだけの URL＝名前を持って来ていない
-    $('entryText').textContent = bc
+    $('entryText').textContent = (bc
       ? '😴 この配信はいま開いていないみたいです。始まればここに出ます。'
       : noName ? '😴 この部屋は終わったみたいです。'
-      : '😴 この部屋にはいま誰もいないみたいです。古いリンクかもしれません。'
+      : '😴 この部屋にはいま誰もいないみたいです。古いリンクかもしれません。')
+      + (entry.id ? '（見つけるのに時間がかかっているだけのこともあります）' : '')
     $('entryOpen').hidden = bc   // 聞き役は配信部屋を開けない（鍵が無い）
   }
   syncKindRow()   // ボタンの文言
@@ -5376,6 +5380,15 @@ const entryStart = () => {
   entry.state = 'checking'; entryRender()
   if (entryTimer) clearInterval(entryTimer)
   entryTimer = setInterval(entryUpdate, 1000)
+}
+// 「このまま入ってみる」：入口の確認をやめて、リンクの部屋（pendingHash＝リンクの ID のまま）に参加する。
+// 参加ボタンを押したのと同じ道を通す（iOS の音声の解錠など、ユーザー操作の中でしかできない処理があるため）
+$('entryTry').onclick = () => {
+  if (!entry.id) return
+  if (entryTimer) { clearInterval(entryTimer); entryTimer = null }
+  entry.id = ''; entry.name = ''; entry.pk = ''; entry.state = ''
+  entryRender()
+  $('join').click()
 }
 $('entryLobby').onclick = () => { const l = document.querySelector('.lobby'); if (l) l.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
 // 「部屋の名前をつけて参加」＝すぐには入らない。参加ボタンを戻し、部屋名の欄を選択状態にして
@@ -6215,7 +6228,8 @@ function startZeroG(Z) {
     const kindEl = $('linkBub').querySelector('.lb-kind'), kind = bc ? 'megaphone' : 'house'
     if (kindEl.dataset.i !== kind) { kindEl.dataset.i = kind; kindEl.innerHTML = window.POP_ICON.svg(kind) }
     $('linkBub').querySelector('.lb-name').textContent = roomInput.value.trim() || hashName() || '名前のない部屋'
-    $('linkBub').querySelector('.lb-state').textContent = (st === 'checking' ? 'さがしています…' : $('entryText').textContent || (bc ? '配信部屋' : '')).replace(window.POP_ICON.LEAD, '')
+    // 文の後ろの補足（「見つけるのに時間が…」）は泡に入りきらないので外す（扉の泡の名札で読める）
+    $('linkBub').querySelector('.lb-state').textContent = (st === 'checking' ? 'さがしています…' : $('entryText').textContent || (bc ? '配信部屋' : '')).replace(window.POP_ICON.LEAD, '').replace(/（見つけるのに[^）]*）/, '')
     $('linkBub').classList.toggle('asleep', st === 'asleep')
     $('linkBub').classList.toggle('live', st === 'live' || st === 'choose')
     $('linkBub').classList.toggle('searching', st === 'checking')
@@ -6224,10 +6238,15 @@ function startZeroG(Z) {
     $('linkJoin').disabled = st === 'checking'
     $('linkJoin').setAttribute('aria-label', $('joinLbl').textContent)
     $('linkLobby').hidden = st !== 'asleep' && st !== 'choose'
+    // 「このまま入ってみる」（v0.15.26）：お休み中でも、リンクに部屋 ID があればそのまま入れる（右下の ✓ の位置に扉の泡。☎ は少し上へ）
+    const canTry = !$('entryTry').hidden
+    $('linkTry').hidden = !canTry
+    $('linkBub').classList.toggle('can-try', canTry)
     $('linkNew').hidden = (st !== 'asleep' && st !== 'choose') || bc   // 聞き役は配信部屋を作れない（鍵が無い）
   }
   $('linkJoin').addEventListener('click', () => $('join').click())
   $('linkLobby').addEventListener('click', () => $('entryLobby').click())
+  $('linkTry').addEventListener('click', () => $('entryTry').click())   // 入口の確認をやめて、リンクの部屋にそのまま入る
   $('linkNew').addEventListener('click', () => { freshRoom(roomInput.value.trim() || hashName()); $('createBox').open = true; setTimeout(view, 30) })
 
   // 「通話中の部屋から選ぶ」：元はページを下へスクロールしていた。ここではカメラを引いてロビーを見せる
