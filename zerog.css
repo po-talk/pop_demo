@@ -611,3 +611,4 @@ button.room .room-arc circle { fill: none; stroke: var(--blue-hi); stroke-width:
 .inl { display: inline-block; width: 1.05em; height: 1.05em; vertical-align: -.17em; margin: 0 .08em; }
 .inl > svg { width: 100%; height: 100%; display: block; }
 .inl[data-i="megaphone"] { color: #fde047; }
+#ntfRoomOpt { display: none !important; }   /* MOD：元の通知トグル（v0.15.31）は泡では出さない。index.html の該当コメント参照 */
