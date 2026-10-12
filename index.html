@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 POP DEMO（旧称 Bubble Zero-G）pop 0.8.0（元：ぽっと通話 v0.16.10）
+  ぽっと通話 POP DEMO（旧称 Bubble Zero-G）pop 0.8.1（元：ぽっと通話 v0.16.10）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -215,6 +215,8 @@
   .member .m-tap:hover{ color:var(--link) }
   .cl-tap{ cursor:pointer }
   .cl-row.pick .cl-em, .cl-row.pick .cl-who{ cursor:pointer; text-decoration:underline dotted; text-underline-offset:2px }
+/* MOD：泡版では名刺を開かないので、名前・絵文字の「押せる」印を出さない */
+.m-tap, .cl-tap, .cl-row.pick .cl-em, .cl-row.pick .cl-who { cursor:auto !important; text-decoration:none !important }
 </style>
 <link rel="stylesheet" href="bubble.css?v=14">
 <link rel="stylesheet" href="zerog.css?v=40">
@@ -919,7 +921,7 @@ window.__potPending = () => { try { return pendingPeers().map(p => p.name || p.i
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.8.0'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.8.1'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.16.10'
 
@@ -1646,14 +1648,14 @@ const mySeconds = () => call.joinedId ? Math.floor((performance.now() - call.joi
 
 // ───────── 名刺（プロフィールカード・v0.16.0） ─────────
 // 完全サーバーレス・localStorage 保持・P2P オンデマンド要求（action 'card'）。
-const CARD_KEY = 'pot-call-card'
+const CARD_KEY = 'pop-call-card'   // MOD：泡版は本体と保存を分ける（pop-call- 接頭辞の方針）。泡版ではまだ名刺を作らない＝空のまま
 const CARD_REQ_MS = 10000     // 同じ相手からの要求に応じる間隔（連打への自衛）
 const loadCard = () => {
   try { const o = JSON.parse(lsGet(CARD_KEY) || '{}'); return o && typeof o === 'object' ? o : {} }
   catch { return {} }
 }
 const saveCard = c => lsSet(CARD_KEY, JSON.stringify(c))
-const CARD_NOIMG_KEY = 'pot-call-card-noimg'   // 「相手の名刺の画像を表示しない」（v0.16.1）
+const CARD_NOIMG_KEY = 'pop-call-card-noimg'   // 「相手の名刺の画像を表示しない」（v0.16.1）
 
 // ── 名刺の鍵（v0.16.1）──
 // SNS の本人確認を「受け手が自分で確かめられる」形にするための鍵（ECDSA P-256・配信鍵とは別）。
@@ -1666,7 +1668,7 @@ const CARD_NOIMG_KEY = 'pot-call-card-noimg'   // 「相手の名刺の画像を
 // 受け手は ①問い返しに鍵で署名させ（持ち主か）②証拠に同じ指紋があるか、の両方を確かめる＝証拠を写しただけの
 // 人は ① で落ちる。① の署名文には部屋・問う側・答える側の peerId を入れる＝問い返しの横流し（偽者が本人へ
 // 問いを回して答えを持ち帰る）を防ぐ（本人の署名には本人の peerId が入るので、偽者経由では一致しない）。
-const CARD_IDB = 'pot-call-keys', CARD_IDB_STORE = 'keys'
+const CARD_IDB = 'pop-call-keys', CARD_IDB_STORE = 'keys'   // MOD：名刺の鍵も本体と分ける（本体で作った鍵を泡版から使わない）
 const idbReq = (mode, fn) => new Promise((res, rej) => {
   const o = indexedDB.open(CARD_IDB, 1)
   o.onupgradeneeded = () => o.result.createObjectStore(CARD_IDB_STORE)
@@ -2210,7 +2212,11 @@ $('cdTipLink').onclick = async e => {
 }
 
 // カードを開く
+// MOD（pop 0.8.1）：泡版では**まだ名刺を開かない**（泡での名刺のデザインは利用者が後で決める・10-12 利用者の指示）。
+//   ひとことの名前から開くと泡の画面で崩れていた。開かない＝相手に名刺を求めることもしない
+const POP_CARD_OFF = true
 const openCard = uid => {
+  if (POP_CARD_OFF) return
   call.cardViewing = uid
   if (uid === 'self') {
     renderCardView('self', myCardPayload())

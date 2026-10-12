@@ -80,6 +80,13 @@ try:
             pop.eval("(() => { const t = document.getElementById('chatText'); t.value = 'ほんとだ、ふわふわしてる'; document.getElementById('chatSend').click() })()")
             time.sleep(1.5); snap(pop, '3chat'); pop.eval("document.getElementById('tabChat').click()"); time.sleep(1.5)
             print('  chat toggles closed:', pop.eval("document.getElementById('panChat').hidden && !document.getElementById('callBub').classList.contains('chat-mode')"))
+            # pop 0.8.1：泡版ではまだ名刺を開かない（ひとことの名前・メンバーの絵文字を押しても名刺の窓は出ない）
+            pop.eval("document.getElementById('tabChat').click()"); time.sleep(1.5)
+            pop.eval("(() => { const r = document.querySelector('#chatLog .cl-row.can'); if (!r) return; r.click(); r.querySelector('.cl-who')?.click(); r.querySelector('.cl-who')?.click() })()"); time.sleep(0.8)
+            pop.eval("(() => { const t = [...document.querySelectorAll('#members .member')].find(el => !el.querySelector('.you'))?.querySelector('.m-tap'); t?.click() })()"); time.sleep(0.8)
+            closed = pop.eval("!document.getElementById('cardDlg').open")
+            print('  名刺は開かない（泡版はまだ）:', '✅' if closed else '❌')
+            pop.eval("document.querySelectorAll('dialog[open]').forEach(d => d.close()); document.getElementById('tabChat').click()"); time.sleep(1)
         if st == 'settings':
             pop.eval("document.getElementById('tabSettings').click()"); time.sleep(2.5); snap(pop, '4settings'); pop.eval("document.getElementById('tabSettings').click()"); time.sleep(1.5)
         if st == 'ignore':
