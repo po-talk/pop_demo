@@ -4045,7 +4045,9 @@ const renderPip = () => {
   const b = $('pip')
   b.hidden = !call.joinedId || !pipCan()
   // ★textContent で丸ごと書き換えないこと（**アイコンごと消える**）。文字だけ差し替える。
-  b.querySelector('.pip-lbl').textContent = pipOn() ? '小窓をとじる' : '小窓'
+  const pl = pipOn() ? '小窓をとじる' : '小窓'
+  b.querySelector('.pip-lbl').textContent = pl
+  b.setAttribute('aria-label', pl)   // aria-label は隠し文字より優先。一緒に変える
 }
 // ★PiP の要求は**押した瞬間に同期で**呼ぶこと。await を1つ挟むだけでユーザー操作の文脈が
 //   切れて NotAllowedError になる（計測ページで実際に踏んだ）。映像は join の時点で
@@ -6722,7 +6724,9 @@ $('join').onclick = joinCall
 // DOMは作り直さず class と textContent だけ変える（innerHTML差し替えの再描画ちらつきを防ぐ）。
 const renderMute = () => {
   $('mute').classList.toggle('muted', call.muted)
-  $('mute').querySelector('.lbl').textContent = call.muted ? 'ミュート解除' : 'ミュート'
+  const ml = call.muted ? 'ミュート解除' : 'ミュート'
+  $('mute').querySelector('.lbl').textContent = ml
+  $('mute').setAttribute('aria-label', ml)   // aria-label は隠し文字より優先。一緒に変える（ミュート中も「ミュート」のままになる退行を防ぐ）
 }
 renderMute()   // 初期表示
 
@@ -7874,7 +7878,8 @@ function startZeroG(Z) {
       seen.add(key)
       const n = +el.dataset.n || 1, r = Math.min(150, 58 + Math.sqrt(n) * 24)
       const nmTxt = el.querySelector('.room-name')?.textContent || '部屋'
-      el.setAttribute('aria-label', nmTxt + '（' + n + '人）' + (isBcRoom(el.dataset.room) ? '・配信部屋' : '・雑談部屋') + (nmTxt.startsWith('🏷') ? '・話題: ' + nmTxt.replace(/^🏷\s*/, '') : ''))
+      // 話題付きは nmTxt 自体が「🏷 話題」なので ・話題: … を足さない（同じ話題を 2 回読む）
+      el.setAttribute('aria-label', nmTxt + '（' + n + '人）' + (isBcRoom(el.dataset.room) ? '・配信部屋' : '・雑談部屋'))
       decorateRoom(el)
       let b = lobB.get(key)
       if (b) { space.rebind(b, el); if (Math.abs(b.r - r) > .5) b.grow(r) }
