@@ -218,8 +218,8 @@
 /* MOD：泡版では名刺を開かないので、名前・絵文字の「押せる」印を出さない */
 .m-tap, .cl-tap, .cl-row.pick .cl-em, .cl-row.pick .cl-who { cursor:auto !important; text-decoration:none !important }
 </style>
-<link rel="stylesheet" href="bubble.css?v=14">
-<link rel="stylesheet" href="zerog.css?v=40">
+<link rel="stylesheet" href="bubble.css?v=15">
+<link rel="stylesheet" href="zerog.css?v=42">
 <!-- 見た目（昼夜）のエンジン。**モジュールの外・<style> の直後**に置く＝最初の描画より前に
      昼の色を当てるため（モジュールは描画後に走るので、そこに置くと昼でも一瞬紺が見える）。
      アプリの状態には一切触らない（読むのは localStorage の設定と時計だけ）。設定の UI は
@@ -451,16 +451,16 @@
       <button id="tabSettings" class="tab ctl" type="button" role="tab" aria-selected="false" aria-controls="panSettings" aria-label="設定"><span class="ico" data-i="gear"></span></button>
     </div>
     <div class="zc actions">
-      <button id="raise" class="ctl" hidden><span class="sr">通話希望</span><span class="ico" data-i="raise"></span></button>
-      <button id="speak" class="ctl tone-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8.5" y1="21" x2="15.5" y2="21"/></svg><span class="sr">マイクを使う</span></button>
-      <button id="mute" class="ctl"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8.5" y1="21" x2="15.5" y2="21"/><line class="mic-slash" x1="4" y1="3" x2="20" y2="21"/></svg><span class="lbl sr">ミュート</span></button>
-      <button id="leave" class="ctl tone-red"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h8"/><path d="M14 3v18"/><path d="M18 12h4"/><path d="m19 9 3 3-3 3"/></svg><span class="sr">退出</span></button>
+      <button id="raise" class="ctl" hidden aria-label="通話希望"><span class="sr">通話希望</span><span class="ico" data-i="raise"></span></button>
+      <button id="speak" class="ctl tone-ok" aria-label="マイクを使う"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8.5" y1="21" x2="15.5" y2="21"/></svg><span class="sr">マイクを使う</span></button>
+      <button id="mute" class="ctl" aria-label="ミュート"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M6 11a6 6 0 0 0 12 0"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="8.5" y1="21" x2="15.5" y2="21"/><line class="mic-slash" x1="4" y1="3" x2="20" y2="21"/></svg><span class="lbl sr">ミュート</span></button>
+      <button id="leave" class="ctl tone-red" aria-label="退出"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h8"/><path d="M14 3v18"/><path d="M18 12h4"/><path d="m19 9 3 3-3 3"/></svg><span class="sr">退出</span></button>
     </div>
     <button id="reactBtn" class="ctl" type="button" aria-label="リアクション" aria-expanded="false"><span class="ico" data-i="reactplus"></span></button>
     <!-- 操作の泡をまとめる泡：しばらく触らないと、ミュート以外の操作はこの「⋯」に包まれて閉じる -->
     <button id="ctlMore" class="ctl" type="button" aria-label="操作をひらく" aria-expanded="true" hidden><span class="ico">⋯</span></button>
     <div id="reactions" class="zc" hidden></div>
-    <button id="pip" class="ctl" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><rect x="12" y="12" width="8" height="6" rx="1" fill="currentColor" stroke="none"/></svg><span class="pip-lbl sr">小窓</span></button>
+    <button id="pip" class="ctl" type="button" hidden aria-label="小窓"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><rect x="12" y="12" width="8" height="6" rx="1" fill="currentColor" stroke="none"/></svg><span class="pip-lbl sr">小窓</span></button>
     <button id="retry" class="ctl" type="button" hidden aria-label="つなぎ直す"><span class="ico" data-i="refresh"></span><span class="sr">🔄 つなぎ直す</span></button>
 
     <!-- 招待（参加前は「部屋を作る」の泡に、通話中は操作の泡に並ぶ） -->
@@ -7873,7 +7873,8 @@ function startZeroG(Z) {
       const key = el.dataset.room
       seen.add(key)
       const n = +el.dataset.n || 1, r = Math.min(150, 58 + Math.sqrt(n) * 24)
-      el.setAttribute('aria-label', (el.querySelector('.room-name')?.textContent || '部屋') + '（' + n + '人）')
+      const nmTxt = el.querySelector('.room-name')?.textContent || '部屋'
+      el.setAttribute('aria-label', nmTxt + '（' + n + '人）' + (isBcRoom(el.dataset.room) ? '・配信部屋' : '・雑談部屋') + (nmTxt.startsWith('🏷') ? '・話題: ' + nmTxt.replace(/^🏷\s*/, '') : ''))
       decorateRoom(el)
       let b = lobB.get(key)
       if (b) { space.rebind(b, el); if (Math.abs(b.r - r) > .5) b.grow(r) }
