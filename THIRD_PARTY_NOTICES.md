@@ -18,10 +18,10 @@
 - **nostr-tools** — The Unlicense（パブリックドメイン相当・義務なし）
   https://github.com/nbd-wtf/nostr-tools
 
-以下は「ひとことの読み上げ」（配信部屋・配信者がオンにしたときだけ）で、jsDelivr／unpkg／Hugging Face から実行時に読み込むもの。
-本リポジトリはこれらを再配布していません。
+以下は「ひとことの読み上げ」（配信部屋・配信者がオンにしたときだけ）で、pop 0.8.3 から本家ぽっと通話（同じ potalk.app）の `/vendor/` から実行時に読み込むもの。
+本リポジトリはこれらを再配布していません（同梱と表示は本家リポジトリ po-talk/po-talk.github.io の `vendor/` にあります）。
 
-- **piper-plus**（`piper-plus`・`@piper-plus/g2p`）— MIT License — © ayutaz and contributors
+- **piper-plus**（`piper-plus`・`@piper-plus/g2p`）— MIT License — © 2022 Michael Hansen, © 2025 ayutaz
   https://github.com/ayutaz/piper-plus
 - **ONNX Runtime Web**（`onnxruntime-web`）— MIT License — © Microsoft Corporation
   https://github.com/microsoft/onnxruntime

@@ -14,4 +14,4 @@ esm.sh から実行時に読み込んでいたライブラリを、**同じ中�
 - **版を上げるとき**：同じ URL から取り直し、ファイル名の版・`index.html` の import と modulepreload・`SHA256SUMS`・`LICENSES.md`・この表を揃える。
   Trystero は版で通信の形が変わりうる（`index.html` の「Trystero 0.25.x API notes」と RUNBOOK §4 を先に読む）。版が同じなら通信の形は変わらず、本番・CLI・常設ページ・泡版とそのままつながる。
 - ライセンス本文は `LICENSES.md`（中に含まれる依存も含む）。
-- 読み上げ（piper-plus・onnxruntime-web）はまだ jsDelivr／unpkg から読む（wasm が 60MB あるため別に判断）。
+- 読み上げ（piper-plus・@piper-plus/g2p・onnxruntime-web）は**ここには置かない**。pop 0.8.3 から、声のモデル（`../models/`）と同じく本番（同じ potalk.app）の `/vendor/` を読む（72MB を複製しないため）。中身と版の固定は本番の `vendor/SHA256SUMS`。
