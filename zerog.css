@@ -333,7 +333,6 @@ dialog.help-dialog::backdrop { background: rgba(14,12,40,.32); backdrop-filter: 
 .help-sec[open] summary::before { content: '• '; }
 .help-sec ol, .help-sec ul { padding-left: 1.2em; margin: 6px 0; }
 .help-credit { font-size: 11px; color: var(--ink-dim); }
-.help-hide { display: flex; justify-content: center; align-items: center; gap: 6px; font-size: 12px; margin-top: 10px; }
 .help-x, .help-close { position: absolute; border-radius: 50%; cursor: pointer; color: var(--ink); border: 1.5px solid var(--rim); font: inherit; z-index: 2;
   background: radial-gradient(circle at 35% 30%, rgba(255,255,255,.3) 0%, rgba(255,255,255,.06) 62%, rgba(147,197,253,.24) 100%); }
 .help-x { right: 13%; top: 9%; width: 44px; height: 44px; font-size: 16px; }
@@ -612,3 +611,4 @@ button.room .room-arc circle { fill: none; stroke: var(--blue-hi); stroke-width:
 .inl > svg { width: 100%; height: 100%; display: block; }
 .inl[data-i="megaphone"] { color: #fde047; }
 #ntfRoomOpt { display: none !important; }   /* MOD：元の通知トグル（v0.15.31）は泡では出さない。index.html の該当コメント参照 */
+button.room .room-bot { display: none; }   /* やまびこ部屋の一言（本体 v0.16.17）は泡が小さいので出さない（「常設」は時間の場所に出る） */

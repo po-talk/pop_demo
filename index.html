@@ -1,6 +1,6 @@
 <!doctype html>
 <!--
-  ぽっと通話 POP DEMO（旧称 Bubble Zero-G）pop 0.8.3（元：ぽっと通話 v0.16.14）
+  ぽっと通話 POP DEMO（旧称 Bubble Zero-G）pop 0.8.4（元：ぽっと通話 v0.16.23）
   見た目だけを差し替えたデモ。通話の約束ごと（Trystero・appId・データチャネル）は元と同じなので、
   本番（potalk.app）の人と同じ部屋で話せる。置き場所は potalk.app/pop_demo/（別 repo po-talk/pop_demo。
   本番 repo には何も足さない）。普段ぽっと通話を使っている人に遊んでもらうためのお試し版。
@@ -374,7 +374,7 @@
       <input id="name" placeholder="ゲスト" autocomplete="off" maxlength="20" aria-label="あなたの名前">
       <span id="growNote" class="pf-grow" aria-label="成長"></span>
       <!-- MOD：本体の「名刺を設定」（v0.16）。泡版での入口は未定（利用者が後で決める）＝要素だけ残して出さない（元のコードが ID で掴む） -->
-      <button id="btnOpenCardEdit" class="pf-card-btn" type="button" hidden>📇 名刺（プロフィールカード）を設定</button>
+      <button id="btnOpenCardEdit" class="pf-card-btn" type="button" hidden>📇 名刺を作る</button>
       <span class="pf-you" aria-hidden="true">（あなた）</span>
       <span id="pfName" hidden></span><span id="pfEdit" hidden></span>
     </div>
@@ -402,8 +402,8 @@
           <span id="roomCount" class="char-count"></span>
         </div>
         <div id="kindRow" class="zc" role="radiogroup" aria-label="部屋の種類">
-          <label class="kind-opt" id="kindBcL" aria-label="配信部屋にする（あなたの声だけ流れます）"><input type="radio" name="kind" id="kindBc"><span class="ico" data-i="megaphone"></span></label>
-          <label class="kind-opt" id="kindChatL" aria-label="雑談部屋にする（全員で話せます）"><input type="radio" name="kind" id="kindChat" checked><span class="ico" data-i="house"></span></label>
+          <label class="kind-opt" id="kindBcL" aria-label="配信（あなたの声だけ）"><input type="radio" name="kind" id="kindBc"><span class="ico" data-i="megaphone"></span></label>
+          <label class="kind-opt" id="kindChatL" aria-label="雑談（みんなで話す）"><input type="radio" name="kind" id="kindChat" checked><span class="ico" data-i="house"></span></label>
         </div>
       </div>
       <button id="join" class="tone-ok"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg><span id="joinLbl" class="cap">部屋を作る</span></button>
@@ -468,7 +468,7 @@
 
     <!-- 招待（参加前は「部屋を作る」の泡に、通話中は操作の泡に並ぶ） -->
     <div id="shareWrap" class="zc" hidden>
-      <span id="shareLabel" class="sr">共有リンク：</span><a class="share sr" id="share" href="#"></a>
+      <span id="shareLabel" class="sr">招待リンク：</span><a class="share sr" id="share" href="#"></a>
       <button id="copy" class="ctl" aria-label="招待リンクをコピー"><span class="ico" data-i="link"></span><span class="sr">🔗 招待リンクをコピー</span></button>
       <button id="qr" class="ctl" aria-expanded="false" aria-label="QRコード"><span class="ico" data-i="qr"></span><span class="sr">📱 QRコード</span></button>
       <div id="qrBox" class="qr-bub" hidden>
@@ -518,11 +518,10 @@
           <label class="opt" id="sndReactRow" style="display:none" aria-label="リアクションを音で鳴らす"><input type="checkbox" id="sndReact"><span class="ico" data-i="sparkle"></span></label>
           <label class="opt" id="sndTtsRow" hidden aria-label="ひとことを つくよみちゃんが読み上げる"><input type="checkbox" id="sndTts"><span class="ico" data-i="speak"></span></label>
           <label class="opt" id="sndTtsNameRow" hidden aria-label="投稿した人の名前は読まない"><input type="checkbox" id="sndTtsNoName"><span class="ico" data-i="nameoff"></span></label>
-          <label class="opt" id="reqOpenRow" hidden aria-label="通話希望者募集（聞き役が「通話希望」を出せます）"><input type="checkbox" id="reqOpen"><span class="ico" data-i="raise"></span></label>
+          <label class="opt" id="reqOpenRow" hidden aria-label="通話希望者募集（聞いている人が「通話希望」を出せます）"><input type="checkbox" id="reqOpen"><span class="ico" data-i="raise"></span></label>
         </div>
-        <p class="vol-note" id="sndTtsNote" hidden>読み上げは部屋の全員に聞こえます。初回は約 40 MB を読み込みます（Wi-Fi 推奨）。ページを開くたびにオフから始まります</p>
+        <p class="vol-note" id="sndTtsNote" hidden>読み上げは部屋の全員に聞こえます。ダウンロードは初回だけです（約 40 MB・Wi-Fi 推奨）。ページを開くたびにオフから始まります</p>
         <p class="vol-note" id="sndTtsProg" hidden></p>
-        <p class="vol-note" id="sndTtsSent" hidden></p>
         <p class="vol-note" id="sndTtsCrash" hidden></p>
       </div>
     </div>
@@ -557,7 +556,7 @@
     <div id="diag" class="hud-note diag" hidden></div>
     <div id="lobbyStatus" class="hud-note lobby-status">🛰 ロビーに接続中…</div>
   </div>
-  <button id="unlock" class="hud-unlock"><span class="ico" data-i="vol3"></span><span class="cap">音声を有効化<br>（タップ）</span></button>
+  <button id="unlock" class="hud-unlock"><span class="ico" data-i="vol3"></span><span class="cap">タップして<br>音を出す</span></button>
   <!-- 左下：いつでも使う小さな操作（ハニカムに整列・動かない）。ひとつの泡に包み、しばらく触らないと小さく縮む。
        縮んだ泡を押すと、また膨らんで中の操作が出る -->
   <button id="hubWrap" type="button" class="hub-wrap open" aria-label="メニュー" aria-expanded="true"><span class="ico" data-i="logo"></span></button>
@@ -577,6 +576,7 @@
   <div id="lobbyViewers" class="hud-viewers"></div>
   <!-- MOD：元の「パソコンの通知でも知らせる」（v0.15.31）。ハニカムは 6 マス固定で置き場が無いので、要素だけ残して出さない
        （元のコードが ID で掴むため。消すと初期化で落ちる）。タブの題名・アイコンの印は元のまま効く。泡での出し方は未定 -->
+  <span class="ntf-note" id="sndRoomNote" hidden></span>   <!-- MOD：本体の 🔔 の一度きりの注記（v0.16.17）。泡では出さない（要素だけ置く） -->
   <label class="snd-opt" id="ntfRoomOpt" hidden><input type="checkbox" id="ntfRoom"><span class="ntf-note" id="ntfRoomNote"></span></label>
   <div id="tip" hidden></div>
 </div>
@@ -598,7 +598,7 @@
   <h2>🫖 これはなに？</h2>
   <p class="help-demo">ぽっと通話の見た目を大きく変えた<b>デモンストレーションサイト</b>です。<a id="helpStable" href="../">通常版はこちら</a></p>
 
-  <p>登録なし・インストールなしで、居合わせた人と<b>声だけで話せる</b>小さなお茶の席です。同じ部屋を開いた人どうしが、そのまま話せます。配信アプリ POPOPO にインスパイアされて作りました。</p>
+  <p>登録なしで、居合わせた人と<b>声だけで話せる</b>小さなお茶の席</p>
   <p class="help-warn">⚠️ 実験中です。ご利用は自己責任で！</p>
   <div class="help-more" aria-hidden="true"><span>↓</span></div>
 
@@ -613,21 +613,19 @@
 
   <details class="help-sec" open><summary>はじめての参加方法</summary>
     <ol>
-      <li><b>部屋を選ぶ</b>：下の「通話中の部屋」から。誰もいなくても、入って待てば次に来た人と話せます</li>
-      <li><b>名前を決めて「参加する」</b>：本名でなくて大丈夫です。マイクの使用をきかれたら「許可」（一度だけ）</li>
+      <li><b>名前を決める</b>：本名でなくて大丈夫です</li>
+      <li><b>部屋を選んで「参加する」</b>：下の「通話中の部屋」から部屋をタップし、「参加する」を押します。誰もいなくても、入って待てば次に来た人と話せます。マイクの使用をきかれたら「許可」を選びます（一度だけ）</li>
       <li><b>ひとこと挨拶する</b>：「こんにちは」だけで十分です。聞いているだけでも大丈夫です</li>
     </ol>
-    <p>友だちを呼ぶときは、部屋に入ってから<b>共有リンク</b>か <b>QR コード</b>を渡します。リンクがそのまま部屋の入口です。</p>
+    <p>友だちを呼ぶときは、部屋に入ってから<b>招待リンク</b>か <b>QR コード</b>を渡します。リンクを開いた人は、そのままその部屋に入ります。</p>
   </details>
 
   <details class="help-sec"><summary>注意</summary>
     <ul>
-      <li>マイクの許可が必要です。<b>Safari / Chrome で開いてください</b>（LINE や X の中のブラウザは不可）</li>
-      <li>iPhone では「音声を有効化」が出ることがあります。画面のどこかをタップすると鳴ります</li>
-      <li>快適なのは <b>4〜6 人</b>くらいまで（全員が全員につながる方式のため）</li>
+      <li><b>Safari / Chrome で開いてください</b>（LINE や X の中のブラウザではマイクが使えません）</li>
+      <li>快適なのは <b>4〜6 人</b>くらいまで</li>
       <li>非公開の部屋はありません。人がいる部屋はかならず一覧に出ます</li>
-      <li>過去の会話は残りません（録音・保存なし）。ブラウザが違えば別の人として扱われます</li>
-      <li>配信部屋では、配信者がオンにすると「ひとこと」が声で読み上げられ、部屋の全員に聞こえます（声と顔：つくよみちゃん）</li>
+      <li>過去の会話は残りません（録音・保存なし）</li>
     </ul>
     <p>詳しくは<a href="https://potalk.app/manual/#trouble" target="_blank" rel="noopener">使い方の「困ったとき」</a>へ。</p>
   </details>
@@ -639,12 +637,10 @@
 
   <details class="help-sec"><summary>制作者</summary>
     <p>♨️🦈 qramo（クラモ）<a href="https://x.com/qraPo3" target="_blank" rel="noopener">@qraPo3</a>。開発の報告や勉強会は、ぽっと通話の部屋で開きます（日時は X で）。</p>
-    <p class="help-credit">🤖 開発は <a href="https://claude.com/claude-code" target="_blank" rel="noopener">Claude Code</a> と一緒に</p>
     <p class="help-credit">🗣 読み上げの声と顔：フリー素材キャラクター「つくよみちゃん」<a href="https://tyc.rei-yumesaki.net/" target="_blank" rel="noopener">tyc.rei-yumesaki.net</a>（声：つくよみちゃんコーパス／Illustration by 夢前黎）。音声合成は <a href="https://github.com/ayutaz/piper-plus" target="_blank" rel="noopener">piper-plus</a>（MIT）</p>
   </details>
 
   <p class="help-credit">📊 このサイトはアクセス測定に <a href="https://www.cloudflare.com/web-analytics/" target="_blank" rel="noopener">Cloudflare Web Analytics</a> を利用しています（Cookie不使用・個人を特定する情報は取得しません）。</p>
-  <label class="help-hide"><input type="checkbox" id="helpHide"> 今後表示しない</label>
   </div>
   <button id="helpClose" class="help-close" type="button">泡になって<br>はじめる</button>
 </dialog>
@@ -652,10 +648,10 @@
   <div class="help-scroll">
   <h2 id="ignoreTitle">🙈 この人の音を受け取らないようにします</h2>
   <ul>
-    <li>押したことは相手には伝わりません（通知も出ません）</li>
+    <li>相手には伝わりません（通知も出ません）</li>
+    <li><b>相手にはあなたの声が聞こえたままです</b></li>
+    <li>相手が部屋に入り直すと外れます</li>
     <li>もう一度押せばいつでも戻せます</li>
-    <li>ただし相手には、<b>あなたの声が聞こえたままです</b>。本当に離れたいときは退出してください</li>
-    <li>なお相手が部屋に入り直すと無視は外れます</li>
   </ul>
   </div>
   <div class="ignore-actions">
@@ -697,7 +693,6 @@
     <p class="cd-verify-msg" id="cdVerifyMsg"></p>
   </div>
   <div class="cd-foot">
-    <p class="cd-foot-note">※ P2Pオンデマンド名刺交換（サーバー不保持）</p>
     <button id="cdEditBtn" class="pf-card-btn" type="button" hidden>✏️ 自分の名刺を編集する</button>
     <button id="cdIgnore" type="button" hidden></button>
   </div>
@@ -706,7 +701,7 @@
 <dialog id="cardEditDlg" class="help-dialog card-dialog" aria-labelledby="ceTitle">
   <button class="help-x" id="ceClose" type="button" aria-label="閉じる">✕</button>
   <h2 id="ceTitle" style="margin:0 36px 8px 0">📇 名刺（プロフィール）設定</h2>
-  <p class="sub" style="margin:0 0 12px;font-size:12.5px">端末にのみ保存され、相手があなたのアイコン・名前を押した時だけ直接渡されます。</p>
+  <p class="sub" style="margin:0 0 12px;font-size:12.5px">名刺はこの端末にだけ保存され、相手があなたのアイコンか名前を押したときだけ、相手に直接渡されます。</p>
 
   <label class="ce-lbl">名刺アイコン（画像または絵文字）</label>
   <div class="ce-avatar-row">
@@ -727,7 +722,7 @@
   <textarea id="ceBio" maxlength="60" placeholder="自己紹介やステータスなど（最大60文字）" rows="2"></textarea>
   
   <label class="ce-lbl">お礼・チップ窓口（提示する1件を選択）</label>
-  <label class="ce-none"><input type="radio" name="ceTipOpt" value="none" checked> 提示しない（非表示）</label>
+  <label class="ce-none"><input type="radio" name="ceTipOpt" value="none" checked> 提示しない</label>
   <div class="ce-row">
     <input type="radio" name="ceTipOpt" value="ofuse" id="ceTipR_ofuse">
     <span class="ce-name">☕ OFUSE</span>
@@ -750,23 +745,23 @@
   </div>
   <div class="ce-row">
     <input type="radio" name="ceTipOpt" value="bmac" id="ceTipR_bmac">
-    <span class="ce-name">🥐 Buy Me Coffee</span>
+    <span class="ce-name">🥐 Buy Me a Coffee</span>
     <input type="text" id="ceTip_bmac" placeholder="URL または ユーザ名" autocomplete="off" maxlength="100">
   </div>
-  <p class="ce-note">※ Amazonほしい物リストは配送先の本名や住所バレにご注意ください。短縮 URL（amzn.asia など）は使えないので、一度開いて表示された URL を貼ってください。<br>※ URLを貼ると自動でIDに切り詰めます（形式不一致は赤枠）。</p>
+  <p class="ce-note">※ Amazon ほしい物リストは、配送先の本名や住所が相手に知られないよう、ご注意ください。短縮 URL（amzn.asia など）は使えないので、一度開いて表示された URL を貼ってください。<br>※ URLを貼ると自動でIDに切り詰めます（形式が合わないときは枠が赤くなります）。</p>
 
   <label class="ce-lbl">SNS ID（オプトイン本人確認対応）</label>
   <div class="ce-row">
-    <span class="ce-name">𝕏 (Twitter)</span>
+    <span class="ce-name">𝕏</span>
     <input type="text" id="ceSns_x" placeholder="URL または @ID" autocomplete="off" maxlength="100">
     <button class="ce-ver-btn" id="ceBtnVer_x" type="button" title="本人確認を行う">認証</button>
-    <span class="ce-ver-badge" id="ceVerBadge_x" title="認証済み（タップで解除）" hidden>✅</span>
+    <span class="ce-ver-badge" id="ceVerBadge_x" title="確認済み（タップで解除）" hidden>✅</span>
   </div>
   <div class="ce-row">
     <span class="ce-name">🐙 GitHub</span>
     <input type="text" id="ceSns_github" placeholder="URL または ユーザ名" autocomplete="off" maxlength="100">
     <button class="ce-ver-btn" id="ceBtnVer_github" type="button" title="本人確認を行う">認証</button>
-    <span class="ce-ver-badge" id="ceVerBadge_github" title="認証済み（タップで解除）" hidden>✅</span>
+    <span class="ce-ver-badge" id="ceVerBadge_github" title="確認済み（タップで解除）" hidden>✅</span>
   </div>
   <div class="ce-row">
     <span class="ce-name">📝 note</span>
@@ -787,7 +782,7 @@
     <span class="ce-name">🟣 Nostr</span>
     <input type="text" id="ceSns_nostr" placeholder="URL または npub1..." autocomplete="off" maxlength="100">
     <button class="ce-ver-btn" id="ceBtnVer_nostr" type="button" title="拡張機能で本人確認">認証</button>
-    <span class="ce-ver-badge" id="ceVerBadge_nostr" title="認証済み（タップで解除）" hidden>✅</span>
+    <span class="ce-ver-badge" id="ceVerBadge_nostr" title="確認済み（タップで解除）" hidden>✅</span>
   </div>
   <p class="ce-note">※ 各サービスのプロフィールURLを貼ると自動でIDに切り詰めます。「認証」で本人確認すると、相手が「✅ を確かめる」を押したときに ✅ が付きます。<br>※ ブラウザのデータを消すと名刺の鍵が変わり、もう一度認証が必要です。</p>
 
@@ -853,7 +848,7 @@
 <dialog id="cardWarnDlg" class="help-dialog ignore-dialog" aria-labelledby="cdWarnTitle">
   <h2 id="cdWarnTitle">⚠️ 未検証のアカウントです</h2>
   <div class="cd-warn">
-    <p id="cdWarnMsg">このリンクは本人が所有しているか未検証です。なりすましにご注意ください。</p>
+    <p id="cdWarnMsg">このリンクが本人のものかは、まだ確かめていません。なりすましにご注意ください。</p>
     <div class="cd-warn-actions">
       <a id="cdWarnGo" href="#" target="_blank" rel="noopener noreferrer nofollow">開く</a>
       <button id="cdWarnNo" type="button">やめる</button>
@@ -924,7 +919,7 @@ window.__potPending = () => { try { return pendingPeers().map(p => p.name || p.i
 // ───────────────────────────────────────────────────────────────────────────
 // 版。**ここが唯一の定義**（画面表示もここから入れる）。ファイル冒頭のコメントにも同じ番号が
 // 書いてあるので、上げるときは両方直すこと（食い違いは test/smoke.py の T15 が検出する）。
-const APP_VERSION = 'pop 0.8.3'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
+const APP_VERSION = 'pop 0.8.4'   // MOD の版。元にしたぽっと通話は UPSTREAM_VERSION
 const DEMO_BUILD = true   // MOD：本番ドメインに置くお試し版。🔬 診断の出し入れもこれで許す（元は hostname 判定）
 const UPSTREAM_VERSION = 'v0.16.14'
 
@@ -1173,9 +1168,7 @@ const rejoin = (() => {
 // ただし**つなぎ直しの最中は出さない**：通話を復旧している最中に説明を被せても邪魔なだけで、
 // しかも本人はページが再読込されたことを知らないので「なぜ今？」になる。
 const HELP_HIDE_KEY = 'pop-call-hide-help'
-const helpHide = $('helpHide')
-helpHide.checked = lsGet(HELP_HIDE_KEY) === '1'
-helpHide.onchange = () => lsSet(HELP_HIDE_KEY, helpHide.checked ? '1' : '')
+helpDialog.addEventListener('close', () => lsSet(HELP_HIDE_KEY, '1'))   // 初回だけ自動で開く（本体 v0.16.17）
 if (!rejoin && lsGet(HELP_HIDE_KEY) !== '1') openHelp()
 
 // 招待リンクのQRコード（参加中ボード内にトグル表示）。ライブラリは必要時だけ vendor/ から
@@ -1313,37 +1306,125 @@ const roomIdOf = (name, pk) => name && FP_RE.test(pk || '') ? name + PK_SEP + pk
 // 30文字で切れて指紋が欠け、別の部屋になる＝ロビーからタップしても誰にも会えない）。
 const capRoomId = v => roomIdOf(capRoom(roomBase(v)), roomPk(v))
 
-// ───────── 配信部屋の鍵（ECDSA P-256・localStorage） ─────────
+// ───────── 配信部屋の鍵（ECDSA P-256・IndexedDB・取り出せない秘密鍵） ─────────
 // オーナーであることの証明は**秘密鍵を持っていること**だけで決まる。トークン方式を捨てた理由は
 // HANDOFF 2026-08-13 の訂正：他人のクライアントに検証手段が無いので「自分がオーナーだ」と
 // 名乗るだけで通ってしまう。`crypto.subtle` は標準搭載なのでサーバ無しで本物の検証ができる。
+// ★監査 S1（v0.16.23）：鍵の置き場所を localStorage（JWK の**平文文字列**）から、名刺の鍵と同じ
+//   IndexedDB・extractable:false（取り出せない CryptoKey）へ移した。localStorage は同じページで
+//   動く悪いスクリプトがいつでもそのまま読める場所。配信鍵も「ブラウザの中で署名させる」以上の
+//   持ち出しをさせない。古い鍵は初回の起動で自動移行（bcMigrate＝利用者の操作は要らない・指紋＝
+//   配信リンクはそのまま生きる）。保存は名刺と同じ DB（泡版は pop-call-keys / keys）。鍵名は `bc:<指紋>`（名刺は 'card'）。
 const b64u = buf => btoa(String.fromCharCode(...new Uint8Array(buf))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
 const unb64u = s => Uint8Array.from(atob(String(s).replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))
 const ECDSA = { name: 'ECDSA', namedCurve: 'P-256' }
 const SIGN_ALG = { name: 'ECDSA', hash: 'SHA-256' }
 const fpOf = async pub => b64u((await crypto.subtle.digest('SHA-256', unb64u(pub))).slice(0, 16))
-const BC_KEY = 'pop-call-bcast'
-const BC_MAX = 20            // 溜め込まない。古い順に捨てる（＝古い配信部屋のオーナー権は失う）
-const loadBcKeys = () => { try { const o = JSON.parse(lsGet(BC_KEY) || '{}'); return o && typeof o === 'object' ? o : {} } catch { return {} } }
+// 名刺の鍵と同じ DB を使うので、DB 名・ストレージ・共通の要求ヘルプをここに先行宣言する（名刺の節参照）
+const CARD_IDB = 'pop-call-keys', CARD_IDB_STORE = 'keys'   // MOD：名刺の鍵も配信鍵も本体と分ける（本体で作った鍵を泡版から使わない）
+const idbReq = (mode, fn) => new Promise((res, rej) => {
+  const o = indexedDB.open(CARD_IDB, 1)
+  o.onupgradeneeded = () => o.result.createObjectStore(CARD_IDB_STORE)
+  o.onerror = () => rej(o.error)
+  o.onsuccess = () => {
+    const db = o.result
+    try {
+      const q = fn(db.transaction(CARD_IDB_STORE, mode).objectStore(CARD_IDB_STORE))
+      q.onsuccess = () => { res(q.result); db.close() }
+      q.onerror = () => { rej(q.error); db.close() }
+    } catch (e) { db.close(); rej(e) }
+  }
+})
+const BC_IDB_PREFIX = 'bc:'          // 名刺と同じ DB の中の配信鍵レコード（'bc:'+指紋）
+const BC_STASH_PREFIX = 'bcstash:'   // ★テスト用（下の __potBcErase）だけ。通常コードは触らない
+const BC_MAX = 20            // 溜め込まない。古い順に捨てる（＝古い配信部屋のオーナー権は失う）。移動後の IndexedDB 側でも同じ
+const BC_LEGACY_KEY = 'pop-call-bcast'   // MOD：泡版の pop 0.8.3 までの localStorage 保存（本体の pot-call-bcast とは別）。移行の読み出し専用（移行後は書かない・消す）
+const bcKeysMem = new Map()  // 指紋 → { fp, name, pub, at, sign: CryptoKey(取り出せない) }。起動時の preload で満たし、同期判定（ownerKeyByFp）はこれだけを見る
+const importVerify = pub => crypto.subtle.importKey('raw', unb64u(pub), ECDSA, false, ['verify'])
+// ── 配信部屋の鍵の実装（v0.16.23・上の設計メモと名刺の鍵の節を参照） ──
+const bcIdbPut = rec => idbReq('readwrite', st => st.put(rec, BC_IDB_PREFIX + rec.fp))
+const bcIdbDel = (fp, prefix = BC_IDB_PREFIX) => idbReq('readwrite', st => st.delete(prefix + fp))
+const bcRange = prefix => IDBKeyRange.bound(prefix, prefix + '\uffff')
+const bcEvict = () => {   // BC_MAX を IndexedDB 側でも守る（古い順に捨てる＝従来と同じ）
+  const all = [...bcKeysMem.values()]
+  if (all.length <= BC_MAX) return
+  all.sort((a, b) => (a.at || 0) - (b.at || 0)).slice(0, all.length - BC_MAX)
+    .forEach(r => { bcKeysMem.delete(r.fp); bcIdbDel(r.fp).catch(() => {}) })
+}
+const bcStore = async rec => { bcKeysMem.set(rec.fp, rec); await bcIdbPut(rec); bcEvict() }
+// 古い鍵の移行：localStorage の JWK を一度だけ読み、取り出せない鍵にして IndexedDB へ。
+// 移せたものだけ文字列から消す（失敗したものは次の起動で再試行＝鍵を失わない）。鍵の名前・指紋はそのまま。
+const bcMigrate = async () => {
+  let legacy
+  try { legacy = JSON.parse(lsGet(BC_LEGACY_KEY) || '{}') } catch { return }
+  if (!legacy || typeof legacy !== 'object') return
+  const left = {}; let moved = 0
+  for (const [fp, v] of Object.entries(legacy)) {
+    if (!(v && v.jwk && FP_RE.test(fp))) { left[fp] = v; continue }
+    try {
+      const sign = await crypto.subtle.importKey('jwk', v.jwk, ECDSA, false, ['sign'])
+      await bcStore({ fp, name: v.name || '', pub: v.pub || '', at: v.at || Date.now(), sign })
+      moved++
+    } catch { left[fp] = v }
+  }
+  if (moved) {
+    if (Object.keys(left).length) lsSet(BC_LEGACY_KEY, JSON.stringify(left))
+    else { try { localStorage.removeItem(BC_LEGACY_KEY) } catch {} }
+  }
+}
 // **同じ部屋名なら同じ鍵**を使い回す＝配信リンクが毎回変わらない（前に配ったリンクが生き続ける）。
+// v0.16.23 の鍵生成は extractable:false（名刺と同じ）。秘密鍵の JWK は二度と作らない＝書き出せない。
 const ownerKeyFor = async name => {
-  const all = loadBcKeys()
-  const hit = Object.entries(all).find(([, v]) => v && v.name === name)
-  if (hit) return { fp: hit[0], ...hit[1] }
-  const kp = await crypto.subtle.generateKey(ECDSA, true, ['sign', 'verify'])
-  const jwk = await crypto.subtle.exportKey('jwk', kp.privateKey)
+  const hit = [...bcKeysMem.values()].find(v => v.name === name)
+  if (hit) return hit
+  const kp = await crypto.subtle.generateKey(ECDSA, false, ['sign', 'verify'])
   const pub = b64u(await crypto.subtle.exportKey('raw', kp.publicKey))
   const fp = await fpOf(pub)
-  all[fp] = { name, jwk, pub, at: Date.now() }
-  const ks = Object.keys(all)
-  if (ks.length > BC_MAX) ks.sort((a, b) => (all[a].at || 0) - (all[b].at || 0)).slice(0, ks.length - BC_MAX).forEach(k => delete all[k])
-  lsSet(BC_KEY, JSON.stringify(all))
-  return { fp, name, jwk, pub }
+  const rec = { fp, name, pub, at: Date.now(), sign: kp.privateKey }
+  await bcStore(rec)
+  return rec
 }
 // 指紋から自分の鍵を探す。**見つかれば自分がその部屋のオーナー**（＝端末に縛られる代償）。
-const ownerKeyByFp = fp => { const v = fp ? loadBcKeys()[fp] : null; return v ? { fp, ...v } : null }
-const importSign = jwk => crypto.subtle.importKey('jwk', jwk, ECDSA, false, ['sign'])
-const importVerify = pub => crypto.subtle.importKey('raw', unb64u(pub), ECDSA, false, ['verify'])
+// 同期（参加 UI のあちこちで呼ばれる）だが、中身はメモリだけ＝下の preload が終えていれば正しい。
+// preload は同じモジュールの評価順でこの後ろの初期化より先に走る（await を跨ぐ初期化はない）。
+const ownerKeyByFp = fp => (fp && bcKeysMem.get(fp)) || null
+// ★テストの差し替え口（smoke.py・v0.16.23）：取り出せない鍵は書き出して戻せないため、消す前に
+//   同じ DB 内の bcstash: に一時コピーする。通常の利用では呼ばれない（テスト eval 専用）。
+window.__potBcList = () => [...bcKeysMem.values()].map(({ fp, name, at }) => ({ fp, name, at }))
+window.__potBcErase = async (keepStash = false) => {
+  // ★保存場所はタブ間で共有：このタブが覚えている鍵だけでなく「鍵置き場」全体を空にする
+  //   （従来の localStorage.removeItem と同じ意味。ここが揃っていないと、つなぎ直した
+  //   聞き役が DB から鍵を見つけて自分がオーナーになり、名簿が二重に署名される＝T27f が壊れた）
+  const stored = await idbReq('readonly', st => st.getAll(bcRange(BC_IDB_PREFIX))).catch(() => [])
+  const byFp = new Map((stored || []).filter(r => r && r.fp).map(r => [r.fp, r]))
+  for (const fp of [...new Set([...byFp.keys(), ...bcKeysMem.keys()])]) {
+    const rec = byFp.get(fp) || bcKeysMem.get(fp)
+    if (keepStash && rec && rec.sign) await idbReq('readwrite', st => st.put(rec, BC_STASH_PREFIX + fp)).catch(() => {})
+    bcKeysMem.delete(fp)
+    await bcIdbDel(fp).catch(() => {})
+  }
+}
+window.__potBcRestore = async () => {
+  const stashed = await idbReq('readonly', st => st.getAll(bcRange(BC_STASH_PREFIX))).catch(() => [])
+  for (const r of stashed || []) {
+    if (!(r && r.fp && r.sign)) continue
+    await bcIdbDel(r.fp, BC_STASH_PREFIX).catch(() => {})
+    await bcStore(r)
+  }
+}
+// 起動時の読み込み：古い鍵を移行 → IndexedDB の配信鍵をメモリへ（この await を跨いで後の初期化が続く）。
+// 名刺の鍵とちがって「読むだけ」でも作らずに確かめる場所なので preload 必須（失敗しても聞き役・雑談は使える）。
+const bcKeysPreload = async () => {
+  try {
+    await bcMigrate()
+    const recs = await idbReq('readonly', st => st.getAll(bcRange(BC_IDB_PREFIX)))
+    for (const r of recs || []) if (r && r.fp && r.sign) bcKeysMem.set(r.fp, { fp: r.fp, name: r.name || '', pub: r.pub || '', at: r.at || 0, sign: r.sign })
+    bcEvict()
+  } catch { /* プライベートモード等で IndexedDB が使えない：鍵なしで進む（配信部屋を作るとき applyBcast のエラーで知らせる） */ }
+}
+// ★待つのは 3 秒まで：IndexedDB の open が返ってこない端末（iOS の一部で既知）でも、ページ全体が
+//   起動しないまま止まらないようにする。間に合わなければ鍵なしで進み、読み込みは裏で続く。
+await Promise.race([bcKeysPreload(), new Promise(r => setTimeout(r, 3000))])
 // 登壇引き継ぎトークン（v0.14.26 / v0.14.27）：枠主が許可時に発行し、リスナーが sessionStorage で保持。
 // つなぎ直し後に提示することで、枠主が新しい peerId を名簿に追加して再署名する。
 const GRANT_TOKEN_TTL_MS = 10 * 60 * 1000  // 10分間有効（つなぎ直し・トラブルシュートの猶予・v0.14.27）
@@ -1421,7 +1502,7 @@ const syncShare = () => {
   if (!nm) return
   const url = roomUrl(n, nm)
   $('share').textContent = url; $('share').href = url
-  $('shareLabel').textContent = (call.joinedId ? '共有リンク' : '招待リンク（まだ参加していません）') + '（タップで URL だけコピー）：'
+  $('shareLabel').textContent = '招待リンク' + (call.joinedId ? '' : '（まだ参加していません）') + '（タップで URL だけコピー）：'
   if (qrShown) drawQr()   // QRを開いたまま部屋名を変えたら描き直す
 }
 
@@ -1592,9 +1673,10 @@ AVATARS.forEach(e => {
   avatarsEl.appendChild(b)
 })
 
-// 初回（保存データなし）は開いた状態、以降は閉じた状態を初期値にする
+// 名前の欄は**畳んだ状態**から始める（v0.16.17・PLAN-ui-text 原則 1）。〜v0.16.16 は初回だけ開いていた＝
+// 最初の画面にアバター 16 個と 🌱 の説明と名刺のボタンまで並んで、文字が多かった。
 const profileBox = $('profileBox')
-profileBox.open = !savedRaw
+profileBox.open = false
 const syncToggleLabel = () => { $('pfEdit').textContent = profileBox.open ? '閉じる ▴' : '変更 ▾' }
 profileBox.addEventListener('toggle', syncToggleLabel)  // 開閉に追従して文言を切り替え
 syncToggleLabel()
@@ -1639,7 +1721,7 @@ const stageOf = () => {
   if (stats.joins >= 3 && min >= 5) return '🌿'   // 最初の1段だけは初日でも反応（ごほうび）
   return '🌱'
 }
-const STAGE_NOTE = { '🌱': '🌱（←話して育てよう）', '🌿': '🌿（すくすく）', '🌷': '🌷（花がさいた）', '🌻': '🌻（大きな花がさいた）', '🌲': '🌲（りっぱな針葉樹！）', '🌳': '🌳（りっぱな広葉樹！）' }
+const STAGE_NOTE = { '🌱': '🌱（話すと育ちます）', '🌿': '🌿（すくすく）', '🌷': '🌷（花がさいた）', '🌻': '🌻（大きな花がさいた）', '🌲': '🌲（りっぱな針葉樹！）', '🌳': '🌳（りっぱな広葉樹！）' }
 const renderGrow = () => { $('growNote').textContent = STAGE_NOTE[stageOf()] }
 renderGrow()
 // 参加中はプロフィール変更を止める（名前・絵文字は参加時に送ったきりで、途中で変えても相手に届かない）
@@ -1674,20 +1756,7 @@ const CARD_NOIMG_KEY = 'pop-call-card-noimg'   // 「相手の名刺の画像を
 // 受け手は ①問い返しに鍵で署名させ（持ち主か）②証拠に同じ指紋があるか、の両方を確かめる＝証拠を写しただけの
 // 人は ① で落ちる。① の署名文には部屋・問う側・答える側の peerId を入れる＝問い返しの横流し（偽者が本人へ
 // 問いを回して答えを持ち帰る）を防ぐ（本人の署名には本人の peerId が入るので、偽者経由では一致しない）。
-const CARD_IDB = 'pop-call-keys', CARD_IDB_STORE = 'keys'   // MOD：名刺の鍵も本体と分ける（本体で作った鍵を泡版から使わない）
-const idbReq = (mode, fn) => new Promise((res, rej) => {
-  const o = indexedDB.open(CARD_IDB, 1)
-  o.onupgradeneeded = () => o.result.createObjectStore(CARD_IDB_STORE)
-  o.onerror = () => rej(o.error)
-  o.onsuccess = () => {
-    const db = o.result
-    try {
-      const q = fn(db.transaction(CARD_IDB_STORE, mode).objectStore(CARD_IDB_STORE))
-      q.onsuccess = () => { res(q.result); db.close() }
-      q.onerror = () => { rej(q.error); db.close() }
-    } catch (e) { db.close(); rej(e) }
-  }
-})
+// ★CARD_IDB・idbReq は上の「配信部屋の鍵」の節へ移した（本体 v0.16.23・同じ DB を両方の鍵で使うため）
 const fpLine = fp => 'potalk1-' + fp            // 証拠に載せる指紋の書式
 let cardKeyRec = null                           // {priv: CryptoKey(取り出せない), pub: 公開鍵 b64url, fp}
 // create=false は読むだけ（無ければ null）。鍵を作るのは本人確認を始めたときだけ
@@ -1896,7 +1965,7 @@ const TIP_DEFS = {
     url: id => 'https://ko-fi.com/' + id
   },
   bmac: {
-    name: 'Buy Me a Coffee', label: '🥐 Buy Me Coffee でお礼', re: /^[a-zA-Z0-9_]{1,30}$/,
+    name: 'Buy Me a Coffee', label: '🥐 Buy Me a Coffee でお礼', re: /^[a-zA-Z0-9_]{1,30}$/,
     parse: s => {
       s = s.trim()
       const m = s.match(/(?:https?:\/\/)?(?:www\.)?buymeacoffee\.com\/([a-zA-Z0-9_]{1,30})(?:\/|\?|$)/i)
@@ -2098,7 +2167,7 @@ const renderCardView = (uid, cardData) => {
     $('cdSubEmoji').hidden = true
   }
   $('cdName').textContent = p.name || (you ? 'あなた' : 'ゲスト')
-  $('cdState').textContent = you ? '通話中（あなた）' : (call.ignored.has(uid) ? '非表示（無視中）' : '通話中')
+  $('cdState').textContent = you ? '通話中（あなた）' : (call.ignored.has(uid) ? '無視中' : '通話中')
 
   // bio
   const bio = cardData?.bio || ''
@@ -2158,7 +2227,7 @@ const renderCardView = (uid, cardData) => {
     sBadge.className = state === 'ok' ? 'cd-ok' : 'cd-un' + (state === 'claim' ? ' claim' : '')
     sBadge.textContent = VER_LABEL[state]
     sBadge.title = state === 'ok' ? (you ? 'あなたの端末で本人確認済み' : 'この通話で本人確認しました')
-      : state === 'claim' ? '本人は認証済みと言っています。「✅ を確かめる」で確かめられます'
+      : state === 'claim' ? '本人は確認済みと言っています。「✅ を確かめる」で確かめられます'
       : state === 'none' ? '自己申告' : '確かめましたが、本人のものと確認できませんでした'
     a.append(sName, sId, sBadge)
     if (state !== 'ok') {   // ✅ 以外は開く前に注意を挟む
@@ -2177,7 +2246,7 @@ const renderCardView = (uid, cardData) => {
     btn.hidden = !!allOk
     btn.disabled = st?.state === 'checking'
     btn.textContent = st?.state === 'checking' ? '確かめています…' : st?.state === 'done' ? 'もう一度確かめる' : '✅ を確かめる'
-    msg.textContent = !st ? '押すと、この人の SNS に本人確認の印があるかを、あなたの端末から確かめます（相手の SNS のサーバに問い合わせます）'
+    msg.textContent = !st ? '押すと、この人の SNS に本人確認用の鍵の行があるかを、あなたの端末から確かめます（相手の SNS のサーバに問い合わせます）'
       : st.state === 'checking' ? ''
       : st.old ? '相手のアプリが古く、確かめられません（相手が再読み込みすると確かめられるようになります）'
       : !st.key ? '⚠️ 名刺の鍵の持ち主であることを確かめられませんでした。なりすましの可能性があります'
@@ -2190,7 +2259,7 @@ const renderCardView = (uid, cardData) => {
   $('cdIgnore').hidden = you
   if (!you) {
     const isIg = call.ignored.has(uid)
-    $('cdIgnore').innerHTML = (isIg ? HEART_BROKEN_SVG : HEART_SVG) + ' <span>' + (isIg ? '非表示と消音を解除する' : 'この人を非表示 ＆ 消音（自衛）') + '</span>'
+    $('cdIgnore').innerHTML = (isIg ? HEART_BROKEN_SVG : HEART_SVG) + ' <span>' + (isIg ? '無視をやめる' : 'この人を無視する') + '</span>'
     $('cdIgnore').classList.toggle('is-ignored', isIg)
     $('cdIgnore').onclick = () => {
       if (call.ignored.has(uid)) unignorePeer(uid)
@@ -2281,7 +2350,7 @@ const openLinkConfirm = (title, msg, url, kind) => {
 }
 const openCardWarn = (serviceName, id, url, state) => openLinkConfirm(
   '⚠️ 未検証の ' + serviceName + ' です',
-  'このリンク (' + shortenNpub(id) + ') は' + (state === 'claim' ? '、本人は認証済みと言っていますが、まだ確かめていません。「✅ を確かめる」で確かめられます。'
+  'このリンク (' + shortenNpub(id) + ') は' + (state === 'claim' ? '、本人は確認済みと言っていますが、まだ確かめていません。「✅ を確かめる」で確かめられます。'
     : state === 'ng' || state === 'err' ? '、確かめましたが本人のものと確認できませんでした。'
     : '本人の申告だけで、本人のものか確かめられていません。') + 'なりすましにご注意ください。', url, 'warn')
 $('cdWarnNo').onclick = () => { $('cardWarnDlg').close() }
@@ -2600,7 +2669,7 @@ const openCardAuth = async service => {
     $('caInputSec').hidden = true
     $('caNote').textContent = '※ 相手はあなたの名刺を見るたびに bio を確かめます。bio から消すと、相手の画面で ✅ が付かなくなります。' + keep
   } else if (service === 'x') {
-    $('caTitle').textContent = '𝕏 (Twitter) 本人確認'
+    $('caTitle').textContent = '𝕏 本人確認'
     $('caAccount').textContent = '対象アカウント: @' + id
     $('caDesc').textContent = '「𝕏 でポストする」から下の文面を投稿し、そのポストのリンクを貼って「確認する」を押してください。'
     $('caCodeSec').hidden = false
@@ -2645,11 +2714,11 @@ $('caCopyPost').onclick = () => flashCopy($('caCopyPost'), makeXPostText(curAuth
 
 const AUTH_WHY = {
   notfound: 'アカウントが見つかりません',
-  limit: '問い合わせの回数制限中です。少し待ってからお試しください',
+  limit: '問い合わせの回数に制限がかかっています。少し待ってからお試しください',
   http: 'サービスに問い合わせられませんでした。公開アカウントか確認してください',
   author: '投稿者（署名した人）が入力したアカウントと違います',
   nocode: '鍵の行が見つかりませんでした。書き写しや保存を確認してください',
-  shape: '署名の形が正しくありません',
+  shape: '署名の形式が正しくありません',
   sig: '署名を確かめられませんでした',
   none: '署名がありません',
 }
@@ -2696,7 +2765,7 @@ $('caVerifyBtn').onclick = async () => {
     msg.className = 'ca-msg ok'
     msg.textContent = '🎉 本人確認ができました。相手の画面では、相手が「✅ を確かめる」を押すと ✅ が付きます。'
     msg.hidden = false
-    btn.textContent = '✅ 認証完了'
+    btn.textContent = '✅ 確認できました'
 
     const c = loadCard()
     c.proofs = c.proofs || {}
@@ -3223,7 +3292,6 @@ const renderMembers = () => {
   })
   // 読み上げの仮想メンバー 🗣「つくよみちゃん」（v0.14.44）。人ではないので人数に数えず、名簿の印も付けない。
   // 配信者の行の直下。音は 'tts' の <audio>（受け取る側）か自分の合成（配信者）で、跳ねは解析器（vadTick）が描く
-  renderTtsSent()
   if (ttsVisible()) {
     const v = memberRow('🗣', 'つくよみちゃん', false, false, '', undefined, null, call.bcast ? { mark: '' } : null)
     v.classList.add('virtual'); v.dataset.uid = 'tts'; v.title = '読み上げ（配信者の端末で合成）。声と顔：フリー素材キャラクター「つくよみちゃん」'
@@ -3464,7 +3532,7 @@ const onLoudPeer = uid => {
   call.loud.set(uid, Date.now()); call.loudHits.delete(uid)
   routePeer(uid)
   const name = uid === 'tts' ? '読み上げ' : ((call.profiles.get(uid) || {}).name || 'ゲスト') + ' さん'
-  showPeerNotice('🔉 ' + name + 'の音がとても大きいので、自動で小さくしました（名前の横に 🔉）。続くようなら、その人の ❤️ から「無視」もできます', 20000)
+  showPeerNotice('🔉 ' + name + 'の音が大きすぎたので、小さくしました（続くなら ❤️ で無視できます）', 20000)
   renderMembers()
 }
 const startLoudWatch = () => { if (!loudTimer) loudTimer = setInterval(loudTick, LOUD_TICK_MS) }
@@ -4159,6 +4227,7 @@ $('pipVideo').addEventListener('webkitpresentationmodechanged', renderPip)   // 
 // 消える事故が起きる。他の localStorage キーも同じ理由で PROFILE_KEY 等に揃えてある）
 const SND_PEER_KEY = 'pop-call-snd-peer'
 const SND_ROOM_KEY = 'pop-call-snd-room'
+const SND_ROOM_NOTE_KEY = 'pop-call-snd-room-note'   // 🔔 の制約の知らせを一度出したか（本体 v0.16.17）
 const SND_REACT_KEY = 'pop-call-snd-react'
 let sndPeer = lsGet(SND_PEER_KEY) !== '0'   // 未保存＝オン
 let sndRoom = lsGet(SND_ROOM_KEY) === '1'   // 未保存＝オフ
@@ -4197,6 +4266,9 @@ const soundRoom  = () => { if (sndRoom) playTones([[988, 0, 0.09], [1319, 0.08, 
   roomBox.onchange = () => {
     sndRoom = roomBox.checked; lsSet(SND_ROOM_KEY, sndRoom ? '1' : '0')
     if (sndRoom) { ensureAudioCtx(); soundRoom() }   // オンにした操作で解錠＋見本を1回鳴らす
+    // 制約の知らせは**オンにした瞬間に一度だけ**（v0.16.17）。ロビーの常設の注記をやめた代わり
+    $('sndRoomNote').textContent = sndRoom && lsGet(SND_ROOM_NOTE_KEY) !== '1' ? 'このタブを開いている間だけ知らせます' : ''
+    if (sndRoom) lsSet(SND_ROOM_NOTE_KEY, '1')
   }
 }
 
@@ -4213,7 +4285,7 @@ let ntfRoom = ntfCan() && lsGet(NTF_ROOM_KEY) === '1' && Notification.permission
   const opt = $('ntfRoomOpt'), box = $('ntfRoom'), note = $('ntfRoomNote')
   opt.hidden = !ntfCan()
   box.checked = ntfRoom
-  const denied = () => { note.textContent = '（ブラウザの設定で通知が止められています。アドレス欄の左の印から許可できます）' }
+  const denied = () => { note.textContent = '（ブラウザの設定で通知が止められています。アドレス欄の左のアイコンから許可できます）' }
   if (ntfCan() && lsGet(NTF_ROOM_KEY) === '1' && Notification.permission === 'denied') denied()
   box.onchange = async () => {
     note.textContent = ''
@@ -4242,7 +4314,7 @@ const notifyRooms = fresh => {   // fresh: [{room, people}]（新しく現れた
     n.onclick = () => { try { window.focus() } catch {} ; n.close(); const l = document.querySelector('.lobby'); if (l) l.scrollIntoView({ block: 'start' }) }
   } catch { ntfRoom = false; $('ntfRoomOpt').hidden = true }   // 対応していない環境（UA 判定の漏れ）は黙って畳む
 }
-// タブの題名とアイコン：通話中の部屋があれば「● N部屋で通話中」、見ていない間に新しい部屋ができたら「🔔」。
+// タブの題名とアイコン：通話中の部屋があれば「● N部屋で通話中」（入室中は「● ほかN部屋で通話中」）、見ていない間に新しい部屋ができたら「🔔」。
 // 数えるのは自分以外の部屋（自分ひとりの部屋で印が付いても「誰かいる」の意味にならない）
 const BASE_TITLE = document.title
 const favLinks = [...document.querySelectorAll('link[rel="icon"]')].map(l => ({ l, href: l.getAttribute('href'), type: l.getAttribute('type') }))
@@ -4270,7 +4342,8 @@ const setFav = on => {
   img.src = 'images/icon.svg'
 }
 const renderTabMark = () => {
-  document.title = (tabFresh ? '🔔 新しい部屋｜' : tabRooms ? '● ' + tabRooms + '部屋で通話中｜' : '') + BASE_TITLE
+  // 入室中は自分の部屋を数えていないので「ほか N 部屋」と言う（Issue #9：入室中に実際より 1 つ少なく見える）
+  document.title = (tabFresh ? '🔔 新しい部屋｜' : tabRooms ? '● ' + (call.joinedId ? 'ほか' : '') + tabRooms + '部屋で通話中｜' : '') + BASE_TITLE
   setFav(tabRooms > 0)
 }
 const clearTabFresh = () => { if (tabFresh && !ntfAway()) { tabFresh = false; renderTabMark() } }
@@ -4463,7 +4536,7 @@ const ttsStage = (msg) => {
 //   All execution providers failed: wasm: no available backend found. ERR: [wasm] RangeError: Out of memory
 // 復旧の詳しい順序（アプリ・タブを閉じる → それでも駄目なら端末の再起動が確実）は manual の「困ったとき」にある。
 const ttsErrText = raw => {
-  if (/out of memory/i.test(raw)) return '読み上げに使うメモリが足りませんでした。「つなぎ直す」を押すと直ることがあります（ほかのアプリやタブを閉じると入りやすくなります）'
+  if (/out of memory/i.test(raw)) return '読み上げに使うメモリが足りませんでした。「つなぎ直す」を押すと直ることがあります（ほかのアプリやタブを閉じると、メモリに収まりやすくなります）'
   if (/fetch|network|load failed|404/i.test(raw)) return '読み上げの読み込みに失敗しました。電波の良いところでもう一度お試しください'
   if (/no available backend|execution provider/i.test(raw)) return '読み上げの部品を動かせませんでした。「つなぎ直す」を押すと直ることがあります'
   return raw || '読み上げの準備に失敗しました'
@@ -4668,14 +4741,14 @@ const stopSpeech = () => {
 // 設定行は配信部屋のオーナーの通話中だけ出す（armJoined と退出時に呼ぶ）。つなぎ直しでオンを引き継いだときは入室時に読み込み直す（ttsWarm）
 const syncTtsRow = () => {
   $('sndTtsRow').hidden = !ttsAllowed()
-  $('sndTtsNote').hidden = !(ttsAllowed() && sndTts)
+  $('sndTtsNote').hidden = !ttsAllowed()   // 行と同時に常時出す＝オンにする前に読める（v0.16.18・チェックしてからでは遅い）
   $('sndTtsNameRow').hidden = !(ttsAllowed() && sndTts)
   // 通話希望者募集（v0.15.9）は配信部屋のオーナーのときだけ出す。部屋を出た／オーナーでなくなったら畳んで締め切る
   const own = !!call.joinedId && call.bcast && !!call.ownerKey
   $('reqOpenRow').hidden = !own
   if (!own && call.reqOpen) { call.reqOpen = false; call.requests.clear() }
   $('reqOpen').checked = call.reqOpen
-  renderTtsProg(); renderTtsSent()
+  renderTtsProg()
 }
 // 配信者：いまの募集状態を配る（target 省略＝全員・grantAction はオーナー検証済みの経路）。
 const sendReqOpen = target => { if (call.ownerKey && call.grantAction) sendTo(call.grantAction, { k: 'reqopen', on: !!call.reqOpen }, target) }
@@ -4705,14 +4778,6 @@ const sendEnterNotice = () => {
   const box = $('sndTtsNoName')
   box.checked = ttsNoName
   box.onchange = () => { ttsNoName = box.checked; lsSet(TTS_NONAME_KEY, ttsNoName ? '1' : '0') }
-}
-// 配信者に「誰に届いているか」を見せる。古い版のクライアントは受け取れない（返事が無い＝送らない）ので、ここで気づける
-const renderTtsSent = () => {
-  const el = $('sndTtsSent')
-  el.hidden = !(ttsAllowed() && sndTts && ttsDest)
-  if (el.hidden) return
-  const n = [...call.peers].filter(id => call.ttsSent.has(id)).length
-  el.textContent = '届いている人：' + n + ' / ' + call.peers.size + ' 人' + (n < call.peers.size ? '（古い版の人には届きません。ページを開き直してもらってください）' : '')
 }
 // 読み込み → 見本を 1 回読む（準備ができたことが耳で分かる）。トグル ON と、保存オンでの入室（warm）の両方から
 const ttsStart = (sample = true) => loadTts().then(() => {
@@ -4919,7 +4984,7 @@ const renderCrowd = () => {
   if (el.hidden) return
   el.textContent = n >= roomCap()
     ? '👥 ' + n + '人です。この部屋の上限（' + roomCap() + '人）に達しました'
-    : '👥 ' + n + '人になりました。あと ' + (roomCap() - n) + '人まで（多いほど音が途切れやすくなります）'
+    : '👥 あと ' + (roomCap() - n) + '人まで（多いと途切れやすくなります）'
 }
 // 入ってきた自分が定員を超えていたら、自分から抜ける。**一瞬入って出る**ことになるが、
 // 満室のまま全員の通話が重くなるより、入れなかったと分かるほうがよい。
@@ -5120,7 +5185,7 @@ const unlockNow = () => { if (audioCtx) audioCtx.resume().then(applyVolume).catc
 let unlockArmed = false
 const showUnlock = () => {
   $('unlock').style.display = 'block'
-  showPeerNotice('🔊 音が止まっています。画面のどこかをタップすると鳴ります')
+  showPeerNotice('🔊 音が止まっています。どこかをタップすると鳴ります')
   if (unlockArmed) return
   unlockArmed = true
   const once = () => { unlockArmed = false; if ($('unlock').style.display !== 'none') unlockNow() }
@@ -5136,7 +5201,7 @@ const renderAudioWarn = ids => {
   el.hidden = !ids.length
   if (!ids.length) return
   const who = ids.map(id => (call.profiles.get(id) || {}).name || '相手').join('、')
-  el.textContent = '🔈 ' + who + ' の音がまだ届いていません。「つなぎ直す」を試してみてください'
+  el.textContent = '🔈 ' + who + 'さんの音が届いていません。「つなぎ直す」を試してください'
 }
 const checkAudioArrival = () => {
   if (!call.room) return
@@ -5832,11 +5897,11 @@ const renderBcNote = () => {
       : '📣 配信が終了しました。' + left + ' 秒後に「通話中の部屋」へ戻ります'
   } else {
     txt = call.ownerKey
-      ? '📣 あなたの配信部屋です。ほかの人の声は誰にも流れません（🎙 を押すとその人も話せます）'
+      ? '📣 あなたの配信です。ほかの人の声は流れません（🎙 を押すとその人も話せます）'
       : call.speakers.has(myPeerId)
         ? '🎙 あなたは話す許可を持っています'
         : call.speakers.size
-          ? '📣 配信部屋です。配信者の声だけが流れます（あなたのマイクは使いません）'
+          ? '📣 配信者の声だけが流れます（あなたのマイクは使いません）'
           : '📣 配信部屋です。まだ配信者が来ていません'
   }
   // × で閉じた案内は、**同じ内容の間だけ**閉じたまま（登壇許可・配信終了など内容が変われば出し直す・v0.15.15）。
@@ -5950,7 +6015,7 @@ const renderMail = () => {
   }
   if (call.ownerKey) {                       // ── 枠主 ──
     if (!call.mailOpen) {
-      head.append(line('お題を出して、リスナーからお便りを募集できます。'))
+      head.append(line('お題を出して、聞いている人からお便りを募集できます。'))
       body.append(line('例：「最近食べて美味しかったもの」。集まったお便りはあなたにだけ並び、選んだものだけが部屋に出ます。', 'mail-empty'))
       mailForm.hidden = false
       mailText.maxLength = MAIL_TITLE_MAX
@@ -5977,13 +6042,13 @@ const renderMail = () => {
   } else {                                   // ── リスナー ──
     if (!call.mailOpen) {
       head.append(line('いまはお便りを募集していません。'))
-      body.append(line('枠主がお題を出すと、ここに書けるようになります。', 'mail-empty'))
+      body.append(line('配信者がお題を出すと、ここに書けるようになります。', 'mail-empty'))
       mailForm.hidden = true
     } else {
       head.append(line('📮 ' + call.mailTitle))
       body.append(call.mailSent
         ? line('送ったお便り：' + call.mailSent, 'mail-item')
-        : line('お便りは枠主にだけ届きます。読まれると部屋のみんなに出ます。', 'mail-empty'))
+        : line('お便りは配信者にだけ届きます。読まれると部屋のみんなに出ます。', 'mail-empty'))
       mailForm.hidden = false
       mailText.maxLength = MAIL_TEXT_MAX
       mailText.placeholder = 'お便りを書く…'
@@ -6247,7 +6312,6 @@ const wireRoom = () => {
       if (call.ttsSent.has(peerId)) { ttsResend(peerId); return }
       call.ttsSent.add(peerId); call.ttsSentStream.set(peerId, ttsDest.stream)
       try { call.room.addStream(ttsDest.stream, { target: peerId }) } catch {}
-      renderTtsSent()
       return
     }
     if ('now' in d) {  // 読んでいる人の行を光らせる（配信者からだけ）。連打よけはここだけ
@@ -6718,7 +6782,7 @@ const runJoin = async () => {
   call.bcast = bcast
   if (owner) {
     try {
-      call.ownerKey = await importSign(owner.jwk)
+      call.ownerKey = owner.sign   // v0.16.23：保存済みの「取り出せない鍵」をそのまま使う（JWK の import はもう無い）
       call.ownerPub = owner.pub
       call.grants = new Set([myPeerId])   // オーナーはまず自分を名簿に載せる（自分への許可も同じ道を通る）
       // 配信者のつなぎ直し復元（v0.14.26）：前回の登壇リスナーが部屋に残っていれば名簿を引き継ぐ
@@ -6745,7 +6809,7 @@ const runJoin = async () => {
     } catch {
       call.ownerKey = null; call.ownerPub = ''
       if (call.stream) { call.stream.getTracks().forEach(t => t.stop()); call.stream = null }   // 誰にも届かないマイクは掴まない
-      showPeerNotice('📣 配信者の鍵を読めませんでした。この部屋では聞き役になります')
+      showPeerNotice('📣 配信者の鍵を読めませんでした。この部屋ではリスナーとして入ります')
     }
   }
 
@@ -6938,7 +7002,7 @@ const checkRecover = (now, stuck, expect) => {
   if (!call.lostAt) { call.lostAt = now; return }              // 壊れ始めた時刻を覚える
   if (now - call.lostAt < RECOVER_AFTER_MS) return             // まだ待つ（瞬断かもしれない）
   if (!autoLeft()) {                                           // 打ち止め。ここから先は人に委ねる
-    showPeerNotice('🔌 自動でつなぎ直しましたが直りませんでした。「つなぎ直す」を押すか、時間をおいて入り直してください')
+    showPeerNotice('🔌 つながりません。「つなぎ直す」を押すか、時間をおいて入り直してください')
     call.lostAt = now                                          // 通知を出し続けないよう数え直す
     return
   }
@@ -7241,11 +7305,11 @@ const entryRender = () => {
   if (entry.state === 'asleep') {
     const bc = !!(entry.pk || roomPk(entry.id))
     const noName = !!entry.id && !roomInput.value.trim()   // ハッシュだけの URL＝名前を持って来ていない
-    $('entryText').textContent = (bc
-      ? '😴 この配信はいま開いていないみたいです。始まればここに出ます。'
+    // 短く（v0.16.17）。「探すのに時間がかかっているだけ」の場合は「🚪 このまま入ってみる」のボタンが受け持つ
+    $('entryText').textContent = bc
+      ? '😴 この配信はいま開いていません。始まればここに出ます。'
       : noName ? '😴 この部屋は終わったみたいです。'
-      : '😴 この部屋にはいま誰もいないみたいです。古いリンクかもしれません。')
-      + (entry.id ? '（見つけるのに時間がかかっているだけのこともあります）' : '')
+      : '😴 いまは誰もいません。'
     $('entryOpen').hidden = bc   // 聞き役は配信部屋を開けない（鍵が無い）
   }
   syncKindRow()   // ボタンの文言
@@ -7294,6 +7358,81 @@ $('entryOpen').onclick = () => {
   entryCancel(); roomInput.focus(); roomInput.select()
 }
 
+// ─ 通話中の部屋の並び順（v0.16.15・利用者が決めた評価）─ それまでは部屋 ID の文字順＝利用者にはでたらめに見えた。
+// 点は「人数 1 人分＝1 点」の物差し。見る側の画面だけで計算する（在室の合図の中身は変えない＝CLI・常設ページは無関係）。
+//   人数：4 人までは 1 人 1 点、それより上は 1 人 0.5 点（大部屋が圧倒しない）
+//   賑やかさ：話している人（活発さ 1 以上）1 人につき 1.5 点＋平均の活発さ×0.5。どちらも 1 分の平均でならす
+//   伸び：直近 5 分で増えた人数 1 人につき 1 点（3 点まで）
+//   話題タグ：＋0.5 ／ 見ている人が 🌱 で、部屋に 🌱 の人がいる：＋1
+//   満員：−6 ／ 全員が黙っている：2 分を過ぎたら 1 分ごとに −1（−8 まで）／ 開いて 4 時間を過ぎたら 1 時間ごとに −1
+//   作りたて（開いて 3 分まで）：ほかの部屋の真ん中の点より下にはしない（人数 1・まだ静か、で沈ませない）
+// 並びの例外：自分のいる部屋は先頭。見ている人が 🌱 なら、ようこそ・やまびこ（MOVED_ROOMS）を、いちばん点の高い部屋のすぐ下へ。
+// 揺れ止め（活発さは 5 秒ごとに変わる）：並べ替えは 25 秒ごと。そのあいだに増えた部屋は点の位置に差し込み、消えた部屋は抜くだけ。
+//   確認の 2 択が出ている間と、一覧を触って 4 秒以内は動かさない。点の差が 0.75 以下の隣どうしは入れ替えない。
+const RANK_EVERY_MS = 25000, RANK_MARGIN = 0.75, RANK_TAU_MS = 60000, RANK_GROW_MS = 5 * 60000, RANK_TOUCH_MS = 4000
+const roomStat = new Map()   // 部屋 → { talkers, mean, at, heard, seen, hist: [[時刻, 人数], …] }
+let lobbyOrder = [], lobbyRankAt = 0, lobbyTouchAt = 0
+const roomFeat = (room, people, now, viewerSprout) => {
+  const n = people.length
+  const talkers = people.filter(p => (p.talk || 0) >= 1).length
+  const mean = people.reduce((a, p) => a + (p.talk || 0), 0) / Math.max(1, n)
+  let s = roomStat.get(room)
+  if (!s) roomStat.set(room, s = { talkers, mean, at: now, heard: 0, seen: now, hist: [] })
+  else {
+    const k = 1 - Math.exp(-Math.max(0, now - s.at) / RANK_TAU_MS)   // 時間で重みを決める（在室の合図が来る頻度に左右されない）
+    s.talkers += (talkers - s.talkers) * k; s.mean += (mean - s.mean) * k; s.at = now
+  }
+  if (talkers) s.heard = now
+  if (!s.hist.length || now - s.hist[s.hist.length - 1][0] >= 5000) s.hist.push([now, n])
+  while (s.hist.length > 1 && now - s.hist[0][0] > RANK_GROW_MS) s.hist.shift()
+  return {
+    n, talkers: s.talkers, mean: s.mean,
+    silentMs: now - (s.heard || s.seen),
+    grow: n - Math.min(...s.hist.map(h => h[1])),
+    tagged: people.some(p => p.tag),
+    sprout: viewerSprout && people.some(p => p.stage === '🌱'),
+    full: n >= roomCapOf(room),
+    ageSec: roomSeconds(room, people),
+  }
+}
+const lobbyScore = f => {
+  let s = Math.min(f.n, 4) + Math.max(0, f.n - 4) * 0.5
+  s += f.talkers * 1.5 + f.mean * 0.5
+  s += Math.min(3, Math.max(0, f.grow))
+  if (f.tagged) s += 0.5
+  if (f.sprout) s += 1
+  if (f.full) s -= 6
+  if (f.silentMs > 120000) s -= Math.min(8, (f.silentMs - 120000) / 60000)
+  if (f.ageSec > 4 * 3600) s -= (f.ageSec - 4 * 3600) / 3600
+  return s
+}
+// 並びの土台（例外を当てる前）。reorder が偽なら、前の並びを保って出し入れだけする
+const lobbyRankBase = (prev, score, reorder) => {
+  const order = prev.filter(r => r in score)
+  Object.keys(score).filter(r => !order.includes(r)).sort((a, b) => score[b] - score[a]).forEach(r => {
+    const i = order.findIndex(x => score[x] < score[r])
+    if (i < 0) order.push(r); else order.splice(i, 0, r)
+  })
+  if (reorder) {
+    for (let moved = true, pass = 0; moved && pass <= order.length; pass++) {
+      moved = false
+      for (let i = 0; i + 1 < order.length; i++) {
+        if (score[order[i + 1]] - score[order[i]] > RANK_MARGIN) { [order[i], order[i + 1]] = [order[i + 1], order[i]]; moved = true }
+      }
+    }
+  }
+  return order
+}
+const lobbyRankApply = (base, own, boost) => {
+  const pin = own && base.includes(own) ? [own] : []
+  const b = boost.filter(r => base.includes(r) && r !== own)
+  const rest = base.filter(r => r !== own && !b.includes(r))
+  return [...pin, ...rest.slice(0, 1), ...b, ...rest.slice(1)]
+}
+window.__potLobbyRank = { score: lobbyScore, base: lobbyRankBase, apply: lobbyRankApply }   // テスト用（T86）
+const lobbyTouched = () => { lobbyTouchAt = Date.now() }
+;['pointerdown', 'touchstart', 'wheel', 'scroll'].forEach(ev => $('lobbyList').addEventListener(ev, lobbyTouched, { passive: true }))
+
 const renderLobby = () => {
   const list = $('lobbyList'), status = $('lobbyStatus')
   if (!lobbyRoom) return  // 接続前は初期メッセージのまま
@@ -7312,7 +7451,18 @@ const renderLobby = () => {
   //   （配信者が去った部屋は下の「配信の終わり」で片づく）。告知そのものは全員が送る＝人数は出る
   byRoom.forEach((people, room) => { if (isBcRoom(room) && !people.some(p => p.bo)) byRoom.delete(room) })
   list.replaceChildren()
-  const names = [...byRoom.keys()].sort()
+  // 並び順（上の「通話中の部屋の並び順」）。消えた部屋の記録は捨てる
+  const now = Date.now(), viewerSprout = stageOf() === '🌱'
+  roomStat.forEach((_, r) => { if (!byRoom.has(r)) roomStat.delete(r) })
+  const feats = new Map([...byRoom].map(([r, people]) => [r, roomFeat(r, people, now, viewerSprout)]))
+  const score = {}
+  feats.forEach((f, r) => { score[r] = lobbyScore(f) })
+  const vals = Object.values(score).sort((a, b) => a - b), mid = vals.length ? vals[Math.floor(vals.length / 2)] : 0
+  feats.forEach((f, r) => { if (f.ageSec < 180) score[r] = Math.max(score[r], mid) })
+  const reorder = !lobbyAsk && now - lobbyTouchAt >= RANK_TOUCH_MS && now - lobbyRankAt >= RANK_EVERY_MS
+  if (reorder) lobbyRankAt = now
+  lobbyOrder = lobbyRankBase(lobbyOrder, score, reorder)
+  const names = lobbyRankApply(lobbyOrder, call.joinedId, viewerSprout ? Object.values(MOVED_ROOMS) : [])
   // ロビーに入った直後はまだ誰も見つけていないだけなので「ありません」と断定しない。
   // 相手の発見（Nostrでの合流＋WebRTCの確立）に数秒かかるため、その間は探索中と出す。
   status.textContent = names.length ? ''
@@ -7392,7 +7542,8 @@ const renderLobby = () => {
     }
     const dur = document.createElement('div'); dur.className = 'room-dur'
     const durText = document.createElement('span')
-    durText.textContent = '⏱ ' + fmtDuration(roomSeconds(room, people))
+    // 常設の部屋（ボットが常駐）は経過時間の代わりに「常設」（PR #7 の案・v0.16.17）。名前ではなく部屋 ID で判定
+    durText.textContent = STANDING_ROOMS.has(room) ? '常設' : '⏱ ' + fmtDuration(roomSeconds(room, people))
     const eq = document.createElement('span'); eq.className = 'room-eq'
     eq.dataset.act = act                 // 活発さ(0〜3)をEQの高さの元にする。実音声ではなくランダム
     eq.textContent = lobbyEqFrame(act)   // 初期フレーム（次のtickまで空にならないように）
@@ -7424,7 +7575,13 @@ const renderLobby = () => {
       rp.append(im, n)
       ppl.append(rp)
     }
-    btn.append(top); if (sub) btn.append(sub); btn.append(dur, ppl)
+    btn.append(top); if (sub) btn.append(sub)
+    // やまびこ部屋だけ一言（PR #7 の案・v0.16.17）：ボットの部屋だと分かり、マイクの確認に使えると分かる
+    if (room === MOVED_ROOMS['やまびこ部屋⛰️（5秒で返信）']) {
+      const bot = document.createElement('div'); bot.className = 'room-bot'; bot.textContent = '🤖 ボットが 5 秒で返します。ひとりでマイクの確認ができます'
+      btn.append(bot)
+    }
+    btn.append(dur, ppl)
     btn.onclick = () => askRoom(room, lobbyName(room, people))
     list.append(btn)
     if (lobbyAsk && lobbyAsk.room === room) {   // タップした部屋の直下に2択
@@ -7487,7 +7644,7 @@ const roomHow = room => {
   // 配信部屋の聞き役として入るなら、そもそもマイクを使わない。「ミュートで入る」と書くと
   // 「あとで解除すれば話せる」と読まれてしまうので、起きることをそのまま書く。
   const listen = isBcRoom(room) && !ownerKeyByFp(roomPk(room))
-  return listen ? '聞き役で入室します（マイクは使いません）' : 'ミュート状態で入室します'
+  return listen ? 'リスナーとして入室します（マイクは使いません）' : 'ミュート状態で入室します'
 }
 const selectRoom = (room, name) => {
   if (room === call.joinedId) return
