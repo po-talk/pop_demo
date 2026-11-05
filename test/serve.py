@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """pop_demo ローカルテスト用サーバ（本番と同じ並びで配る）
 
-    /            … 本番のぽっと通話（既定 ~/Downloads/webrtc-call の作業ツリー）
+    /            … 本番のぽっと通話（既定 ~/projects/webrtc-call の作業ツリー）
     /pop_demo/   … この repo（お試し版）
 
 本番では potalk.app/ と potalk.app/pop_demo/ が同じオリジンなので、保存の引き継ぎや
@@ -26,7 +26,7 @@ import sys
 import urllib.parse
 
 HERE = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-UPSTREAM = os.path.expanduser('~/Downloads/webrtc-call')
+UPSTREAM = os.path.expanduser('~/projects/webrtc-call')
 APP_ID_SRC = "appId: 'kuramo-webrtc-call'"
 NOSTR_SRC = 'const NOSTR_RELAYS = TRYSTERO_BASE.relayConfig.urls'
 NOSTR_DST = 'const NOSTR_RELAYS = []   /* テスト中は公開リレーへ流さない */'
